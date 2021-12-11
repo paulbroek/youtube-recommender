@@ -18,12 +18,12 @@ api_key = "api_key" # Enter your own API key – this one won’t work
 
 youtube_api = build("youtube", "v3", developerKey=api_key)
 
+search_terms = ['business'] 
+
 results = youtube_api.search().list(q=search_terms, part="snippet", type="video",
                                     order="viewCount", maxResults=50).execute()
 
-request = youtube.channels().list(
-    
-)
+request = youtube_api.channels().list()
 response = request.execute()
 
 print(response)
