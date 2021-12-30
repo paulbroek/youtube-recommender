@@ -211,3 +211,10 @@ if __name__ == '__main__':
     uploaded_since = get_start_date_string(days)
 
     res = search_each_term(["Peterson"], api_key, uploaded_since)
+    # youtube_api = build('youtube', 'v3', developerKey = api_key)
+    # 
+
+    # client-id OAuth
+    # api_key
+    # client-secret OAuth
+    # CLIENT_SECRET
