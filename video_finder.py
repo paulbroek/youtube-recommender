@@ -3,6 +3,7 @@
 """
 Created on Wed Nov 11 16:09:52 2020
 @author: chrislovejoy
+From: https://github.com/chris-lovejoy/YouTube-video-finder/
 """
 
 from typing import List, Union, Dict
@@ -13,10 +14,10 @@ import pandas as pd
 from datetime import datetime, timedelta
 from apiclient.discovery import build
 
-from rarc.utils.log import setup_logger
+from rarc_utils.log import setup_logger
 
 log_fmt     = "%(asctime)s - %(module)-14s - %(lineno)-4s - %(funcName)-16s - %(levelname)-7s - %(message)s"  #name
-logger      = setup_logger(cmdLevel=logging.INFO, saveFile=0, savePandas=1, fmt=log_fmt)
+logger      = setup_logger(cmdLevel=logging.INFO, saveFile=0, savePandas=1, fmt=log_fmt) # DEBUG
 
 def get_start_date_string(search_period_days: int) -> str:
     """Returns string for date at start of search period."""
@@ -200,21 +201,3 @@ def custom_score(viewcount, ratio, days_since_published):
     ratio = min(ratio, 5)
     score = (viewcount * ratio) / days_since_published
     return score
-
-if __name__ == '__main__':
-
-    api_key = "api_key"
-
-    # uploaded_since = datetime.utcnow() - timedelta(days=60)
-
-    days = 60
-    uploaded_since = get_start_date_string(days)
-
-    res = search_each_term(["Peterson"], api_key, uploaded_since)
-    # youtube_api = build('youtube', 'v3', developerKey = api_key)
-    # 
-
-    # client-id OAuth
-    # api_key
-    # client-secret OAuth
-    # CLIENT_SECRET

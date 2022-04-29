@@ -14,7 +14,7 @@
 from googleapiclient.discovery import build
 
 # Call the YouTube API. To create API Key, go to Gogole cloud console -> Enable APIs page, and find "YouTube Data API v3"
-api_key = "api_key" # Enter your own API key – this one won’t work
+# api_key =  # Enter your own API key – this one won’t work
 
 youtube_api = build("youtube", "v3", developerKey=api_key)
 
