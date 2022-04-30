@@ -4,25 +4,24 @@
 Find and download captions from YouTube API
 """
 
-from typing import List, Union, Dict, Any
+from typing import List, Dict, Any #, Union
 import logging
 
 # Load dependencies
-from datetime import datetime, timedelta
-import pandas as pd
+# from datetime import datetime, timedelta
+# import pandas as pd
 from apiclient.discovery import build
 from youtube_transcript_api import YouTubeTranscriptApi
 
 logger = logging.getLogger(__name__)
 
 
-def search_each_video(
-    search_terms: Union[str, List[str]], api_key
-) -> Dict[str, pd.DataFrame]:
-    """search each video for captions"""
+# def search_each_video(
+#     search_terms: Union[str, List[str]], api_key
+# ) -> Dict[str, pd.DataFrame]:
+#     """search each video for captions"""
 
-    pass
-
+#     pass
 
 def list_captions(video_id: str, api_key: str):
     """Executes captions search through API and returns result."""
@@ -63,21 +62,3 @@ def captions_to_str(captions: List[Dict[str, Any]], sep=', ') -> str:
     texts = [t['text'] for t in captions]
 
     return sep.join(texts)
-
-# def find_captions(search_terms, api_key):
-#     """Calls other functions (below) to find results and populate dataframe."""
-
-#     # Initialise results dataframe
-#     dataframe = pd.DataFrame(columns=('Title', 'Video URL', 'Custom_Score',
-#                             'Views', 'Channel Name','Num_subscribers',
-#                             'View-Subscriber Ratio','Channel URL'))
-
-#     # Run search
-#     search_results, youtube_api = search_api(search_terms, api_key,
-#                                                         uploaded_since)
-
-#     results_df = populate_dataframe(search_results, youtube_api, dataframe,
-#                                                         views_threshold)
-
-#     return results_df
-
