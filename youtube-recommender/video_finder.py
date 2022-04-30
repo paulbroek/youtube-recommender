@@ -9,12 +9,11 @@ From:
 
 from typing import List, Union, Dict
 import logging
-
-# Load dependencies
-import pandas as pd
 from datetime import datetime, timedelta
-from apiclient.discovery import build
 
+import pandas as pd
+
+from apiclient.discovery import build
 from rarc_utils.log import setup_logger
 
 log_fmt     = "%(asctime)s - %(module)-14s - %(lineno)-4s - %(funcName)-16s - %(levelname)-7s - %(message)s"  #name
