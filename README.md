@@ -6,6 +6,9 @@ Extends on [this](https://github.com/chris-lovejoy/YouTube-video-finder) repo, b
 
 ## 1.1 Requirements
 
+-   [x] Retrieve videos by search term
+-   [x] Retrieve captions by video_id
+-   [ ] Join YouTube API metadata and YouTubeTranscriptApi captions data into one dataset
 -   [ ] Retrieve personal watch history
 -   [ ] Get all, or popular video **genres**
 -   [ ] With these genres, try to make **recommendations**

@@ -1,7 +1,8 @@
 """ 
 extract topic models using spacy
 
-help: https://medium.com/@soorajsubrahmannian/extracting-hidden-topics-in-a-corpus-55b2214fc17d
+help: 
+    https://medium.com/@soorajsubrahmannian/extracting-hidden-topics-in-a-corpus-55b2214fc17d
 """
 
 import pandas as pd
@@ -17,10 +18,10 @@ NUM_TOPIC = 10
 
 
 def clean_up(text):
-    """ Step-1: clean up your text and generate list of words for each document. 
-    I recommend you go through an introductory tutorial on Spacy in this link. 
-    The content inside the cleanup function is designed for a specific action. 
-    I have provided two examples in the github repo """
+    """Step-1: clean up your text and generate list of words for each document.
+    I recommend you go through an introductory tutorial on Spacy in this link.
+    The content inside the cleanup function is designed for a specific action.
+    I have provided two examples in the github repo"""
 
     removal = ["ADV", "PRON", "CCONJ", "PUNCT", "PART", "DET", "ADP", "SPACE"]
     text_out = []
@@ -34,6 +35,7 @@ def clean_up(text):
         ):
             lemma = token.lemma_
             text_out.append(lemma)
+
     return text_out
 
 
