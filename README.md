@@ -50,7 +50,10 @@ ipy youtube-recommender/main.py 'search term 1' --search-period 29
 Download captions for YouTube videos, optionally extract latent topics
 
 ```bash
-ipy youtube-recommender/topicer.py 'video_id_1' 'video_id_2'
+ipy youtube-recommender/topicer.py -- 'video_id_1' 'video_id_2'
+
+# optionally save captions to feather file
+ipy youtube-recommender/topicer.py -- 'video_id_1' 'video_id_2' --save_captions
 
 # to inspect results, inspect `captions` object`
 ```
