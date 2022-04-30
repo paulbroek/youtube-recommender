@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
@@ -10,9 +9,10 @@ This module imports and calls the function to execute the API call
 and print results to the console.
 """
 
+import argparse
 import yaml
 import video_finder as vf
-import argparse
+import caption_finder as cf
 
 parser = argparse.ArgumentParser(description='Defining search parameters')
 parser.add_argument('search_terms', type=str, nargs='+',
@@ -34,6 +34,15 @@ def load_yaml(filepath):
 config = load_yaml('./config.yaml')
 
 if __name__ == "__main__":
-    start_date_string = vf.get_start_date_string(args.search_period)
-    res = vf.search_each_term(args.search_terms, config['api_key'],
-                        start_date_string)
+    # start_date_string = vf.get_start_date_string(args.search_period)
+    # res = vf.search_each_term(args.search_terms, config['api_key'],
+    #                     start_date_string)
+
+    video_id = 'IUAHUEy1V0Q'
+    res2, youtube_api = cf.list_captions(video_id, config['api_key'])
+
+    # caption_id = res2['items'][0]['id']
+    # caption = cf.download_caption(caption_id, youtube_api, tfmt='srt') # sbv
+
+    captions = cf.download_caption2(video_id)
+    caption_text = cf.captions_to_str(captions)

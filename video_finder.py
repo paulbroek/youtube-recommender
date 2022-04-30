@@ -3,7 +3,8 @@
 """
 Created on Wed Nov 11 16:09:52 2020
 @author: chrislovejoy
-From: https://github.com/chris-lovejoy/YouTube-video-finder/
+From: 
+    https://github.com/chris-lovejoy/YouTube-video-finder/
 """
 
 from typing import List, Union, Dict
