@@ -85,10 +85,12 @@ def search_api(search_terms, api_key, uploaded_since):
     # Initialise API call
     youtube_api = build('youtube', 'v3', developerKey = api_key)
 
-    #Make the search
+    # Make the search
+    # update by paul: I set relevanceLanguage to 'en', but it will still return other language videos
+    # filter them out later by classifying the related caption
     results = youtube_api.search().list(q=search_terms, part='snippet',
                                 type='video', order='viewCount', maxResults=50,
-                                publishedAfter=uploaded_since).execute()
+                                publishedAfter=uploaded_since, relevanceLanguage='en', ).execute()
 
     return results, youtube_api
 

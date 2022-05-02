@@ -8,6 +8,7 @@ Extends on [this](https://github.com/chris-lovejoy/YouTube-video-finder) repo, b
 
 -   [x] Retrieve videos by search term
 -   [x] Retrieve captions by video_id
+-   [ ] Dismiss non-English ideos by using [fastText](https://github.com/facebookresearch/fastText)
 -   [ ] Join YouTube API metadata and YouTubeTranscriptApi captions data into one dataset
 -   [ ] Retrieve personal watch history
 -   [ ] Get all, or popular video **genres**

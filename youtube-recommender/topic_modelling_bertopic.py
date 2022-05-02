@@ -1,10 +1,17 @@
 """
-inspired by:
+Based on:
     https://www.holisticseo.digital/python-seo/topic-modeling/
 
 Run:
+    conda activate py39
     cd ~/repos/youtube-recommender/youtube-recommender
     ipy topic_modelling_bertopic.py
+
+Caution: 
+    Bertopic doesn't work when number of documents is too low, see:
+    https://github.com/MaartenGr/BERTopic/issues/97
+
+    My solution is to concat duplicate lists together, so there are more docs to train on
 """
 
 import pandas as pd

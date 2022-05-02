@@ -10,9 +10,11 @@ import logging
 # Load dependencies
 # from datetime import datetime, timedelta
 import pandas as pd
+from yapic import json
 
+import langid
 from apiclient.discovery import build
-from youtube_transcript_api import YouTubeTranscriptApi
+from youtube_transcript_api import YouTubeTranscriptApi, NoTranscriptFound
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +59,12 @@ def download_caption_v2(video_id: str) -> List[Dict[str, Any]]:
 def download_captions(video_ids: List[str]) -> List[Dict[str, Any]]:
     res = []
     for video_id in video_ids:
-        captions: List[Dict[str, Any]] = download_caption_v2(video_id)
+        try:
+            captions: List[Dict[str, Any]] = download_caption_v2(video_id)
+        except NoTranscriptFound:
+            logger.error(f"cannot found caption for {video_id=}, probably not an english video, dismissing it")
+            continue
+
         row = dict(text=captions_to_str(captions, sep=", "), video_id=video_id)
         res.append(row)
 
@@ -69,6 +76,8 @@ def captions_to_df(captions: List[Dict[str, Any]]) -> pd.DataFrame:
     assert "text" in df.columns
     assert "video_id" in df.columns
     df["text_len"] = df["text"].map(len)
+    df["language_cl"] = df["text"].map(langid.classify)
+    df["language_cl"] = df["language_cl"].map(json.dumps)
     # todo: combine youtube api metadata with captions data
     # or use separate method for this?
 
