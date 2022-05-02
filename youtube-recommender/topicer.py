@@ -18,7 +18,7 @@ parser = argparse.ArgumentParser(description="Defining parameters")
 parser.add_argument(
     "video_ids",
     type=str,
-    nargs="+",
+    nargs="*",
     help="The YouTube videos to extract captions from. Can be multiple.",
 )
 parser.add_argument(

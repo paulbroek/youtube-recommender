@@ -62,5 +62,8 @@ ipy youtube-recommender/topicer.py -- 'video_id_1' 'video_id_2'
 # optionally save captions to feather file
 ipy youtube-recommender/topicer.py -- 'video_id_1' 'video_id_2' --save_captions
 
+# load video_ids from top_videos.feather file automatically
+ipy youtube-recommender/topicer.py -- --save_captions --from_feather
+
 # to inspect results, inspect `captions` object`
 ```
