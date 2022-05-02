@@ -14,7 +14,7 @@ from yapic import json
 
 import langid
 from apiclient.discovery import build
-from youtube_transcript_api import YouTubeTranscriptApi, NoTranscriptFound
+from youtube_transcript_api import YouTubeTranscriptApi, NoTranscriptFound, TranscriptsDisabled
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +63,9 @@ def download_captions(video_ids: List[str]) -> List[Dict[str, Any]]:
             captions: List[Dict[str, Any]] = download_caption_v2(video_id)
         except NoTranscriptFound:
             logger.error(f"cannot find caption for {video_id=}, probably not an english video, dismissing it")
+            continue
+        except TranscriptsDisabled:
+            logger.error(f"captions are disabled for {video_id=}, dismissing it")
             continue
 
         row = dict(text=captions_to_str(captions, sep=", "), video_id=video_id)
