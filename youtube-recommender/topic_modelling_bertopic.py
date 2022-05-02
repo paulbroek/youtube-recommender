@@ -17,13 +17,14 @@ Caution:
 import pandas as pd
 # from sklearn.datasets import fetch_20newsgroups
 from bertopic import BERTopic
+from settings import CAPTIONS_PATH
 
-data = pd.read_feather("data/captions.feather")
+data = pd.read_feather(CAPTIONS_PATH)
 docs = data["text"].to_list()
 
 # bertopic only works with many documents, not a small number
-if len(docs) < 300:
-    dupls = 10
+if len(docs) < 20:
+    dupls = 5
     to_copy = docs.copy()
     for i in range(dupls):
         docs += to_copy
@@ -32,3 +33,6 @@ topic_model = BERTopic()
 
 # docs = fetch_20newsgroups(subset='all',  remove=('headers', 'footers', 'quotes'))['data']
 topics, probs = topic_model.fit_transform(docs)
+
+# inspect a topic
+# topic_model.get_topic(0)
