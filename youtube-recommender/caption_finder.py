@@ -62,7 +62,7 @@ def download_captions(video_ids: List[str]) -> List[Dict[str, Any]]:
         try:
             captions: List[Dict[str, Any]] = download_caption_v2(video_id)
         except NoTranscriptFound:
-            logger.error(f"cannot found caption for {video_id=}, probably not an english video, dismissing it")
+            logger.error(f"cannot find caption for {video_id=}, probably not an english video, dismissing it")
             continue
 
         row = dict(text=captions_to_str(captions, sep=", "), video_id=video_id)
@@ -76,6 +76,8 @@ def captions_to_df(captions: List[Dict[str, Any]]) -> pd.DataFrame:
     assert "text" in df.columns
     assert "video_id" in df.columns
     df["text_len"] = df["text"].map(len)
+
+    # todo: can be removed, since download_captions automatically dismisses non-english captions and therefore videos?
     df["language_cl"] = df["text"].map(langid.classify)
     df["language_cl"] = df["language_cl"].map(json.dumps)
     # todo: combine youtube api metadata with captions data

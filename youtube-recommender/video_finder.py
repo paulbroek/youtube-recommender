@@ -14,10 +14,8 @@ from datetime import datetime, timedelta
 import pandas as pd
 
 from apiclient.discovery import build
-from rarc_utils.log import setup_logger
 
-log_fmt     = "%(asctime)s - %(module)-14s - %(lineno)-4s - %(funcName)-16s - %(levelname)-7s - %(message)s"  #name
-logger      = setup_logger(cmdLevel=logging.INFO, saveFile=0, savePandas=1, fmt=log_fmt) # DEBUG
+logger = logging.getLogger(__name__)
 
 def get_start_date_string(search_period_days: int) -> str:
     """Returns string for date at start of search period."""
@@ -43,7 +41,7 @@ def search_each_term(search_terms: Union[str, List[str]], api_key, uploaded_sinc
         list_of_dfs.append(df)
 
     # 1 - concatenate them all
-    full_df = pd.concat((list_of_dfs),axis=0)
+    full_df = pd.concat((list_of_dfs), axis=0)
     full_df = full_df.sort_values(['Custom_Score'], ascending=[0])
     logger.debug("THE TOP VIDEOS OVERALL ARE:")
     print_top_videos(full_df, num_to_print)
@@ -95,7 +93,7 @@ def search_api(search_terms, api_key, uploaded_since):
     return results, youtube_api
 
 
-def populate_dataframe(results, youtube_api, df, views_threshold):
+def populate_dataframe(results, youtube_api, df, views_threshold) -> pd.DataFrame:
     """Extracts relevant information and puts into dataframe"""
     # Loop over search results and add key information to dataframe
     i = 1
@@ -117,7 +115,7 @@ def populate_dataframe(results, youtube_api, df, views_threshold):
     return df
 
 
-def print_top_videos(df, num_to_print):
+def print_top_videos(df, num_to_print) -> None:
     """Prints top videos to console, with details and link to video."""
     if len(df) < num_to_print:
         num_to_print = len(df)

@@ -2,10 +2,10 @@
 
 import argparse
 import logging
-from pathlib import Path
 
 from rarc_utils.log import setup_logger
 import caption_finder as cf
+from settings import DATA_DIR
 
 log_fmt     = "%(asctime)s - %(module)-14s - %(lineno)-4s - %(funcName)-16s - %(levelname)-7s - %(message)s"  #name
 logger      = setup_logger(cmdLevel=logging.INFO, saveFile=0, savePandas=1, fmt=log_fmt) # DEBUG
@@ -26,7 +26,6 @@ parser.add_argument(
 
 args = parser.parse_args()
 
-DATA_DIR = Path("youtube-recommender/data")
 CAPTIONS_FILE = 'captions.feather'
 CAPTIONS_PATH = DATA_DIR / CAPTIONS_FILE
 
