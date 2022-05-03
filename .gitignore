@@ -4,7 +4,8 @@ __pycache__/
 *$py.class
 
 config.yaml
-top_videos.feather
+# top_videos.feather
+*.feather
 
 # C extensions
 *.so
