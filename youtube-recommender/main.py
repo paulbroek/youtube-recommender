@@ -51,7 +51,7 @@ config = load_yaml("./config.yaml")
 if __name__ == "__main__":
     start_date_string = vf.get_start_date_string(args.search_period)
     res = vf.search_each_term(args.search_terms, config["api_key"], start_date_string)
-    df = res["top_videos"].reset_index()
+    df = res["top_videos"].reset_index(drop=True)
 
     if args.filter:
         df = dm.classify_language(df, "Title")

@@ -3,14 +3,12 @@ CLI tool to extract topics from youtube videos
 @author: paulbroek
 """
 
-from os import path
 import argparse
 import logging
 
-import pandas as pd
-
 from rarc_utils.log import setup_logger
 import caption_finder as cf
+import data_methods as dm
 from settings import VIDEOS_PATH, CAPTIONS_PATH
 
 log_fmt = "%(asctime)s - %(module)-14s - %(lineno)-4s - %(funcName)-18s - %(levelname)-7s - %(message)s"  # name
@@ -38,6 +36,12 @@ parser.add_argument(
     help=f"select first `n` rows from feather file",
 )
 parser.add_argument(
+    "--merge_with_videos",
+    action="store_true",
+    default=False,
+    help="merge resulting captions dataset with videos metadata",
+)
+parser.add_argument(
     "--save_captions",
     action="store_true",
     default=False,
@@ -50,9 +54,8 @@ if __name__ == "__main__":
 
     # parse video_ids
     if args.from_feather:
-        # check if file exists, or warn user to run main.py first
-        assert path.exists(VIDEOS_PATH), f"{VIDEOS_PATH.as_posix()} does not exist, create it by running e.g.: `ipy youtube-recommender/main.py -- 'robbins' 'earth' --save`"
-        vdf = pd.read_feather(VIDEOS_PATH)
+
+        vdf = cf.load_feather(VIDEOS_PATH)
         video_ids = vdf.video_id.to_list()
         if args.n > 0:
             video_ids = video_ids[:args.n]
@@ -64,6 +67,9 @@ if __name__ == "__main__":
     # download captions
     captions = cf.download_captions(video_ids)
     df = cf.captions_to_df(captions)
+
+    if args.merge_with_videos:
+        df = dm.merge_captions_with_videos(df, vdf)
 
     if args.save_captions:
 

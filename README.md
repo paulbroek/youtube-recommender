@@ -9,7 +9,7 @@ Extends on [this](https://github.com/chris-lovejoy/YouTube-video-finder) repo, b
 -   [x] Retrieve videos by search term
 -   [x] Retrieve captions by video_id
 -   [x] Dismiss non-English ideos with help of [langid](https://github.com/saffsd/langid.py)
--   [ ] Join YouTube API metadata and YouTubeTranscriptApi captions data into one dataset
+-   [x] Join YouTube API metadata and YouTubeTranscriptApi captions data into one dataset
 -   [ ] Retrieve personal watch history
 -   [ ] Get all, or popular video **genres**
 -   [ ] With these genres, try to make **recommendations**
@@ -64,6 +64,9 @@ ipy youtube-recommender/topicer.py -- 'video_id_1' 'video_id_2' --save_captions
 
 # load video_ids from top_videos.feather file automatically
 ipy youtube-recommender/topicer.py -- --save_captions --from_feather
+
+# keep videos data with captions
+ipy youtube-recommender/topicer.py -- --save_captions --from_feather --merge_with_videos
 
 # to inspect results, inspect `captions` object`
 ```
