@@ -58,7 +58,7 @@ if __name__ == "__main__":
         vdf = cf.load_feather(VIDEOS_PATH)
         video_ids = vdf.video_id.to_list()
         if args.n > 0:
-            video_ids = video_ids[:args.n]
+            video_ids = video_ids[: args.n]
 
         logger.info(f"loaded {len(video_ids):,} video metadata rows")
     else:

@@ -15,6 +15,7 @@ Caution:
 """
 
 import pandas as pd
+
 # from sklearn.datasets import fetch_20newsgroups
 from bertopic import BERTopic
 from settings import CAPTIONS_PATH

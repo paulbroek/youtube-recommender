@@ -55,7 +55,7 @@ if __name__ == "__main__":
 
     if args.filter:
         df = dm.classify_language(df, "Title")
-        df = dm.keep_language(df, 'en')
+        df = dm.keep_language(df, "en")
 
     if args.save:
 

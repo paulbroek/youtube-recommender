@@ -34,9 +34,9 @@ def classify_language(df: pd.DataFrame, column: str) -> pd.DataFrame:
 
     df = df.copy()
 
-    df[LANGUAGE_CL]     = df[column].map(langid.classify)
-    df[LANGUAGE_CODE]   = df[LANGUAGE_CL].map(itemgetter(0))
-    df[LANGUAGE_CL]     = df[LANGUAGE_CL].map(json.dumps)  # makes it serializable
+    df[LANGUAGE_CL] = df[column].map(langid.classify)
+    df[LANGUAGE_CODE] = df[LANGUAGE_CL].map(itemgetter(0))
+    df[LANGUAGE_CL] = df[LANGUAGE_CL].map(json.dumps)  # makes it serializable
 
     return df
 
@@ -59,11 +59,18 @@ def keep_language(df: pd.DataFrame, lang_code: str) -> pd.DataFrame:
 
     return df
 
-def merge_captions_with_videos(df_captions: pd.DataFrame, df_videos: pd.DataFrame, dropCols=('language_cl', 'language_code', 'Video URL')) -> pd.DataFrame:
-    
+
+def merge_captions_with_videos(
+    df_captions: pd.DataFrame,
+    df_videos: pd.DataFrame,
+    dropCols=("language_cl", "language_code", "Video URL"),
+) -> pd.DataFrame:
+
     vdf = df_videos.drop(list(dropCols), axis=1)
 
     # join on `video_id`
-    bdf = pd.merge(df_captions, vdf, left_on='video_id', right_on='video_id')
+    bdf = pd.merge(df_captions, vdf, left_on="video_id", right_on="video_id")
+
+    logger.info("merged df_captions with df_videos")
 
     return bdf

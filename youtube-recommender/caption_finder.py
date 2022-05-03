@@ -11,7 +11,11 @@ import logging
 import pandas as pd
 
 from apiclient.discovery import build
-from youtube_transcript_api import YouTubeTranscriptApi, NoTranscriptFound, TranscriptsDisabled
+from youtube_transcript_api import (
+    YouTubeTranscriptApi,
+    NoTranscriptFound,
+    TranscriptsDisabled,
+)
 
 import data_methods as dm
 
@@ -61,7 +65,9 @@ def download_captions(video_ids: List[str]) -> List[Dict[str, Any]]:
         try:
             captions: List[Dict[str, Any]] = download_caption_v2(video_id)
         except NoTranscriptFound:
-            logger.error(f"cannot find caption for {video_id=}, probably not an english video, dismissing it")
+            logger.error(
+                f"cannot find caption for {video_id=}, probably not an english video, dismissing it"
+            )
             continue
         except TranscriptsDisabled:
             logger.error(f"captions are disabled for {video_id=}, dismissing it")
@@ -96,10 +102,13 @@ def captions_to_str(captions: List[Dict[str, Any]], sep=", ") -> str:
 
     return sep.join(texts)
 
+
 def load_feather(videos_path) -> pd.DataFrame:
 
     # check if file exists, or warn user to run main.py first
-    assert path.exists(videos_path), f"{videos_path.as_posix()} does not exist, create it by running e.g.: `ipy youtube-recommender/main.py -- 'robbins' 'earth' --save`"
+    assert path.exists(
+        videos_path
+    ), f"{videos_path.as_posix()} does not exist, create it by running e.g.: `ipy youtube-recommender/main.py -- 'robbins' 'earth' --save`"
     vdf = pd.read_feather(videos_path)
 
     return vdf
