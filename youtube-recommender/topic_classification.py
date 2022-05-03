@@ -11,6 +11,7 @@
 		https://wandb.ai/authors/Kaggle-NLP/reports/Kaggle-s-NLP-Text-Classification--VmlldzoxOTcwNTc
 		https://www.dataquest.io/blog/tutorial-text-classification-in-python-using-spacy/
 		https://medium.com/analytics-vidhya/nlp-tutorial-for-text-classification-in-python-8f19cd17b49e
+		https://realpython.com/python-keras-text-classification/
 	
 	todo:
 		- select a topic collection model
@@ -25,11 +26,11 @@ import spacy
 from utils.nlp import clean_up
 from settings import SPACY_MODEL, CAPTIONS_PATH
 
+# load spacy model and dataset
 nlp = spacy.load(SPACY_MODEL)
 data = pd.read_feather(CAPTIONS_PATH)
 
 clean_up = partial(clean_up, nlp=nlp)
-
 datalist = data.text.map(clean_up)
 
 raise NotImplementedError

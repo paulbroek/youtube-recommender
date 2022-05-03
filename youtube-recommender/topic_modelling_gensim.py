@@ -19,12 +19,13 @@ from gensim import corpora as gs_corpora
 from utils.nlp import clean_up
 from settings import SPACY_MODEL, CAPTIONS_PATH
 
+# load spacy model and dataset
 nlp = spacy.load(SPACY_MODEL)
-clean_up = partial(clean_up, nlp=nlp)
 data = pd.read_feather(CAPTIONS_PATH)
 
 NUM_TOPIC = 10
 
+clean_up = partial(clean_up, nlp=nlp)
 datalist = data.text.map(clean_up)
 
 # Step-2: Create a vocabulary for the lda model and

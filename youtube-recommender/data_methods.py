@@ -34,9 +34,9 @@ def classify_language(df: pd.DataFrame, column: str) -> pd.DataFrame:
 
     df = df.copy()
 
-    df[LANGUAGE_CL] = df[column].map(langid.classify)
-    df[LANGUAGE_CODE] = df[LANGUAGE_CL].map(itemgetter(0))
-    df[LANGUAGE_CL] = df[LANGUAGE_CL].map(json.dumps)  # makes it serializable
+    df[LANGUAGE_CL]     = df[column].map(langid.classify)
+    df[LANGUAGE_CODE]   = df[LANGUAGE_CL].map(itemgetter(0))
+    df[LANGUAGE_CL]     = df[LANGUAGE_CL].map(json.dumps)  # makes it serializable
 
     return df
 
