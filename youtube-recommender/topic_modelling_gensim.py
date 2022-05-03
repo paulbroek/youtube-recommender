@@ -3,43 +3,28 @@ extract topic models using spacy
 
 help: 
     https://medium.com/@soorajsubrahmannian/extracting-hidden-topics-in-a-corpus-55b2214fc17d
+
+run:
+    cd ~/repos/youtube-recommender
+    ipy youtube-recommender/topic_modelling_gensim.py
 """
 
+from functools import partial
 import pandas as pd
 
 import spacy
 from gensim import models as gs_models
 from gensim import corpora as gs_corpora
 
-nlp = spacy.load("en_core_web_sm")
-data = pd.read_feather("data/captions.feather")
+from utils.nlp import clean_up
+from settings import SPACY_MODEL, CAPTIONS_PATH
+
+nlp = spacy.load(SPACY_MODEL)
+clean_up = partial(clean_up, nlp=nlp)
+data = pd.read_feather(CAPTIONS_PATH)
 
 NUM_TOPIC = 10
 
-
-def clean_up(text):
-    """Step-1: clean up your text and generate list of words for each document.
-    I recommend you go through an introductory tutorial on Spacy in this link.
-    The content inside the cleanup function is designed for a specific action.
-    I have provided two examples in the github repo"""
-
-    removal = ["ADV", "PRON", "CCONJ", "PUNCT", "PART", "DET", "ADP", "SPACE"]
-    text_out = []
-    doc = nlp(text)
-    for token in doc:
-        if (
-            not token.is_stop
-            and token.is_alpha
-            and len(token) > 2
-            and token.pos_ not in removal
-        ):
-            lemma = token.lemma_
-            text_out.append(lemma)
-
-    return text_out
-
-
-# datalist = data.text.apply(lambda x: clean_up(x))
 datalist = data.text.map(clean_up)
 
 # Step-2: Create a vocabulary for the lda model and
@@ -59,3 +44,8 @@ lda = Lda(
     chunksize=2000,
     random_state=3,
 )
+
+# Step-4 : inspect topics
+
+# lda.show_topics(0)
+# lda.show_topics(1)
