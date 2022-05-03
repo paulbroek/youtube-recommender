@@ -1,4 +1,7 @@
-""" CLI tool to extract topics from youtube videos """
+""" topicer.py
+CLI tool to extract topics from youtube videos 
+@author: paulbroek
+"""
 
 from os import path
 import argparse
@@ -10,7 +13,7 @@ from rarc_utils.log import setup_logger
 import caption_finder as cf
 from settings import VIDEOS_PATH, CAPTIONS_PATH
 
-log_fmt = "%(asctime)s - %(module)-14s - %(lineno)-4s - %(funcName)-16s - %(levelname)-7s - %(message)s"  # name
+log_fmt = "%(asctime)s - %(module)-14s - %(lineno)-4s - %(funcName)-18s - %(levelname)-7s - %(message)s"  # name
 logger = setup_logger(
     cmdLevel=logging.INFO, saveFile=0, savePandas=1, fmt=log_fmt
 )  # DEBUG
@@ -45,6 +48,7 @@ args = parser.parse_args()
 
 if __name__ == "__main__":
 
+    # parse video_ids
     if args.from_feather:
         # check if file exists, or warn user to run main.py first
         assert path.exists(VIDEOS_PATH), f"{VIDEOS_PATH.as_posix()} does not exist, create it by running e.g.: `ipy youtube-recommender/main.py -- 'robbins' 'earth' --save`"
@@ -57,6 +61,7 @@ if __name__ == "__main__":
     else:
         video_ids = args.video_ids
 
+    # download captions
     captions = cf.download_captions(video_ids)
     df = cf.captions_to_df(captions)
 

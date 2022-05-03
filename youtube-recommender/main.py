@@ -15,6 +15,7 @@ import logging
 from rarc_utils.log import setup_logger
 
 import video_finder as vf
+import data_methods as dm
 from utils.misc import load_yaml
 from settings import VIDEOS_PATH
 
@@ -31,6 +32,12 @@ parser.add_argument(
     "--search-period", type=int, default=7, help="The number of days to search for."
 )
 parser.add_argument(
+    "--filter",
+    action="store_true",
+    default=False,
+    help="filter non English titles from dataset using langid",
+)
+parser.add_argument(
     "--save",
     action="store_true",
     default=False,
@@ -44,11 +51,18 @@ config = load_yaml("./config.yaml")
 if __name__ == "__main__":
     start_date_string = vf.get_start_date_string(args.search_period)
     res = vf.search_each_term(args.search_terms, config["api_key"], start_date_string)
+    df = res["top_videos"].reset_index()
+
+    if args.filter:
+        df = dm.classify_language(df, "Title")
+        df = dm.keep_language(df, 'en')
 
     if args.save:
-        df = res["top_videos"].reset_index()
+
         # extract video_id from url
-        df['video_id'] = df['Video URL'].str.rsplit('?v=', n=1).str[1]
+        df = dm.extract_video_id(df)
+
+        # save video metadata to feather file
         df.to_feather(VIDEOS_PATH)
         logger.info(
             f"saved {len(df):,} top_videos metadata to {VIDEOS_PATH.as_posix()}"

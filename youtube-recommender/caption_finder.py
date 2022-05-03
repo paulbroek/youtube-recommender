@@ -7,15 +7,12 @@ Find and download captions from YouTube API
 from typing import List, Dict, Any  # , Union
 import logging
 
-# Load dependencies
-# from datetime import datetime, timedelta
 import pandas as pd
-from yapic import json
 
-import langid
 from apiclient.discovery import build
 from youtube_transcript_api import YouTubeTranscriptApi, NoTranscriptFound, TranscriptsDisabled
 
+from utils.misc import classify_language
 logger = logging.getLogger(__name__)
 
 
@@ -81,8 +78,8 @@ def captions_to_df(captions: List[Dict[str, Any]]) -> pd.DataFrame:
     df["text_len"] = df["text"].map(len)
 
     # todo: can be removed, since download_captions automatically dismisses non-english captions and therefore videos?
-    df["language_cl"] = df["text"].map(langid.classify)
-    df["language_cl"] = df["language_cl"].map(json.dumps)
+    df = classify_language(df, "text")
+
     # todo: combine youtube api metadata with captions data
     # or use separate method for this?
 

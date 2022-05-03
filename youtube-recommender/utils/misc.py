@@ -1,4 +1,9 @@
+""" misc.py
+miscelannous utility methods for youtube-recommender
+"""
+
 import yaml
+
 
 def load_yaml(filepath):
     """Import YAML config file."""

@@ -8,7 +8,7 @@ Extends on [this](https://github.com/chris-lovejoy/YouTube-video-finder) repo, b
 
 -   [x] Retrieve videos by search term
 -   [x] Retrieve captions by video_id
--   [ ] Dismiss non-English ideos by using [fastText](https://github.com/facebookresearch/fastText)
+-   [x] Dismiss non-English ideos with help of [langid](https://github.com/saffsd/langid.py)
 -   [ ] Join YouTube API metadata and YouTubeTranscriptApi captions data into one dataset
 -   [ ] Retrieve personal watch history
 -   [ ] Get all, or popular video **genres**
@@ -51,7 +51,7 @@ ipy youtube-recommender/main.py -- 'search term 1' --search-period 29
 # save top_videos to feather
 ipy youtube-recommender/main.py -- 'search term 1' 'search term 2' --save
 
-# to inspect results, inspect `res` object`
+# to inspect results, inspect `res` object`, or `df` for only top_videos
 ```
 
 Download captions for YouTube videos, optionally extract latent topics
