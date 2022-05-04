@@ -4,9 +4,10 @@
 Find and download captions from YouTube API
 """
 
-from typing import List, Dict, Any  # , Union
+from typing import List, Dict, Any, Optional  # , Union
 from os import path
 import logging
+import asyncio
 
 import pandas as pd
 
@@ -52,32 +53,52 @@ def download_caption(caption_id: str, youtube_api, tfmt: str):
     return subtitle
 
 
-def download_caption_v2(video_id: str) -> List[Dict[str, Any]]:
+def download_caption_v2(video_id: str) -> Optional[List[Dict[str, Any]]]:
     """download caption using youtube_transcript_api"""
-    captions = YouTubeTranscriptApi.get_transcript(video_id)
+    
+    captions: Optional[List[Dict[str, Any]]] = None
+
+    try:
+        captions = YouTubeTranscriptApi.get_transcript(video_id)
+    except NoTranscriptFound:
+        logger.error(
+            f"cannot find caption for {video_id=}, probably not an english video, dismissing it"
+        )
+    except TranscriptsDisabled:
+        logger.error(f"captions are disabled for {video_id=}, dismissing it")
+
+
+    if captions is not None:
+        return captions_to_dict(captions, video_id)
 
     return captions
 
 
 def download_captions(video_ids: List[str]) -> List[Dict[str, Any]]:
-    res = []
-    for video_id in video_ids:
-        try:
-            captions: List[Dict[str, Any]] = download_caption_v2(video_id)
-        except NoTranscriptFound:
-            logger.error(
-                f"cannot find caption for {video_id=}, probably not an english video, dismissing it"
-            )
-            continue
-        except TranscriptsDisabled:
-            logger.error(f"captions are disabled for {video_id=}, dismissing it")
-            continue
+    """ download captions in blocking way
+        usage:
+            captions = cf.download_captions(video_ids)
+    """
 
-        row = dict(text=captions_to_str(captions, sep=", "), video_id=video_id)
-        res.append(row)
+    res = [download_caption_v2(video_id) for video_id in video_ids]
+    return list(filter(None, res))
 
-    return res
 
+async def adownload_captions(video_ids: List[str]) -> List[Dict[str, Any]]:
+    """ speeding up downloading of captions by running them concurrently 
+        usage:
+            captions = loop.run_until_complete(cf.adownload_captions(video_ids))
+    """
+
+    loop = asyncio.get_running_loop()
+
+    cors = [loop.run_in_executor(None, download_caption_v2, video_id) for video_id in video_ids]
+
+    captions = await asyncio.gather(*cors)
+    return list(filter(None, captions))
+
+def captions_to_dict(captions, video_id) -> dict:
+    return dict(text=captions_to_str(captions, sep=", "), video_id=video_id)
 
 def captions_to_df(captions: List[Dict[str, Any]]) -> pd.DataFrame:
     df = pd.DataFrame(captions)

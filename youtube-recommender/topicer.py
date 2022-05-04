@@ -4,7 +4,9 @@ CLI tool to extract topics from youtube videos
 """
 
 import argparse
+import sys
 import logging
+import asyncio
 
 from rarc_utils.log import setup_logger
 import caption_finder as cf
@@ -36,6 +38,12 @@ parser.add_argument(
     help=f"select first `n` rows from feather file",
 )
 parser.add_argument(
+    "--dryrun",
+    action="store_true",
+    default=False,
+    help="only load data, do not download captions",
+)
+parser.add_argument(
     "--merge_with_videos",
     action="store_true",
     default=False,
@@ -52,6 +60,8 @@ args = parser.parse_args()
 
 if __name__ == "__main__":
 
+    loop = asyncio.new_event_loop()
+
     # parse video_ids
     if args.from_feather:
 
@@ -63,6 +73,9 @@ if __name__ == "__main__":
         logger.info(f"loaded {len(video_ids):,} video metadata rows")
     else:
         video_ids = args.video_ids
+
+    if args.dryrun:
+        sys.exit()
 
     # download captions
     captions = cf.download_captions(video_ids)
