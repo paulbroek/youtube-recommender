@@ -23,6 +23,7 @@ Extends on [this](https://github.com/chris-lovejoy/YouTube-video-finder) repo, b
 ## 1.2 Nice to haves
 
 -   [ ] Use async http requests to query YouTube API
+-   [x] Query captions asynchronously
 
 ## 2.1 How to install
 
@@ -38,7 +39,7 @@ python -m spacy download en
 
 ## 2.2 How to run
 
-Search for YouTube videos
+Search for YouTube videos, example usage:
 
 ```bash
 # alias ipy="ipython --no-confirm-exit --no-banner -i"
@@ -54,7 +55,25 @@ ipy youtube-recommender/main.py -- 'search term 1' 'search term 2' --save
 # to inspect results, inspect `res` object`, or `df` for only top_videos
 ```
 
-Download captions for YouTube videos, optionally extract latent topics
+`main.py` help:
+
+```
+usage: main.py [-h] [--search-period SEARCH_PERIOD] [--filter] [--save] search_terms [search_terms ...]
+
+Defining search parameters
+
+positional arguments:
+  search_terms          The terms to query. Can be multiple.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --search-period SEARCH_PERIOD
+                        The number of days to search for.
+  --filter              filter non English titles from dataset using langid
+  --save                Save results to
+```
+
+Download captions for YouTube videos, example usage:
 
 ```bash
 ipy youtube-recommender/topicer.py -- 'video_id_1' 'video_id_2'
@@ -69,4 +88,23 @@ ipy youtube-recommender/topicer.py -- --save_captions --from_feather
 ipy youtube-recommender/topicer.py -- --save_captions --from_feather --merge_with_videos
 
 # to inspect results, inspect `captions` object`
+```
+
+`topicer.py` help:
+
+```
+usage: topicer.py [-h] [--from_feather] [-n N] [--dryrun] [--merge_with_videos] [--save_captions] [video_ids ...]
+
+Defining parameters
+
+positional arguments:
+  video_ids            The YouTube videos to extract captions from. Can be multiple.
+
+optional arguments:
+  -h, --help           show this help message and exit
+  --from_feather       Import video ids from `youtube-recommender/data/top_videos.feather`, created in main.py. ignores any manually passed video_ids
+  -n N                 select first `n` rows from feather file
+  --dryrun             only load data, do not download captions
+  --merge_with_videos  merge resulting captions dataset with videos metadata
+  --save_captions      Save captions to `youtube-recommender/data/captions.feather
 ```
