@@ -58,7 +58,7 @@ ipy youtube-recommender/main.py -- 'search term 1' 'search term 2' --save
 `main.py` help:
 
 ```
-usage: main.py [-h] [--search-period SEARCH_PERIOD] [--filter] [--save] search_terms [search_terms ...]
+usage: main.py [-h] [--search-period SEARCH_PERIOD] [--filter] [-s] search_terms [search_terms ...]
 
 Defining search parameters
 
@@ -70,7 +70,7 @@ optional arguments:
   --search-period SEARCH_PERIOD
                         The number of days to search for.
   --filter              filter non English titles from dataset using langid
-  --save                Save results to
+  -s, --save            Save results to
 ```
 
 Download captions for YouTube videos, example usage:
@@ -93,7 +93,7 @@ ipy youtube-recommender/topicer.py -- --save_captions --from_feather --merge_wit
 `topicer.py` help:
 
 ```
-usage: topicer.py [-h] [--from_feather] [-n N] [--dryrun] [--merge_with_videos] [--save_captions] [video_ids ...]
+usage: topicer.py [-h] [--from_feather] [-n N] [--dryrun] [--merge_with_videos] [-s] [video_ids ...]
 
 Defining parameters
 
@@ -106,5 +106,5 @@ optional arguments:
   -n N                 select first `n` rows from feather file
   --dryrun             only load data, do not download captions
   --merge_with_videos  merge resulting captions dataset with videos metadata
-  --save_captions      Save captions to `youtube-recommender/data/captions.feather
+  -s, --save_captions  Save captions to `youtube-recommender/data/captions.feather`
 ```

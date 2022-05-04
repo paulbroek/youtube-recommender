@@ -38,7 +38,7 @@ parser.add_argument(
     help="filter non English titles from dataset using langid",
 )
 parser.add_argument(
-    "--save",
+    "-s", "--save",
     action="store_true",
     default=False,
     help="Save results to ",

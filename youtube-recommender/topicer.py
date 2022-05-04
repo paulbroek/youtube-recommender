@@ -7,6 +7,7 @@ import argparse
 import sys
 import logging
 import asyncio
+import uvloop
 
 from rarc_utils.log import setup_logger
 import caption_finder as cf
@@ -50,7 +51,7 @@ parser.add_argument(
     help="merge resulting captions dataset with videos metadata",
 )
 parser.add_argument(
-    "--save_captions",
+    "-s", "--save_captions",
     action="store_true",
     default=False,
     help=f"Save captions to `{CAPTIONS_PATH.as_posix()}`",
@@ -60,6 +61,7 @@ args = parser.parse_args()
 
 if __name__ == "__main__":
 
+    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
     loop = asyncio.new_event_loop()
 
     # parse video_ids
@@ -78,7 +80,8 @@ if __name__ == "__main__":
         sys.exit()
 
     # download captions
-    captions = cf.download_captions(video_ids)
+    # captions = cf.download_captions(video_ids) # blocking way
+    captions = loop.run_until_complete(cf.adownload_captions(video_ids))
     df = cf.captions_to_df(captions)
 
     if args.merge_with_videos:
