@@ -43,7 +43,7 @@ def list_captions(video_id: str, api_key: str):
 
 
 def download_caption(caption_id: str, youtube_api, tfmt: str):
-    """download caption using YouTube APi
+    """download caption using YouTube API
     Caution: requires OAuth credentials, cannot fetch caption for other user's videos
     """
     subtitle = youtube_api.captions().download(id=caption_id, tfmt=tfmt).execute()
@@ -55,7 +55,7 @@ def download_caption(caption_id: str, youtube_api, tfmt: str):
 
 def download_caption_v2(video_id: str) -> Optional[List[Dict[str, Any]]]:
     """download caption using youtube_transcript_api"""
-    
+
     captions: Optional[List[Dict[str, Any]]] = None
 
     try:
@@ -67,7 +67,6 @@ def download_caption_v2(video_id: str) -> Optional[List[Dict[str, Any]]]:
     except TranscriptsDisabled:
         logger.error(f"captions are disabled for {video_id=}, dismissing it")
 
-
     if captions is not None:
         return captions_to_dict(captions, video_id)
 
@@ -75,9 +74,9 @@ def download_caption_v2(video_id: str) -> Optional[List[Dict[str, Any]]]:
 
 
 def download_captions(video_ids: List[str]) -> List[Dict[str, Any]]:
-    """ download captions in blocking way
-        usage:
-            captions = cf.download_captions(video_ids)
+    """download captions in blocking way
+    usage:
+        captions = cf.download_captions(video_ids)
     """
 
     res = [download_caption_v2(video_id) for video_id in video_ids]
@@ -85,32 +84,35 @@ def download_captions(video_ids: List[str]) -> List[Dict[str, Any]]:
 
 
 async def adownload_captions(video_ids: List[str]) -> List[Dict[str, Any]]:
-    """ speeding up downloading of captions by running them concurrently 
-        usage:
-            captions = loop.run_until_complete(cf.adownload_captions(video_ids))
+    """speeding up downloading of captions by running them concurrently
+    usage:
+        captions = loop.run_until_complete(cf.adownload_captions(video_ids))
     """
 
     loop = asyncio.get_running_loop()
 
-    cors = [loop.run_in_executor(None, download_caption_v2, video_id) for video_id in video_ids]
+    cors = [
+        loop.run_in_executor(None, download_caption_v2, video_id)
+        for video_id in video_ids
+    ]
 
     captions = await asyncio.gather(*cors)
     return list(filter(None, captions))
 
+
 def captions_to_dict(captions, video_id) -> dict:
     return dict(text=captions_to_str(captions, sep=", "), video_id=video_id)
 
-def captions_to_df(captions: List[Dict[str, Any]]) -> pd.DataFrame:
+
+def captions_to_df(captions: List[Dict[str, Any]], classify_lang=True) -> pd.DataFrame:
     df = pd.DataFrame(captions)
     assert "text" in df.columns
     assert "video_id" in df.columns
     df["text_len"] = df["text"].map(len)
 
-    # todo: can be removed, since download_captions automatically dismisses non-english captions and therefore videos?
-    df = dm.classify_language(df, "text")
-
-    # todo: combine youtube api metadata with captions data
-    # or use separate method for this?
+    # can be removed, since download_captions automatically dismisses non-english captions and therefore videos?
+    if classify_lang:
+        df = dm.classify_language(df, "text")
 
     return df
 
