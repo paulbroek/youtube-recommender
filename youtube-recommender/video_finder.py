@@ -10,6 +10,7 @@ From:
 from typing import List, Union, Dict
 import logging
 from datetime import datetime, timedelta
+import asyncio
 
 import pandas as pd
 
@@ -26,19 +27,15 @@ def get_start_date_string(search_period_days: int) -> str:
     return date_string
 
 
-def search_each_term(search_terms: Union[str, List[str]], api_key, uploaded_since,
+async def search_each_term(search_terms: Union[str, List[str]], api_key, uploaded_since,
                         views_threshold=5000, num_to_print=5) -> Dict[str, pd.DataFrame]:
     """Uses search term list to execute API calls and print results."""
 
     if isinstance(search_terms, str):
         search_terms = [search_terms]
 
-    list_of_dfs = []
-    for index, _ in enumerate(search_terms):
-        df = find_videos(search_terms[index], api_key, views_threshold=views_threshold,
-                         uploaded_since = uploaded_since)
-        df = df.sort_values(['Custom_Score'], ascending=[0])
-        list_of_dfs.append(df)
+    # list_of_dfs = find_all_terms(search_terms, api_key, uploaded_since, views_threshold)
+    list_of_dfs  = await afind_all_terms(search_terms, api_key, uploaded_since, views_threshold)
 
     # 1 - concatenate them all
     full_df = pd.concat((list_of_dfs), axis=0)
@@ -64,7 +61,7 @@ def find_videos(search_terms, api_key, views_threshold, uploaded_since):
 
     # Initialise results dataframe
     dataframe = pd.DataFrame(columns=('Title', 'Video URL', 'Custom_Score',
-                            'Views', 'Channel Name','Num_subscribers',
+                            'Views', 'Description', 'Channel Name','Num_subscribers',
                             'View-Subscriber Ratio','Channel URL'))
 
     # Run search
@@ -74,8 +71,36 @@ def find_videos(search_terms, api_key, views_threshold, uploaded_since):
     results_df = populate_dataframe(search_results, youtube_api, dataframe,
                                                         views_threshold)
 
+    results_df = results_df.sort_values(['Custom_Score'], ascending=[0])
+
     return results_df
 
+def find_all_terms(search_terms, api_key, uploaded_since, views_threshold):
+
+    list_of_dfs = []
+    for index, _ in enumerate(search_terms):
+        df = find_videos(search_terms[index], api_key, views_threshold=views_threshold,
+                         uploaded_since = uploaded_since)
+        
+        list_of_dfs.append(df)
+
+    return list_of_dfs
+
+async def afind_all_terms(search_terms, api_key, uploaded_since, views_threshold):
+    """speeding up downloading of captions by running them concurrently
+    usage:
+        results_df_dict = loop.run_until_complete(vf.afind_all_terms(search_terms, api_key, uploaded_since, views_threshold))
+    """
+
+    loop = asyncio.get_running_loop()
+
+    cors = [
+        loop.run_in_executor(None, find_videos, search_term, api_key, views_threshold, uploaded_since)
+        for search_term in search_terms
+    ]
+
+    list_of_dfs = await asyncio.gather(*cors)
+    return list_of_dfs
 
 def search_api(search_terms, api_key, uploaded_since):
     """Executes search through API and returns result."""
@@ -102,6 +127,7 @@ def populate_dataframe(results, youtube_api, df, views_threshold) -> pd.DataFram
         if viewcount > views_threshold:
             title = find_title(item)
             video_url = find_video_url(item)
+            description = find_description(item, youtube_api)
             channel_url = find_channel_url(item)
             channel_id = find_channel_id(item)
             channel_name = find_channel_title(channel_id, youtube_api)
@@ -109,7 +135,7 @@ def populate_dataframe(results, youtube_api, df, views_threshold) -> pd.DataFram
             ratio = view_to_sub_ratio(viewcount, num_subs)
             days_since_published = how_old(item)
             score = custom_score(viewcount, ratio, days_since_published)
-            df.loc[i] = [title, video_url, score, viewcount, channel_name,\
+            df.loc[i] = [title, video_url, score, viewcount, description, channel_name,\
                                     num_subs, ratio, channel_url]
         i += 1
     return df
@@ -153,6 +179,14 @@ def find_viewcount(item, youtube):
                                         part='statistics').execute()
     viewcount = int(video_statistics['items'][0]['statistics']['viewCount'])
     return viewcount
+
+def find_description(item, youtube):
+    """ added by paul """
+    video_id = item['id']['videoId']
+    video_statistics = youtube.videos().list(id=video_id,
+                                        part='snippet').execute()
+    description = video_statistics['items'][0]['snippet']['description']
+    return description
 
 def find_channel_id(item):
     channel_id = item['snippet']['channelId']

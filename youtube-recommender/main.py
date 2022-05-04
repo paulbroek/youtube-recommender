@@ -11,6 +11,9 @@ and print results to the console.
 
 import argparse
 import logging
+from time import time
+import asyncio
+import uvloop
 
 from rarc_utils.log import setup_logger
 
@@ -49,9 +52,16 @@ config = load_yaml("./config.yaml")
 
 
 if __name__ == "__main__":
+    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+    loop = asyncio.new_event_loop()
+
     start_date_string = vf.get_start_date_string(args.search_period)
-    res = vf.search_each_term(args.search_terms, config["api_key"], start_date_string)
+    t0 = time()
+    # res = vf.search_each_term(args.search_terms, config["api_key"], start_date_string)
+    res = loop.run_until_complete(vf.search_each_term(args.search_terms, config["api_key"], start_date_string))
+    elapsed = time() - t0
     df = res["top_videos"].reset_index(drop=True)
+    logger.info(f"got {len(df):,} rows in {elapsed:.2f} secs")
 
     if args.filter:
         df = dm.classify_language(df, "Title")

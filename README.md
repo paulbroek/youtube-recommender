@@ -22,7 +22,7 @@ Extends on [this](https://github.com/chris-lovejoy/YouTube-video-finder) repo, b
 
 ## 1.2 Nice to haves
 
--   [ ] Use async http requests to query YouTube API
+-   [x] Use async http requests to query YouTube API
 -   [x] Query captions asynchronously
 
 ## 2.1 How to install
