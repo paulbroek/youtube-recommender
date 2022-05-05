@@ -18,11 +18,24 @@ LANGUAGE_CODE = "language_code"
 
 def extract_video_id(df: pd.DataFrame, urlCol="Video URL") -> pd.DataFrame:
     """extracts YouTube's video_id from plain URL
-    example: https://www.youtube.com/watch?v=t0OX4jbFwvM --> t0OX4jbFwvM
+    example:
+        https://www.youtube.com/watch?v=t0OX4jbFwvM --> t0OX4jbFwvM
     """
     assert urlCol in df.columns
     df = df.copy()
     df["video_id"] = df[urlCol].str.rsplit("?v=", n=1).str[1]
+
+    return df
+
+
+def extract_channel_id(df: pd.DataFrame, urlCol="Channel URL") -> pd.DataFrame:
+    """extracts YouTube's channel_id from plain URL
+    example:
+        https://www.youtube.com/channel/UC6ObzOWveHCMF --> UC6ObzOWveHCMF
+    """
+    assert urlCol in df.columns
+    df = df.copy()
+    df["channel_id"] = df[urlCol].str.rsplit("/channel/", n=1).str[1]
 
     return df
 
@@ -34,9 +47,9 @@ def classify_language(df: pd.DataFrame, column: str) -> pd.DataFrame:
 
     df = df.copy()
 
-    df[LANGUAGE_CL]     = df[column].map(langid.classify)
-    df[LANGUAGE_CODE]   = df[LANGUAGE_CL].map(itemgetter(0))
-    df[LANGUAGE_CL]     = df[LANGUAGE_CL].map(json.dumps)  # makes it serializable
+    df[LANGUAGE_CL] = df[column].map(langid.classify)
+    df[LANGUAGE_CODE] = df[LANGUAGE_CL].map(itemgetter(0))
+    df[LANGUAGE_CL] = df[LANGUAGE_CL].map(json.dumps)  # makes it serializable
 
     return df
 

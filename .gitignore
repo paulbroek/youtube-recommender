@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 
 config.yaml
+postgres.cfg
 # top_videos.feather
 *.feather
 

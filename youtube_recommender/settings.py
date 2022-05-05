@@ -15,7 +15,7 @@ __all__ = [
 ##### File paths #####
 ######################
 
-DATA_DIR = Path("youtube-recommender/data")
+DATA_DIR = Path("youtube_recommender/data")
 
 VIDEOS_FILE = "top_videos.feather"
 VIDEOS_PATH = DATA_DIR / VIDEOS_FILE

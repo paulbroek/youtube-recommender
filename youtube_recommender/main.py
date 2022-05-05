@@ -71,6 +71,7 @@ if __name__ == "__main__":
 
         # extract video_id from url
         df = dm.extract_video_id(df)
+        df = dm.extract_channel_id(df)
 
         # save video metadata to feather file
         df.to_feather(VIDEOS_PATH)

@@ -10,8 +10,12 @@ import asyncio
 import uvloop
 
 from rarc_utils.log import setup_logger
+from rarc_utils.sqlalchemy_base import get_async_session, get_session #, aget_or_create_many
+
 import caption_finder as cf
 import data_methods as dm
+from db.models import Video, Channel, psql
+from db.helpers import create_many_items
 from settings import VIDEOS_PATH, CAPTIONS_PATH
 
 log_fmt = "%(asctime)s - %(module)-14s - %(lineno)-4s - %(funcName)-18s - %(levelname)-7s - %(message)s"  # name
@@ -51,10 +55,19 @@ parser.add_argument(
     help="merge resulting captions dataset with videos metadata",
 )
 parser.add_argument(
-    "-s", "--save_captions",
+    "-s",
+    "--save_captions",
     action="store_true",
     default=False,
     help=f"Save captions to `{CAPTIONS_PATH.as_posix()}`",
+)
+
+parser.add_argument(
+    "-p",
+    "--push_db",
+    action="store_true",
+    default=False,
+    help="push Video, Channel and Caption rows to postgres / redis`",
 )
 
 args = parser.parse_args()
@@ -63,6 +76,9 @@ if __name__ == "__main__":
 
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
     loop = asyncio.new_event_loop()
+
+    async_session = get_async_session(psql)
+    psession = get_session(psql)()
 
     # parse video_ids
     if args.from_feather:
@@ -91,3 +107,52 @@ if __name__ == "__main__":
 
         df.to_feather(CAPTIONS_PATH)
         logger.info(f"saved {len(df):,} captions to {CAPTIONS_PATH.as_posix()}")
+
+    if args.push_db:
+
+        # get list of dicts for Channel and Video
+        channel_recs = (
+            vdf.rename(
+                columns={
+                    "channel_id": "id",
+                    "Channel Name": "name",
+                    "Num_subscribers": "num_subscribers",
+                }
+            )[["id", "name", "num_subscribers"]]
+            .assign(index=vdf["channel_id"])
+            .set_index('index')
+            # .drop_duplicates(subset=["id"])
+            .drop_duplicates()
+            .to_dict("index")
+        )
+
+        # create channels from same dataset
+
+        channels_dict = loop.run_until_complete(
+            create_many_items(async_session, Channel, channel_recs, nameAttr="id", returnExisting=True)
+        )
+
+        # map the new channels into vdf
+        vdf["channel"] = vdf["channel_id"].map(channels_dict)
+
+        video_recs = (
+            vdf.rename(
+                columns={
+                    "video_id": "id",
+                    "Title": "title",
+                    "Description": "description",
+                    "Views": "views",
+                    "Custom_Score": "custom_score",
+                }
+            )[["id", "title", "description", "views", "custom_score", "channel_id", "channel"]]
+            .assign(index=vdf["video_id"])
+            .set_index('index')
+            .drop_duplicates()
+            .to_dict("index")
+        )
+
+        videos_dict = loop.run_until_complete(
+            create_many_items(async_session, Video, video_recs, nameAttr="id", returnExisting=False)
+        )
+
+        # todo: save captions to redis, or what other database?
