@@ -10,6 +10,7 @@ Extends on [this](https://github.com/chris-lovejoy/YouTube-video-finder) repo, b
 -   [x] Retrieve captions by video_id
 -   [x] Dismiss non-English ideos with help of [langid](https://github.com/saffsd/langid.py)
 -   [x] Join YouTube API metadata and YouTubeTranscriptApi captions data into one dataset
+-   [ ] Create data models in order to cache results to PostgreSQL
 -   [ ] Retrieve personal watch history
 -   [ ] Get all, or popular video **genres**
 -   [ ] With these genres, try to make **recommendations**
