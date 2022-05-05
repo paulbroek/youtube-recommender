@@ -34,7 +34,7 @@ Extends on [this](https://github.com/chris-lovejoy/YouTube-video-finder) repo, b
 pip install -r requirements.txt
 
 # download english corpus for SpaCy
-python -m spacy download en
+python -m spacy download en_core_web_sm
 ```
 
 ## 2.2 How to run

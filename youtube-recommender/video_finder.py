@@ -177,7 +177,12 @@ def find_viewcount(item, youtube):
     video_id = item['id']['videoId']
     video_statistics = youtube.videos().list(id=video_id,
                                         part='statistics').execute()
-    viewcount = int(video_statistics['items'][0]['statistics']['viewCount'])
+    # logger.info(f"{video_id=} {video_statistics['items'][0]['statistics']=}")
+    # videos with comments turned off will not return viewCount
+    if 'viewCount' not in video_statistics['items'][0]['statistics']:
+        viewcount = 0 
+    else:
+        viewcount = int(video_statistics['items'][0]['statistics']['viewCount'])
     return viewcount
 
 def find_description(item, youtube):

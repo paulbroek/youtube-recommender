@@ -3,6 +3,7 @@ google-auth-oauthlib
 google-auth-httplib2
 git+https://github.com/paulbroek/rarc-utils.git 
 youtube-transcript-api
+langid
 spacy
 gensim
 bertopic
