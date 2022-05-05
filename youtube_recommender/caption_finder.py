@@ -6,6 +6,7 @@ Find and download captions from YouTube API
 
 from typing import List, Dict, Any, Optional  # , Union
 from os import path
+from pathlib import Path
 import logging
 import asyncio
 
@@ -135,3 +136,9 @@ def load_feather(videos_path) -> pd.DataFrame:
     vdf = pd.read_feather(videos_path)
 
     return vdf
+
+def save_feather(df: pd.DataFrame, captions_path) -> None:
+    assert isinstance(captions_path, Path)
+    
+    df.to_feather(captions_path)
+    logger.info(f"saved {len(df):,} captions to {captions_path.as_posix()}")

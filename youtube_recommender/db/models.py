@@ -81,7 +81,7 @@ import logging
 # from random import sample, choice
 from pathlib import Path
 
-# import uuid
+import uuid
 # import json
 
 # from pprint import pprint
@@ -99,6 +99,7 @@ from sqlalchemy import (
     Interval,
     Boolean,
     Float,
+    LargeBinary,
 )  # , Index, PickleType
 from sqlalchemy import UniqueConstraint, CheckConstraint  # ,  ForeignKeyConstraint
 
@@ -129,7 +130,7 @@ from rarc_utils.misc import AttrDict, trunc_msg  # , timeago_series
 
 # import rarc_utils.config.redis as redis_config
 # from enabler import config as config_dir
-from .helpers import *
+from helpers import *
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
@@ -190,7 +191,7 @@ class Video(Base, UtilityBase):
 
 
 class Channel(Base, UtilityBase):
-    """Chanenel: contains metadata of YouTube channels: num_subscribers, id, ..."""
+    """Channel: contains metadata of YouTube channels: num_subscribers, id, ..."""
 
     __tablename__ = "channel"
     # id              = Column(Integer, primary_key=True)
@@ -209,6 +210,41 @@ class Channel(Base, UtilityBase):
         return "Channel(id={}, name={}, num_subscribers={})".format(
             self.id, self.name, self.num_subscribers
         )
+
+    def as_dict(self) -> dict:
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+    def json(self) -> dict:
+        return self.as_dict()
+
+
+class Caption(Base, UtilityBase):
+    """Caption: contains compressed captions in Bytes for YouTube videos """
+
+    __tablename__ = "caption"
+    id              = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+
+    video_id = Column(String, ForeignKey("video.id"), nullable=False)
+    video = relationship("Video", uselist=False, lazy="selectin")
+
+    length = Column(Integer, nullable=False)
+    compr = Column(LargeBinary, nullable=False)
+    compr_length = Column(Integer, nullable=False)
+    lang = Column(String, nullable=False)
+
+    created = Column(DateTime, server_default=func.now())  # current_timestamp()
+    updated = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    # add this so that it can be accessed
+    __mapper_args__ = {"eager_defaults": True}
+
+    def __repr__(self):
+        return "Caption(id={}, length={}, compr_length{}, compr%={.2f})".format(
+            self.id, self.length, self.compr_length, self.compr_pct() 
+        )
+
+    def compr_pct(self):
+        return self.compr_length / self.length
 
     def as_dict(self) -> dict:
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}

@@ -5,6 +5,7 @@
 
 from typing import Any, Optional  # Dict, Set, List, Tuple
 
+import zlib
 from sqlalchemy.future import select
 
 from rarc_utils.sqlalchemy_base import create_many
@@ -66,10 +67,14 @@ def get_str_mappings(psqConfig, models=()):
     return get_str_mappings_custom(psqConfig, models)
 
 
-async def create_many_items(asession, model, itemDicts, nameAttr="name", returnExisting=False):
+async def create_many_items(
+    asession, model, itemDicts, nameAttr="name", returnExisting=False
+):
 
     async with asession() as session:
-        items = await create_many(session, model, itemDicts, nameAttr=nameAttr, returnExisting=returnExisting)
+        items = await create_many(
+            session, model, itemDicts, nameAttr=nameAttr, returnExisting=returnExisting
+        )
 
     return items
 
@@ -82,3 +87,16 @@ def get_all(session, model):
     """
     stmt = select(model).filter()
     return list(session.execute(stmt).scalars())
+
+
+def compress_caption(caption: str) -> bytes:
+    """ compress str caption using zlib, saves ~ 50% storage """
+
+    assert isinstance(caption, str)
+    return zlib.compress(caption.encode())
+
+
+def decompress_caption(compr: bytes) -> str:
+
+    assert isinstance(compr, bytes)
+    return zlib.decompress(compr).decode()
