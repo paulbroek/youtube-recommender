@@ -32,6 +32,10 @@ Extends on [this](https://github.com/chris-lovejoy/YouTube-video-finder) repo, b
 
 ```bash
 # add YouTube v3 API key to config.yaml first!
+# structure:
+# api_key:
+#   "your_api_key"
+
 
 # install deps
 pip install -r requirements.txt
