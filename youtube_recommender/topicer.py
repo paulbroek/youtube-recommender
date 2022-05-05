@@ -11,12 +11,15 @@ import asyncio
 import uvloop
 
 from rarc_utils.log import setup_logger
-from rarc_utils.sqlalchemy_base import get_async_session, get_session #, aget_or_create_many
+from rarc_utils.sqlalchemy_base import (
+    get_async_session,
+    get_session,
+)  # , aget_or_create_many
 
 import caption_finder as cf
 import data_methods as dm
 from db.models import Video, Channel, Caption, psql
-from db.helpers import create_many_items
+from db.helpers import create_many_items, compress_caption
 from settings import VIDEOS_PATH, CAPTIONS_PATH
 
 log_fmt = "%(asctime)s - %(module)-16s - %(lineno)-4s - %(funcName)-18s - %(levelname)-7s - %(message)s"  # name
@@ -99,14 +102,16 @@ if __name__ == "__main__":
 
     # download captions
     # captions = cf.download_captions(video_ids) # blocking way
-    captions: List[Dict[str, Any]] = loop.run_until_complete(cf.adownload_captions(video_ids))
+    captions: List[Dict[str, Any]] = loop.run_until_complete(
+        cf.adownload_captions(video_ids)
+    )
     df = cf.captions_to_df(captions)
 
     if args.merge_with_videos:
         df = dm.merge_captions_with_videos(df, vdf)
 
     if args.save_captions:
-        cf.save_feather(df, CAPTIONS_PATH) 
+        cf.save_feather(df, CAPTIONS_PATH)
 
     if args.push_db:
 
@@ -122,7 +127,7 @@ if __name__ == "__main__":
                 }
             )[["id", "name", "num_subscribers"]]
             .assign(index=vdf["channel_id"])
-            .set_index('index')
+            .set_index("index")
             .drop_duplicates()
             .to_dict("index")
         )
@@ -130,7 +135,9 @@ if __name__ == "__main__":
         # create channels from same dataset
 
         channels_dict = loop.run_until_complete(
-            create_many_items(async_session, Channel, channel_recs, nameAttr="id", returnExisting=True)
+            create_many_items(
+                async_session, Channel, channel_recs, nameAttr="id", returnExisting=True
+            )
         )
 
         # map the new channels into vdf
@@ -145,22 +152,37 @@ if __name__ == "__main__":
                     "Views": "views",
                     "Custom_Score": "custom_score",
                 }
-            )[["id", "title", "description", "views", "custom_score", "channel_id", "channel"]]
+            )[
+                [
+                    "id",
+                    "title",
+                    "description",
+                    "views",
+                    "custom_score",
+                    "channel_id",
+                    "channel",
+                ]
+            ]
             .assign(index=vdf["video_id"])
-            .set_index('index')
+            .set_index("index")
             .drop_duplicates()
             .to_dict("index")
         )
 
         videos_dict = loop.run_until_complete(
-            create_many_items(async_session, Video, video_recs, nameAttr="id", returnExisting=True)
+            create_many_items(
+                async_session, Video, video_recs, nameAttr="id", returnExisting=True
+            )
         )
 
-        # todo: save captions to redis, or what other database? CassandraDB? DynamoDB?
-        # assert args.merge_with_videos
+        # save captions to postgres, or what other database: Redis, CassandraDB, DynamoDB?
 
         # map the videos into captions df
         df["video"] = df["video_id"].map(videos_dict)
+
+        # compress texts
+        df["compr"] = df["text"].map(compress_caption)
+        df["compr_length"] = df["compr"].map(len)
 
         caption_recs = (
             df.rename(
@@ -168,13 +190,19 @@ if __name__ == "__main__":
                     "text_len": "length",
                     "language_code": "lang",
                 }
-            )[["video_id", "video", "text", "length", "lang"]]
+            )[["video_id", "video", "length", "compr", "compr_length", "lang"]]
             .assign(index=vdf["video_id"])
-            .set_index('index')
+            .set_index("index")
             .drop_duplicates()
             .to_dict("index")
         )
 
-        # captions_dict = loop.run_until_complete(
-        #     create_many_items(async_session, Caption, caption_recs, nameAttr="video_id", returnExisting=False)
-        # )
+        captions_dict = loop.run_until_complete(
+            create_many_items(
+                async_session,
+                Caption,
+                caption_recs,
+                nameAttr="video_id",
+                returnExisting=False,
+            )
+        )

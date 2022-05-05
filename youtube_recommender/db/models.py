@@ -130,7 +130,7 @@ from rarc_utils.misc import AttrDict, trunc_msg  # , timeago_series
 
 # import rarc_utils.config.redis as redis_config
 # from enabler import config as config_dir
-from helpers import *
+from .helpers import *
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
