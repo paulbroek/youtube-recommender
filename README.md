@@ -12,7 +12,7 @@ Extends on [this](https://github.com/chris-lovejoy/YouTube-video-finder) repo, b
 -   [x] Join YouTube API metadata and YouTubeTranscriptApi captions data into one dataset
 -   [ ] Create data models in order to cache results to PostgreSQL
 -   [ ] Create fastAPI api to retrieve this data
--   [ ] Create job to collect search results for popular/personal search terms, in order not to exceed API quota (10_000 units/day, (extend quota here)[https://support.google.com/youtube/contact/yt_api_form])
+-   [ ] Create job to collect search results for popular/personal search terms, in order not to exceed API quota (10_000 units/day, [extend quota here](https://support.google.com/youtube/contact/yt_api_form)
 -   [ ] Retrieve personal watch history
 -   [ ] Get all, or popular video **genres**
 -   [ ] With these genres, try to make **recommendations**
