@@ -98,14 +98,12 @@ class data_methods:
         return bdf
 
     @classmethod
-    async def push_videos(cls, df, async_session) -> dict:
+    async def push_videos(cls, vdf, async_session) -> dict:
         """Push videos to db.
 
         First create Channel items
-
-        returnExisting:     return videos after creating them
         """
-        channel_recs = cls._make_channel_recs(df)
+        channel_recs = cls._make_channel_recs(vdf)
 
         data = dict()
         # create channels from same dataset
@@ -114,9 +112,9 @@ class data_methods:
         )
 
         # map the new channels into vdf
-        df["channel"] = df["channel_id"].map(data["channel"])
+        vdf["channel"] = vdf["channel_id"].map(data["channel"])
 
-        video_recs = cls._make_video_recs(df)
+        video_recs = cls._make_video_recs(vdf)
 
         data["video"] = await create_many_items(
             async_session, Video, video_recs, nameAttr="id", returnExisting=True
@@ -127,32 +125,17 @@ class data_methods:
         return data
 
     @classmethod
-    async def push_captions(
-        cls, df, video_df, async_session, returnExisting=True
-    ) -> dict:
+    async def push_captions(cls, df, vdf, async_session, returnExisting=True) -> dict:
         """Push captions to db.
 
         First create Channel and Video items
 
         returnExisting:     return captions after creating them
         """
-        # get list of dicts for Channel and Video
-        channel_recs = cls._make_channel_recs(video_df)
 
-        # create channels from same dataset
+        datad = await cls.push_videos(vdf, async_session)
 
-        channels_dict = await create_many_items(
-            async_session, Channel, channel_recs, nameAttr="id", returnExisting=True
-        )
-
-        # map the new channels into vdf
-        video_df["channel"] = video_df["channel_id"].map(channels_dict)
-
-        video_recs = cls._make_video_recs(video_df)
-
-        videos_dict = await create_many_items(
-            async_session, Video, video_recs, nameAttr="id", returnExisting=True
-        )
+        videos_dict = datad["video"]
 
         # save captions to postgres, or what other database: Redis, CassandraDB, DynamoDB?
 
