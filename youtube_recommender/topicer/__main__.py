@@ -27,7 +27,7 @@ from ..video_finder import load_feather
 
 log_fmt = "%(asctime)s - %(module)-16s - %(lineno)-4s - %(funcName)-20s - %(levelname)-7s - %(message)s"  # name
 logger = setup_logger(
-    cmdLevel=logging.INFO, saveFile=0, savePandas=1, fmt=log_fmt
+    cmdLevel=logging.INFO, saveFile=0, savePandas=1, color=1, fmt=log_fmt
 )  # DEBUG
 
 parser = argparse.ArgumentParser(description="Defining parameters")
@@ -96,7 +96,7 @@ if __name__ == "__main__":
     else:
         video_ids = args.video_ids
 
-    if args.dryrun:
+    if args.dryrun or vdf.empty:
         sys.exit()
 
     # get captions from cache

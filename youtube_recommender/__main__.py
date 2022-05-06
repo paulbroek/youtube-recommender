@@ -32,7 +32,7 @@ cfgFile = p.with_name(CONFIG_FILE)
 
 log_fmt = "%(asctime)s - %(module)-16s - %(lineno)-4s - %(funcName)-20s - %(levelname)-7s - %(message)s"  # name
 logger = setup_logger(
-    cmdLevel=logging.INFO, saveFile=0, savePandas=1, fmt=log_fmt
+    cmdLevel=logging.INFO, saveFile=0, savePandas=1, color=1, fmt=log_fmt
 )  # DEBUG
 
 parser = argparse.ArgumentParser(description="Defining search parameters")
@@ -122,6 +122,7 @@ if __name__ == "__main__":
     if args.filter:
         df = dm.classify_language(df, "title")
         df = dm.keep_language(df, "en")
+        assert not df.empty
 
     # extract video_id and channel_id from respective urls
     df = df.pipe(dm.extract_video_id).pipe(dm.extract_channel_id)

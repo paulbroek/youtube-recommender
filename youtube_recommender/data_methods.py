@@ -66,7 +66,11 @@ class data_methods:
         """
         assert LANGUAGE_CL in df.columns
         assert LANGUAGE_CODE in df.columns
-        assert lang_code in df[LANGUAGE_CODE].to_list()
+
+        lang_codes = df[LANGUAGE_CODE].to_list()
+        if lang_code not in lang_codes:
+            logger.error(f"no {lang_code=} rows in this dataset. {lang_codes=}")
+            return pd.DataFrame()
 
         rows_before = len(df)
         df = df[df.language_code == lang_code].reset_index(drop=True)
