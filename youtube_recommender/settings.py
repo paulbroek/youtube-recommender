@@ -36,3 +36,10 @@ CAPTIONS_PATH = DATA_DIR / CAPTIONS_FILE
 #################
 
 SPACY_MODEL = "en_core_web_sm"
+
+#####################
+##### Constants #####
+#####################
+
+# max hours ago for cache item to remain valid
+PSQL_HOURS_AGO = 7 * 24

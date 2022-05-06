@@ -15,6 +15,7 @@ from youtube_transcript_api import (
     YouTubeTranscriptApi,
 )
 
+from .core.types import CaptionId, VideoId
 from .data_methods import data_methods as dm
 
 logger = logging.getLogger(__name__)
@@ -32,7 +33,7 @@ logger = logging.getLogger(__name__)
 # ======================================================================= #
 
 
-def list_captions(video_id: str, api_key: str):
+def list_captions(video_id: VideoId, api_key: str):
     """Execute captions search through API and returns result."""
     # Initialise API call
     youtube_api = build("youtube", "v3", developerKey=api_key)
@@ -42,7 +43,7 @@ def list_captions(video_id: str, api_key: str):
     return results, youtube_api
 
 
-def download_caption(caption_id: str, youtube_api, tfmt: str):
+def download_caption(caption_id: CaptionId, youtube_api, tfmt: str):
     """Download caption using YouTube API.
 
     Caution: requires OAuth credentials, cannot fetch caption for other user's videos
@@ -54,7 +55,7 @@ def download_caption(caption_id: str, youtube_api, tfmt: str):
     return subtitle
 
 
-def download_caption_v2(video_id: str) -> Optional[List[Dict[str, Any]]]:
+def download_caption_v2(video_id: VideoId) -> Optional[List[Dict[str, Any]]]:
     """Download caption using youtube_transcript_api."""
     captions: Optional[List[Dict[str, Any]]] = None
 
@@ -73,7 +74,7 @@ def download_caption_v2(video_id: str) -> Optional[List[Dict[str, Any]]]:
     return captions
 
 
-def download_captions(video_ids: List[str]) -> List[Dict[str, Any]]:
+def download_captions(video_ids: List[VideoId]) -> List[Dict[str, Any]]:
     """Download captions in blocking way.
 
     usage:
@@ -83,7 +84,7 @@ def download_captions(video_ids: List[str]) -> List[Dict[str, Any]]:
     return list(filter(None, res))
 
 
-async def adownload_captions(video_ids: List[str]) -> List[Dict[str, Any]]:
+async def adownload_captions(video_ids: List[VideoId]) -> List[Dict[str, Any]]:
     """Speed up downloading of captions by running them concurrently.
 
     usage:
@@ -108,7 +109,7 @@ def save_feather(df: pd.DataFrame, captions_path: Path) -> None:
     logger.info(f"saved {len(df):,} captions to {captions_path.as_posix()}")
 
 
-def select_video_ids(df: pd.DataFrame, n=0) -> List[str]:
+def select_video_ids(df: pd.DataFrame, n=0) -> List[VideoId]:
     """Select video_ids from dataframe, optionally select first `n` rows."""
     assert isinstance(n, int)
     video_ids = df.video_id.to_list()
@@ -140,7 +141,9 @@ def captions_to_df(captions: List[Dict[str, Any]], classify_lang=True) -> pd.Dat
 # ======================================================================= #
 
 
-def _captions_to_dict(captions, video_id) -> dict:
+def _captions_to_dict(
+    captions: List[Dict[str, Any]], video_id: VideoId
+) -> Dict[str, Any]:
     return dict(text=_captions_to_str(captions, sep=", "), video_id=video_id)
 
 

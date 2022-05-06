@@ -1,19 +1,15 @@
 """data_methods.py, contains methods for working with dataframes."""
 import logging
 from operator import itemgetter
-from typing import Any, Dict, List, NewType, Optional, Type, Union
+from typing import Any, Dict, List
 
 import langid
 import pandas as pd
 from yapic import json
 
+from .core.types import ChannelId, TableTypes, VideoId
 from .db.helpers import compress_caption, create_many_items
 from .db.models import Caption, Channel, Video, queryResult
-
-VideoId = NewType("VideoId", str)
-ChannelId = NewType("ChannelId", str)
-TableTypes = Union[Type["Video"], Type["Channel"], Type["queryResult"]]
-
 
 logger = logging.getLogger(__name__)
 

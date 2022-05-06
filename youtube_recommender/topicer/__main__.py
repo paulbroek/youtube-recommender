@@ -104,6 +104,8 @@ if __name__ == "__main__":
         get_captions_by_video_ids(async_session, video_ids)
     )
 
+    # filter video_ids based on those existing_captions
+
     logger.info(f"{len(existing_captions)=} {existing_captions=}")
 
     # download captions

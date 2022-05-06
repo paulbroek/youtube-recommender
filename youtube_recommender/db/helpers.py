@@ -8,7 +8,9 @@ from rarc_utils.sqlalchemy_base import create_many
 from rarc_utils.sqlalchemy_base import get_str_mappings as get_str_mappings_custom
 from sqlalchemy.future import select
 
+from .core.types import VideoId
 from .models import Caption, queryResult
+from .settings import PSQL_HOURS_AGO
 
 # from .models import *
 
@@ -84,19 +86,31 @@ async def create_many_items(
 
 
 def get_all(session, model):
-    """get all items of a model
+    """Get all items of a model.
+
     example usage:
-        tasks = get_all(psession, Task)
-        habbits = get_all(psession, Habbit)
+
+        videos = get_all(psession, Video)
+        channels = get_all(psession, Channel)
     """
     stmt = select(model).filter()
+
     return list(session.execute(stmt).scalars())
 
 
-async def get_captions_by_video_ids(asession, video_ids: List[str]):
+async def get_captions_by_video_ids(
+    asession, video_ids: List[VideoId], maxHoursAgo: int = PSQL_HOURS_AGO
+):
+    """Get Captions by video_ids from db.
+
+    maxHoursAgo:    only include captions that are less than `maxHoursAgo`
+    """
+    since = datetime.utcnow() - timedelta(hours=maxHoursAgo)
 
     async with asession() as session:
-        query = select(Caption).where(Caption.video_id.in_(video_ids))
+        query = select(Caption).where(
+            Caption.video_id.in_(video_ids) and Caption.updated > since
+        )
         res = await session.execute(query)
 
         instances = res.scalars().fetchall()
@@ -104,8 +118,11 @@ async def get_captions_by_video_ids(asession, video_ids: List[str]):
     return instances
 
 
-def get_last_query_results(session, query: str, maxHoursAgo: int = 7 * 24):
+def get_last_query_results(session, query: str, maxHoursAgo: int = PSQL_HOURS_AGO):
+    """Get last query results from db.
 
+    maxHoursAgo:    only include captions that are less than `maxHoursAgo`
+    """
     since = datetime.utcnow() - timedelta(hours=maxHoursAgo)
 
     stmt = (
@@ -118,13 +135,12 @@ def get_last_query_results(session, query: str, maxHoursAgo: int = 7 * 24):
 
 
 def compress_caption(caption: str) -> bytes:
-    """compress str caption using zlib, saves ~ 50% storage"""
-
+    """Compress str caption using zlib, saves ~ 50% storage."""
     assert isinstance(caption, str)
     return zlib.compress(caption.encode())
 
 
 def decompress_caption(compr: bytes) -> str:
-
+    """Decompress str caption using zlib."""
     assert isinstance(compr, bytes)
     return zlib.decompress(compr).decode()
