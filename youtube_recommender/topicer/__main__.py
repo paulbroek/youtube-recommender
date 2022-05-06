@@ -13,17 +13,17 @@ import uvloop
 from rarc_utils.log import setup_logger
 from rarc_utils.sqlalchemy_base import get_async_session, get_session
 
-from .caption_finder import (
+from ..caption_finder import (
     adownload_captions,
     captions_to_df,
     save_feather,
     select_video_ids,
 )
-from .data_methods import data_methods as dm
-from .db.helpers import get_captions_by_video_ids
-from .db.models import psql
-from .settings import CAPTIONS_PATH, VIDEOS_PATH
-from .video_finder import load_feather
+from ..data_methods import data_methods as dm
+from ..db.helpers import get_captions_by_video_ids
+from ..db.models import psql
+from ..settings import CAPTIONS_PATH, VIDEOS_PATH
+from ..video_finder import load_feather
 
 log_fmt = "%(asctime)s - %(module)-16s - %(lineno)-4s - %(funcName)-20s - %(levelname)-7s - %(message)s"  # name
 logger = setup_logger(
