@@ -39,13 +39,13 @@
 
         see views.sql
         execute inside psql:
-        docker exec -it postgres-master bash -c 'psql enabler -U postgres -f /enabler_data/db/views.sql'
+        docker exec -it postgres-master bash -c 'psql enabler -U postgres -f /youtube_data/db/views.sql'
 
    Add trigger functions, so most frequently used views are always up to date:
 
         see triggers.sql
         execute inside psql:
-        docker exec -it postgres-master bash -c 'psql enabler -U postgres -f /enabler_data/db/triggers.sql'
+        docker exec -it postgres-master bash -c 'psql enabler -U postgres -f /youtube_data/db/triggers.sql'
 
     Get last messages:
 
@@ -267,7 +267,9 @@ class queryResult(Base, UtilityBase):
     # video = relationship("Video", uselist=False, lazy="selectin")
 
     # make sure to lower the string before entering
-    query = Column(String, nullable=False, unique=False) # not unique, but will only add new query_results after N days have elapsed
+    query = Column(
+        String, nullable=False, unique=False
+    )  # not unique, but will only add new query_results after N days have elapsed
     # nresult = Column(Integer, nullable=False, unique=False)
 
     videos = relationship(
