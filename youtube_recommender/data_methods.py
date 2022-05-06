@@ -17,7 +17,7 @@ LANGUAGE_CL = "language_cl"
 LANGUAGE_CODE = "language_code"
 
 
-def extract_video_id(df: pd.DataFrame, urlCol="Video URL") -> pd.DataFrame:
+def extract_video_id(df: pd.DataFrame, urlCol="video_url") -> pd.DataFrame:
     """extracts YouTube's video_id from plain URL
     example:
         https://www.youtube.com/watch?v=t0OX4jbFwvM --> t0OX4jbFwvM
@@ -56,15 +56,17 @@ def classify_language(df: pd.DataFrame, column: str) -> pd.DataFrame:
 
 
 def keep_language(df: pd.DataFrame, lang_code: str) -> pd.DataFrame:
-    """keep only rows of language `lang_code`"""
+    """keep only rows of language `lang_code`
 
-    # `classify_language` should run before this method
+    caution: `classify_language` should run before this method
+    """
+
     assert LANGUAGE_CL in df.columns
     assert LANGUAGE_CODE in df.columns
     assert lang_code in df[LANGUAGE_CODE].to_list()
 
     rows_before = len(df)
-    df = df[df.language_code == "en"].reset_index(drop=True)
+    df = df[df.language_code == lang_code].reset_index(drop=True)
     rows_after = len(df)
 
     logger.info(
@@ -77,12 +79,12 @@ def keep_language(df: pd.DataFrame, lang_code: str) -> pd.DataFrame:
 def merge_captions_with_videos(
     df_captions: pd.DataFrame,
     df_videos: pd.DataFrame,
-    dropCols=("language_cl", "language_code", "Video URL"),
+    dropCols=("language_cl", "language_code", "video_url"),
 ) -> pd.DataFrame:
 
     vdf = df_videos.drop(list(dropCols), axis=1)
 
-    # join on `video_id`
+    # merge on `video_id`
     bdf = pd.merge(df_captions, vdf, left_on="video_id", right_on="video_id")
 
     logger.info("merged df_captions with df_videos")

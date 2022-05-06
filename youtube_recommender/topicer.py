@@ -16,6 +16,7 @@ from rarc_utils.sqlalchemy_base import (
     get_session,
 )  # , aget_or_create_many
 
+import video_finder as vf
 import caption_finder as cf
 import data_methods as dm
 from db.models import Video, Channel, Caption, psql
@@ -87,7 +88,7 @@ if __name__ == "__main__":
 
     # parse video_ids
     if args.from_feather:
-        vdf = cf.load_feather(VIDEOS_PATH)
+        vdf = vf.load_feather(VIDEOS_PATH)
         video_ids = vdf.video_id.to_list()
         if args.n > 0:
             video_ids = video_ids[: args.n]

@@ -118,11 +118,7 @@ if __name__ == "__main__":
         df = dm.classify_language(df, "Title")
         df = dm.keep_language(df, "en")
 
-    # extract video_id from url
-    # df = dm.extract_video_id(df)
-    # df = dm.extract_channel_id(df)
-
-    # cleaner code than above?
+    # extract video_id and channel_id from respective urls
     df = df.pipe(dm.extract_video_id).pipe(dm.extract_channel_id)
 
     # save video metadata to feather file

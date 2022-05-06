@@ -127,18 +127,8 @@ def captions_to_str(captions: List[Dict[str, Any]], sep=", ") -> str:
     return sep.join(texts)
 
 
-def load_feather(videos_path) -> pd.DataFrame:
-
-    # check if file exists, or warn user to run main.py first
-    assert path.exists(
-        videos_path
-    ), f"{videos_path.as_posix()} does not exist, create it by running e.g.: `ipy youtube-recommender/main.py -- 'robbins' 'earth' --save`"
-    vdf = pd.read_feather(videos_path)
-
-    return vdf
-
 def save_feather(df: pd.DataFrame, captions_path) -> None:
     assert isinstance(captions_path, Path)
-    
+
     df.to_feather(captions_path)
     logger.info(f"saved {len(df):,} captions to {captions_path.as_posix()}")
