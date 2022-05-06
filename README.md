@@ -13,7 +13,9 @@ Extends on [this](https://github.com/chris-lovejoy/YouTube-video-finder) repo, b
 - [x] Create data models
 - [x] Save compressed captions data
 - [x] Cache search results in PostgreSQL
+- [x] Make package installable
 - [ ] Reconstruct videos tables from cache results
+- [ ] Also cache load captions in `topicer/__main__.py`
 - [ ] Create fastAPI api to retrieve this data
 - [ ] Create job to collect search results for popular/personal search terms, in order not to exceed API quota (10_000 units/day, [extend quota here](https://support.google.com/youtube/contact/yt_api_form))
 - [ ] Retrieve personal watch history
@@ -54,13 +56,13 @@ Search for YouTube videos, example usage:
 ```bash
 # alias ipy="ipython --no-confirm-exit --no-banner -i"
 
-ipy -m youtube-recommender -- 'search term 1' 'search term 2'
+ipy -m youtube_recommender -- 'search term 1' 'search term 2'
 
 # with different search-period (default is 7 days)
-ipy -m youtube-recommender -- 'search term 1' --search-period 29
+ipy -m youtube_recommender -- 'search term 1' --search-period 29
 
 # save top_videos to feather
-ipy -m youtube-recommender -- 'search term 1' 'search term 2' --save
+ipy -m youtube_recommender -- 'search term 1' 'search term 2' --save
 
 # to inspect results, inspect `res` object`, or `df` for only top_videos
 ```
@@ -86,16 +88,16 @@ optional arguments:
 Download captions for YouTube videos, example usage:
 
 ```bash
-ipy youtube-recommender/topicer.py -- 'video_id_1' 'video_id_2'
+ipy youtube_recommender.topicer -- 'video_id_1' 'video_id_2'
 
 # optionally save captions to feather file
-ipy youtube-recommender/topicer.py -- 'video_id_1' 'video_id_2' --save_captions
+ipy youtube_recommender/topicer -- 'video_id_1' 'video_id_2' --save_captions
 
 # load video_ids from top_videos.feather file automatically
-ipy youtube-recommender/topicer.py -- --save_captions --from_feather
+ipy youtube_recommender/topicer -- --save_captions --from_feather
 
 # keep videos data with captions
-ipy youtube-recommender/topicer.py -- --save_captions --from_feather --merge_with_videos
+ipy youtube_recommender/topicer -- --save_captions --from_feather --merge_with_videos
 
 # to inspect results, inspect `captions` object`
 ```

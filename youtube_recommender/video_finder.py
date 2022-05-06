@@ -100,7 +100,7 @@ def load_feather(videos_path: Path) -> pd.DataFrame:
     assert path.exists(
         videos_path
     ), f"{videos_path.as_posix()} does not exist, create it by running e.g.: \
-        `ipy youtube-recommender/main.py -- 'robbins' 'earth' --save`"
+        `ipy -m youtube_recommender -- 'robbins' 'earth' --save`"
     vdf = pd.read_feather(videos_path)
 
     return vdf

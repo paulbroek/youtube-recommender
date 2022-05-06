@@ -11,17 +11,14 @@ from typing import Any, Dict, List
 
 import uvloop
 from rarc_utils.log import setup_logger
-from rarc_utils.sqlalchemy_base import (  # , aget_or_create_many
-    get_async_session,
-    get_session,
-)
+from rarc_utils.sqlalchemy_base import get_async_session, get_session
 
-from .caption_finder import adownload_captions, captions_to_df, save_feather
-from .data_methods import data_methods as dm
-from .db.helpers import compress_caption, create_many_items
-from .db.models import Caption, Channel, Video, psql
-from .settings import CAPTIONS_PATH, VIDEOS_PATH
-from .video_finder import load_feather
+from ..caption_finder import adownload_captions, captions_to_df, save_feather
+from ..data_methods import data_methods as dm
+from ..db.helpers import compress_caption, create_many_items
+from ..db.models import Caption, Channel, Video, psql
+from ..settings import CAPTIONS_PATH, VIDEOS_PATH
+from ..video_finder import load_feather
 
 log_fmt = "%(asctime)s - %(module)-16s - %(lineno)-4s - %(funcName)-18s - %(levelname)-7s - %(message)s"  # name
 logger = setup_logger(
@@ -89,6 +86,7 @@ if __name__ == "__main__":
     # parse video_ids
     if args.from_feather:
         vdf = load_feather(VIDEOS_PATH)
+
         video_ids = vdf.video_id.to_list()
         if args.n > 0:
             video_ids = video_ids[: args.n]
