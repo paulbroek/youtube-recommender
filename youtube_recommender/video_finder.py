@@ -36,6 +36,13 @@ __all__ = [
 #         pass
 
 #     @staticmethod
+
+
+## ======================================================================= ##
+## ======                       PUBLIC METHODS                      ====== ##
+## ======================================================================= ##
+
+
 def get_start_date_string(search_period_days: int) -> str:
     """Return string for date at start of search period."""
     search_start_date = datetime.today() - timedelta(search_period_days)
@@ -60,8 +67,8 @@ async def search_each_term(
 
     t0 = time()
 
-    # list_of_dfs = find_all_terms(search_terms, api_key, uploaded_since, views_threshold)
-    list_of_dfs = await afind_all_terms(
+    # list_of_dfs = _find_all_terms(search_terms, api_key, uploaded_since, views_threshold)
+    list_of_dfs = await _afind_all_terms(
         search_terms, api_key, uploaded_since, views_threshold
     )
 
@@ -71,14 +78,14 @@ async def search_each_term(
     full_df = pd.concat((list_of_dfs), axis=0)
     full_df = full_df.sort_values(["Custom_Score"], ascending=[0])
     logger.debug("THE TOP VIDEOS OVERALL ARE:")
-    print_top_videos(full_df, num_to_print)
+    _print_top_videos(full_df, num_to_print)
     logger.debug("==========================\n")
 
     # 2 - in total
     for index, _ in enumerate(search_terms):
         results_df = list_of_dfs[index]
         logger.debug("THE TOP VIDEOS FOR SEARCH TERM '{}':".format(search_terms[index]))
-        print_top_videos(results_df, num_to_print)
+        _print_top_videos(results_df, num_to_print)
 
     results_df_dict = dict(zip(search_terms, list_of_dfs))
     results_df_dict["top_videos"] = full_df
@@ -88,7 +95,31 @@ async def search_each_term(
     return results_df_dict
 
 
-def find_videos(search_terms, api_key, views_threshold, uploaded_since):
+def load_feather(videos_path: Path) -> pd.DataFrame:
+    """Load top_videos metadata dataframe from feather."""
+    # check if file exists, or warn user to run main.py first
+    assert path.exists(
+        videos_path
+    ), f"{videos_path.as_posix()} does not exist, create it by running e.g.: `ipy youtube-recommender/main.py -- 'robbins' 'earth' --save`"
+    vdf = pd.read_feather(videos_path)
+
+    return vdf
+
+
+def save_feather(df: pd.DataFrame, videos_path: Path) -> None:
+    """Save top_videos metadata dataframe to feather."""
+    assert isinstance(videos_path, Path)
+
+    df.to_feather(videos_path)
+    logger.info(f"saved {len(df):,} top_videos metadata to {videos_path.as_posix()}")
+
+
+## ======================================================================= ##
+## ======                       PRIVATE METHODS                     ====== ##
+## ======================================================================= ##
+
+
+def _find_videos(search_terms, api_key, views_threshold, uploaded_since):
     """Call other functions (below) to find results and populate dataframe."""
     # Initialise results dataframe
     dataframe = pd.DataFrame(
@@ -106,9 +137,9 @@ def find_videos(search_terms, api_key, views_threshold, uploaded_since):
     )
 
     # Run search
-    search_results, youtube_api = search_api(search_terms, api_key, uploaded_since)
+    search_results, youtube_api = _search_api(search_terms, api_key, uploaded_since)
 
-    results_df = populate_dataframe(
+    results_df = _populate_dataframe(
         search_results, youtube_api, dataframe, views_threshold
     )
 
@@ -117,11 +148,11 @@ def find_videos(search_terms, api_key, views_threshold, uploaded_since):
     return results_df
 
 
-def find_all_terms(search_terms, api_key, uploaded_since, views_threshold):
+def _find_all_terms(search_terms, api_key, uploaded_since, views_threshold):
     """Find all terms in search terms."""
     list_of_dfs = []
     for index, _ in enumerate(search_terms):
-        df = find_videos(
+        df = _find_videos(
             search_terms[index],
             api_key,
             views_threshold=views_threshold,
@@ -133,7 +164,7 @@ def find_all_terms(search_terms, api_key, uploaded_since, views_threshold):
     return list_of_dfs
 
 
-async def afind_all_terms(search_terms, api_key, uploaded_since, views_threshold):
+async def _afind_all_terms(search_terms, api_key, uploaded_since, views_threshold):
     """Speed up downloading of captions by running them concurrently.
 
     usage:
@@ -143,7 +174,7 @@ async def afind_all_terms(search_terms, api_key, uploaded_since, views_threshold
 
     cors = [
         loop.run_in_executor(
-            None, find_videos, search_term, api_key, views_threshold, uploaded_since
+            None, _find_videos, search_term, api_key, views_threshold, uploaded_since
         )
         for search_term in search_terms
     ]
@@ -152,7 +183,7 @@ async def afind_all_terms(search_terms, api_key, uploaded_since, views_threshold
     return list_of_dfs
 
 
-def search_api(search_terms, api_key, uploaded_since):
+def _search_api(search_terms, api_key, uploaded_since):
     """Execute search through API and returns result."""
     # Initialise API call
     youtube_api = build("youtube", "v3", developerKey=api_key)
@@ -177,7 +208,7 @@ def search_api(search_terms, api_key, uploaded_since):
     return results, youtube_api
 
 
-def populate_dataframe(results, youtube_api, df, views_threshold) -> pd.DataFrame:
+def _populate_dataframe(results, youtube_api, df, views_threshold) -> pd.DataFrame:
     """Extract relevant information and put it into dataframe."""
     # Loop over search results and add key information to dataframe
     i = 1
@@ -209,7 +240,7 @@ def populate_dataframe(results, youtube_api, df, views_threshold) -> pd.DataFram
     return df
 
 
-def print_top_videos(df, num_to_print) -> None:
+def _print_top_videos(df, num_to_print) -> None:
     """Print top videos to console, with details and link to video."""
     if len(df) < num_to_print:
         num_to_print = len(df)
@@ -229,25 +260,6 @@ with {} subscribers and can be viewed here: {}\n".format(
                 )
             )
             logger.debug("==========================\n")
-
-
-def load_feather(videos_path: Path) -> pd.DataFrame:
-    """Load top_videos metadata dataframe from feather."""
-    # check if file exists, or warn user to run main.py first
-    assert path.exists(
-        videos_path
-    ), f"{videos_path.as_posix()} does not exist, create it by running e.g.: `ipy youtube-recommender/main.py -- 'robbins' 'earth' --save`"
-    vdf = pd.read_feather(videos_path)
-
-    return vdf
-
-
-def save_feather(df: pd.DataFrame, videos_path: Path) -> None:
-    """Save top_videos metadata dataframe to feather."""
-    assert isinstance(videos_path, Path)
-
-    df.to_feather(videos_path)
-    logger.info(f"saved {len(df):,} top_videos metadata to {videos_path.as_posix()}")
 
 
 ## ======================================================================= ##
