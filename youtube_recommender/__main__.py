@@ -21,8 +21,8 @@ from rarc_utils.sqlalchemy_base import get_async_session, get_session
 from youtube_recommender import config as config_dir
 
 from .data_methods import data_methods as dm
-from .db.helpers import create_many_items, get_last_query_results
-from .db.models import Channel, Video, psql, queryResult
+from .db.helpers import get_last_query_results
+from .db.models import psql, queryResult
 from .settings import CONFIG_FILE, VIDEOS_PATH
 from .utils.misc import load_yaml
 from .video_finder import get_start_date_string, save_feather, search_each_term
@@ -47,6 +47,13 @@ parser.add_argument(
     action="store_true",
     default=False,
     help="only load modules, do not requests APIs",
+)
+parser.add_argument(
+    "-f",
+    "--force",
+    action="store_true",
+    default=False,
+    help="force to run query, do not use cache",
 )
 parser.add_argument(
     "--filter",
@@ -86,19 +93,20 @@ if __name__ == "__main__":
         sys.exit()
 
     search_terms = set(args.search_terms)
-    # before calling YouTube API, use PostgreSQL cache for search results younger than 7 days
-    for query in args.search_terms:
-        qrs = get_last_query_results(
-            psession, query=query, model=queryResult
-        )  # maxHoursAgo=2
-        if len(qrs) > 0:
-            logger.info(
-                f"got cache results for {query=:<25}, dismissing it from search_terms"
-            )
-            # filter out the query
-            search_terms.discard(query)
+    if not args.force:
+        # before calling YouTube API, use PostgreSQL cache for search results younger than 7 days
+        for query in args.search_terms:
+            qrs = get_last_query_results(
+                psession, query=query, model=queryResult
+            )  # maxHoursAgo=2
+            if len(qrs) > 0:
+                logger.info(
+                    f"got cache results for {query=:<25}, dismissing it from search_terms"
+                )
+                # filter out the query
+                search_terms.discard(query)
 
-        psession.close()
+            psession.close()
 
     # todo: recreate dataframe for cached search terms
 
@@ -125,28 +133,9 @@ if __name__ == "__main__":
         save_feather(df, VIDEOS_PATH)
 
     if args.push_db:
-        channel_recs = dm.make_channel_recs(df)
 
-        # create channels from same dataset
-        channels_dict = loop.run_until_complete(
-            create_many_items(
-                async_session, Channel, channel_recs, nameAttr="id", returnExisting=True
-            )
-        )
-
-        # map the new channels into vdf
-        df["channel"] = df["channel_id"].map(channels_dict)
-
-        video_recs = dm.make_video_recs(df)
-
-        videos_dict = loop.run_until_complete(
-            create_many_items(
-                async_session, Video, video_recs, nameAttr="id", returnExisting=True
-            )
-        )
+        datad = dm.push_videos(df, async_session)
+        videos_dict = datad["video"]
 
         # save queryResults
-        for query in args.search_terms:
-            qr = queryResult(query=query, videos=list(videos_dict.values()))
-            psession.add(qr)
-            psession.commit()
+        dm.push_query_results(args.search_terms, videos_dict, psession)

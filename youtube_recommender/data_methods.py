@@ -7,6 +7,9 @@ import langid
 import pandas as pd
 from yapic import json
 
+from .db.helpers import compress_caption, create_many_items
+from .db.models import Caption, Channel, Video, queryResult
+
 logger = logging.getLogger(__name__)
 
 LANGUAGE_CL = "language_cl"
@@ -30,7 +33,7 @@ class data_methods:
         return df
 
     @staticmethod
-    def extract_channel_id(df: pd.DataFrame, urlCol="Channel URL") -> pd.DataFrame:
+    def extract_channel_id(df: pd.DataFrame, urlCol="channel_url") -> pd.DataFrame:
         """Extract YouTube's channel_id from plain URL.
 
         example:
@@ -44,7 +47,7 @@ class data_methods:
 
     @staticmethod
     def classify_language(df: pd.DataFrame, column: str) -> pd.DataFrame:
-        """Classify the language of a pandas column."""
+        """Classify the language of a pandas str column."""
         assert column in df.columns, f"{column=} not in {df.columns=}"
 
         df = df.copy()
@@ -90,6 +93,91 @@ class data_methods:
 
         return bdf
 
+    @classmethod
+    async def push_videos(cls, df, async_session) -> None:
+        """Push videos to db.
+
+        First create Channel items
+
+        returnExisting:     return videos after creating them
+        """
+        channel_recs = cls.make_channel_recs(df)
+
+        data = dict()
+        # create channels from same dataset
+        data["channel"] = await create_many_items(
+            async_session, Channel, channel_recs, nameAttr="id", returnExisting=True
+        )
+
+        # map the new channels into vdf
+        df["channel"] = df["channel_id"].map(data["channel"])
+
+        video_recs = cls.make_video_recs(df)
+
+        data["video"] = await create_many_items(
+            async_session, Video, video_recs, nameAttr="id", returnExisting=True
+        )
+
+        return data
+
+    @classmethod
+    async def push_captions(
+        cls, df, video_df, async_session, returnExisting=True
+    ) -> None:
+        """Push captions to db.
+
+        First create Channel and Video items
+
+        returnExisting:     return captions after creating them
+        """
+        # get list of dicts for Channel and Video
+        channel_recs = cls.make_channel_recs(video_df)
+
+        # create channels from same dataset
+
+        channels_dict = await create_many_items(
+            async_session, Channel, channel_recs, nameAttr="id", returnExisting=True
+        )
+
+        # map the new channels into vdf
+        video_df["channel"] = video_df["channel_id"].map(channels_dict)
+
+        video_recs = cls.make_video_recs(video_df)
+
+        videos_dict = await create_many_items(
+            async_session, Video, video_recs, nameAttr="id", returnExisting=True
+        )
+
+        # save captions to postgres, or what other database: Redis, CassandraDB, DynamoDB?
+
+        # map the videos into captions df
+        df["video"] = df["video_id"].map(videos_dict)
+
+        # compress captions
+        df["compr"] = df["text"].map(compress_caption)
+        df["compr_length"] = df["compr"].map(len)
+
+        caption_recs = cls.make_caption_recs(df)
+
+        # captions_dict =
+        captions = await create_many_items(
+            async_session,
+            Caption,
+            caption_recs,
+            nameAttr="video_id",
+            returnExisting=returnExisting,
+        )
+
+        return captions
+
+    @classmethod
+    def push_query_results(cls, queries, videos_dict, session) -> None:
+        """Push queryResults to db."""
+        for query in queries:
+            qr = queryResult(query=query, videos=list(videos_dict.values()))
+            session.add(qr)
+            session.commit()
+
     @staticmethod
     def make_channel_recs(df: pd.DataFrame) -> List[Dict[str, Any]]:
         """Make Channel records from dataframe, for SQLAlchemy object creation."""
@@ -97,8 +185,7 @@ class data_methods:
             df.rename(
                 columns={
                     "channel_id": "id",
-                    "Channel Name": "name",
-                    "Num_subscribers": "num_subscribers",
+                    "channel_name": "name",
                 }
             )[["id", "name", "num_subscribers"]]
             .assign(index=df["channel_id"])
@@ -113,14 +200,7 @@ class data_methods:
     def make_video_recs(df: pd.DataFrame) -> List[Dict[str, Any]]:
         """Make Video records from dataframe, for SQLAlchemy object creation."""
         recs = (
-            df.rename(
-                columns={
-                    "video_id": "id",
-                    "Description": "description",
-                    "Views": "views",
-                    "Custom_Score": "custom_score",
-                }
-            )[
+            df.rename(columns={"video_id": "id",})[
                 [
                     "id",
                     "title",

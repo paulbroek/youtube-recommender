@@ -100,12 +100,24 @@ async def adownload_captions(video_ids: List[str]) -> List[Dict[str, Any]]:
     return list(filter(None, captions))
 
 
-def save_feather(df: pd.DataFrame, captions_path) -> None:
+def save_feather(df: pd.DataFrame, captions_path: Path) -> None:
     """Save captions dataframe to feather."""
     assert isinstance(captions_path, Path)
 
     df.to_feather(captions_path)
     logger.info(f"saved {len(df):,} captions to {captions_path.as_posix()}")
+
+
+def select_video_ids(df: pd.DataFrame, n=0) -> List[str]:
+    """Select video_ids from dataframe, optionally select first `n` rows."""
+    assert isinstance(n, int)
+    video_ids = df.video_id.to_list()
+    if n > 0:
+        video_ids = video_ids[:n]
+
+    logger.info(f"select {len(video_ids):,} video metadata rows")
+
+    return video_ids
 
 
 def captions_to_df(captions: List[Dict[str, Any]], classify_lang=True) -> pd.DataFrame:

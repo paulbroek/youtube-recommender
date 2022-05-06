@@ -75,7 +75,7 @@ async def search_each_term(
 
     # 1 - concatenate them all
     full_df = pd.concat((list_of_dfs), axis=0)
-    full_df = full_df.sort_values(["Custom_Score"], ascending=[0])
+    full_df = full_df.sort_values(["custom_score"], ascending=[0])
     logger.debug("THE TOP VIDEOS OVERALL ARE:")
     _print_top_videos(full_df, num_to_print)
     logger.debug("==========================\n")
@@ -126,13 +126,13 @@ def _find_videos(search_terms, api_key, views_threshold, uploaded_since):
         columns=(
             "title",
             "video_url",
-            "Custom_Score",
-            "Views",
-            "Description",
-            "Channel Name",
-            "Num_subscribers",
-            "View-Subscriber Ratio",
-            "Channel URL",
+            "custom_score",
+            "views",
+            "description",
+            "channel_name",
+            "num_subscribers",
+            "view_subscriber_atio",
+            "channel_url",
         )
     )
 
@@ -143,7 +143,7 @@ def _find_videos(search_terms, api_key, views_threshold, uploaded_since):
         search_results, youtube_api, dataframe, views_threshold
     )
 
-    results_df = results_df.sort_values(["Custom_Score"], ascending=[0])
+    results_df = results_df.sort_values(["custom_score"], ascending=[0])
 
     return results_df
 
@@ -250,12 +250,12 @@ def _print_top_videos(df, num_to_print) -> None:
         for i in range(num_to_print):
             video = df.iloc[i]
             title = video["title"]
-            views = video["Views"]
-            subs = video["Num_subscribers"]
+            views = video["views"]
+            subs = video["num_subscribers"]
             link = video["video_url"]
             logger.debug(
                 "Video #{}:\nThe video '{}' has {} views, from a channel \
-with {} subscribers and can be viewed here: {}\n".format(
+                with {} subscribers and can be viewed here: {}\n".format(
                     i + 1, title, views, subs, link
                 )
             )

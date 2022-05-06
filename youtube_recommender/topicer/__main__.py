@@ -13,10 +13,14 @@ import uvloop
 from rarc_utils.log import setup_logger
 from rarc_utils.sqlalchemy_base import get_async_session, get_session
 
-from ..caption_finder import adownload_captions, captions_to_df, save_feather
+from ..caption_finder import (
+    adownload_captions,
+    captions_to_df,
+    save_feather,
+    select_video_ids,
+)
 from ..data_methods import data_methods as dm
-from ..db.helpers import compress_caption, create_many_items
-from ..db.models import Caption, Channel, Video, psql
+from ..db.models import psql
 from ..settings import CAPTIONS_PATH, VIDEOS_PATH
 from ..video_finder import load_feather
 
@@ -83,15 +87,10 @@ if __name__ == "__main__":
     async_session = get_async_session(psql)
     psession = get_session(psql)()
 
-    # parse video_ids
+    # load videos file and select video_ids
     if args.from_feather:
         vdf = load_feather(VIDEOS_PATH)
-
-        video_ids = vdf.video_id.to_list()
-        if args.n > 0:
-            video_ids = video_ids[: args.n]
-
-        logger.info(f"loaded {len(video_ids):,} video metadata rows")
+        video_ids = select_video_ids(vdf, n=args.n)
 
     else:
         video_ids = args.video_ids
@@ -99,12 +98,14 @@ if __name__ == "__main__":
     if args.dryrun:
         sys.exit()
 
+    # todo: get captions from cache
+
     # download captions
     # captions = download_captions(video_ids) # blocking way
-    captions: List[Dict[str, Any]] = loop.run_until_complete(
+    captions_list: List[Dict[str, Any]] = loop.run_until_complete(
         adownload_captions(video_ids)
     )
-    df = captions_to_df(captions)
+    df = captions_to_df(captions_list)
 
     if args.merge_with_videos:
         df = dm.merge_captions_with_videos(df, vdf)
@@ -113,49 +114,6 @@ if __name__ == "__main__":
         save_feather(df, CAPTIONS_PATH)
 
     if args.push_db:
+        # dm.push_captions(df, vdf, async_session)
 
-        # todo: move code to data_methods.py
-
-        # get list of dicts for Channel and Video
-        channel_recs = dm.make_channel_recs(vdf)
-
-        # create channels from same dataset
-
-        channels_dict = loop.run_until_complete(
-            create_many_items(
-                async_session, Channel, channel_recs, nameAttr="id", returnExisting=True
-            )
-        )
-
-        # map the new channels into vdf
-        vdf["channel"] = vdf["channel_id"].map(channels_dict)
-
-        video_recs = dm.make_video_recs(vdf)
-
-        videos_dict = loop.run_until_complete(
-            create_many_items(
-                async_session, Video, video_recs, nameAttr="id", returnExisting=True
-            )
-        )
-
-        # save captions to postgres, or what other database: Redis, CassandraDB, DynamoDB?
-
-        # map the videos into captions df
-        df["video"] = df["video_id"].map(videos_dict)
-
-        # compress captions
-        df["compr"] = df["text"].map(compress_caption)
-        df["compr_length"] = df["compr"].map(len)
-
-        caption_recs = dm.make_caption_recs(df)
-
-        # captions_dict =
-        _ = loop.run_until_complete(
-            create_many_items(
-                async_session,
-                Caption,
-                caption_recs,
-                nameAttr="video_id",
-                returnExisting=False,
-            )
-        )
+        _ = loop.run_until_complete(dm.push_captions(df, vdf, async_session))
