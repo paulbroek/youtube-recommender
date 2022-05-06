@@ -14,8 +14,8 @@ Extends on [this](https://github.com/chris-lovejoy/YouTube-video-finder) repo, b
 - [x] Save compressed captions data
 - [x] Cache search results in PostgreSQL
 - [x] Make package installable
-- [ ] Reconstruct videos tables from cache results
 - [ ] Also cache load captions in `topicer/__main__.py`
+- [ ] Reconstruct videos tables from cache results
 - [ ] Create fastAPI api to retrieve this data
 - [ ] Create job to collect search results for popular/personal search terms, in order not to exceed API quota (10_000 units/day, [extend quota here](https://support.google.com/youtube/contact/yt_api_form))
 - [ ] Retrieve personal watch history
@@ -67,10 +67,10 @@ ipy -m youtube_recommender -- 'search term 1' 'search term 2' --save
 # to inspect results, inspect `res` object`, or `df` for only top_videos
 ```
 
-`main.py` help:
+`python -m youtube_recommender --help`:
 
 ```
-usage: main.py [-h] [--search-period SEARCH_PERIOD] [--filter] [-s] search_terms [search_terms ...]
+usage: __main__.py [-h] [--search-period SEARCH_PERIOD] [--dryrun] [-f] [--filter] [-s] [-p] search_terms [search_terms ...]
 
 Defining search parameters
 
@@ -81,31 +81,37 @@ optional arguments:
   -h, --help            show this help message and exit
   --search-period SEARCH_PERIOD
                         The number of days to search for.
+  --dryrun              only load modules, do not requests APIs
+  -f, --force           force to run query, do not use cache
   --filter              filter non English titles from dataset using langid
   -s, --save            Save results to
+  -p, --push_db         push queryResult and Video rows to PostgreSQL`
 ```
 
 Download captions for YouTube videos, example usage:
 
 ```bash
-ipy youtube_recommender.topicer -- 'video_id_1' 'video_id_2'
+ipy -m youtube_recommender.topicer -- 'video_id_1' 'video_id_2'
 
 # optionally save captions to feather file
-ipy youtube_recommender/topicer -- 'video_id_1' 'video_id_2' --save_captions
+ipy -m youtube_recommender.topicer -- 'video_id_1' 'video_id_2' --save_captions
 
 # load video_ids from top_videos.feather file automatically
-ipy youtube_recommender/topicer -- --save_captions --from_feather
+ipy -m youtube_recommender.topicer -- --save_captions --from_feather
 
 # keep videos data with captions
-ipy youtube_recommender/topicer -- --save_captions --from_feather --merge_with_videos
+ipy -m youtube_recommender.topicer -- --save_captions --from_feather --merge_with_videos
+
+# short, most used option:
+ipy -m youtube_recommender.topicer -- --from_feather -sp
 
 # to inspect results, inspect `captions` object`
 ```
 
-`topicer.py` help:
+`python -m youtube_recommender.topicer --help`:
 
 ```
-usage: topicer.py [-h] [--from_feather] [-n N] [--dryrun] [--merge_with_videos] [-s] [video_ids ...]
+usage: __main__.py [-h] [--from_feather] [-n N] [--dryrun] [--merge_with_videos] [-s] [-p] [video_ids ...]
 
 Defining parameters
 
@@ -114,9 +120,10 @@ positional arguments:
 
 optional arguments:
   -h, --help           show this help message and exit
-  --from_feather       Import video ids from `youtube-recommender/data/top_videos.feather`, created in main.py. ignores any manually passed video_ids
+  --from_feather       Import video ids from `/home/paul/repos/youtube-recommender/youtube_recommender/data/top_videos.feather`, created in main.py. ignores any manually passed video_ids
   -n N                 select first `n` rows from feather file
   --dryrun             only load data, do not download captions
   --merge_with_videos  merge resulting captions dataset with videos metadata
-  -s, --save_captions  Save captions to `youtube-recommender/data/captions.feather`
+  -s, --save_captions  Save captions to `/home/paul/repos/youtube-recommender/youtube_recommender/data/captions.feather`
+  -p, --push_db        push Video, Channel and Caption rows to PostgreSQL`
 ```
