@@ -1,27 +1,27 @@
 """
-    enabler SQLAlchemy models
+    youtube SQLAlchemy models
     creating a data model for any type of messages / tasks, ordering them by priority, sending reminders to a variety of sources, ...
 
     based on:
          https://docs.sqlalchemy.org/en/14/orm/extensions/asyncio.html 
 
-    create database 'enabler' in psql (command line tool for postgres):
+    create database 'youtube' in psql (command line tool for postgres):
         (go inside psql) docker exec -it trade-postgres bash -c 'psql -U postgres -W'   ENTER PASSWORD, see file: trade/docker-compose-trade.yml
         
-        CREATE DATABASE "enabler";
+        CREATE DATABASE "youtube";
 
     now connect using:
-        docker exec -it trade-postgres bash -c 'psql enabler -U postgres'
+        docker exec -it trade-postgres bash -c 'psql youtube -U postgres'
 
     create some tables using (from ./rarc/rarc directory):
         ipython --no-confirm-exit ~/repos/youtube-recommender/youtube-recommender/db/models.py -i -- --create 1
         ipython --no-confirm-exit ~/repos/youtube-recommender/youtube-recommender/db/models.py -i -- --create 1 -f  (create without asking for confirmation to delete existing models, use with caution)
 
     list data:
-        ipython --no-confirm-exit ~/repos/enabler/enabler/models.py -i -- --create 0
+        ipython --no-confirm-exit ~/repos/youtube/youtube/models.py -i -- --create 0
 
     For migrations use alembic. First install `pip install psycopg2-binary` and `pip install alembic` in current conda environment. Run `alembic init alembic`  in this folder, 
-    and update "alembic.ini" by changing sqlalchemy.url to `postgresql://postgres:PASSWORD@80.56.112.182/enabler`
+    and update "alembic.ini" by changing sqlalchemy.url to `postgresql://postgres:PASSWORD@80.56.112.182/youtube`
         - update the env.py file by importing your model: 
             from models import *
             from models import Base
@@ -39,13 +39,13 @@
 
         see views.sql
         execute inside psql:
-        docker exec -it postgres-master bash -c 'psql enabler -U postgres -f /youtube_data/db/views.sql'
+        docker exec -it postgres-master bash -c 'psql youtube -U postgres -f /youtube_data/db/views.sql'
 
    Add trigger functions, so most frequently used views are always up to date:
 
         see triggers.sql
         execute inside psql:
-        docker exec -it postgres-master bash -c 'psql enabler -U postgres -f /youtube_data/db/triggers.sql'
+        docker exec -it postgres-master bash -c 'psql youtube -U postgres -f /youtube_data/db/triggers.sql'
 
     Get last messages:
 
@@ -122,7 +122,7 @@ from rarc_utils.log import setup_logger, set_log_level, loggingLevelNames
 from rarc_utils.misc import AttrDict, trunc_msg  # , timeago_series
 
 # import rarc_utils.config.redis as redis_config
-# from enabler import config as config_dir
+# from youtube import config as config_dir
 from .helpers import *
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
