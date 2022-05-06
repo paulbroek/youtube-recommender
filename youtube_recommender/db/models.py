@@ -221,8 +221,8 @@ class Caption(Base, UtilityBase):
 
     def __repr__(self):
         return "Caption(id={}, video.title={}, length={:_}, compr_length={:_}, compr%={:.2%})".format(
-            self.id,
-            trunc_msg(self.video.title, 20),
+            trunc_msg(self.id.__str__(), 8),
+            trunc_msg(self.video.title, 40),
             self.length,
             self.compr_length,
             self.compr_pct(),

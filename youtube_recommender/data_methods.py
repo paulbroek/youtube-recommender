@@ -1,7 +1,7 @@
 """data_methods.py, contains methods for working with dataframes."""
 import logging
 from operator import itemgetter
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, NewType, Optional, Type, Union
 
 import langid
 import pandas as pd
@@ -9,6 +9,11 @@ from yapic import json
 
 from .db.helpers import compress_caption, create_many_items
 from .db.models import Caption, Channel, Video, queryResult
+
+VideoId = NewType("VideoId", str)
+ChannelId = NewType("ChannelId", str)
+TableTypes = Union[Type["Video"], Type["Channel"], Type["queryResult"]]
+
 
 logger = logging.getLogger(__name__)
 
@@ -100,7 +105,7 @@ class data_methods:
     @classmethod
     async def push_videos(
         cls, vdf: pd.DataFrame, async_session
-    ) -> Dict[str, Dict[str, "model"]]:
+    ) -> Dict[str, Dict[str, TableTypes]]:
         """Push videos to db.
 
         First create Channel items
@@ -129,7 +134,7 @@ class data_methods:
     @classmethod
     async def push_captions(
         cls, df: pd.DataFrame, vdf: pd.DataFrame, async_session, returnExisting=True
-    ) -> Dict[str, Caption]:
+    ) -> Dict[VideoId, Caption]:
         """Push captions to db.
 
         First create Channel and Video items
@@ -167,7 +172,7 @@ class data_methods:
 
     @classmethod
     def push_query_results(
-        cls, queries: List[str], videos_dict: List[dict], session
+        cls, queries: List[str], videos_dict: Dict[VideoId, Dict[str, Any]], session
     ) -> None:
         """Push queryResults to db."""
         for query in queries:
@@ -182,7 +187,7 @@ class data_methods:
     # ======================================================================= #
 
     @staticmethod
-    def _make_channel_recs(df: pd.DataFrame) -> List[Dict[str, Any]]:
+    def _make_channel_recs(df: pd.DataFrame) -> Dict[ChannelId, Dict[str, Any]]:
         """Make Channel records from dataframe, for SQLAlchemy object creation."""
         recs = (
             df.rename(
@@ -200,7 +205,7 @@ class data_methods:
         return recs
 
     @staticmethod
-    def _make_video_recs(df: pd.DataFrame) -> List[Dict[str, Any]]:
+    def _make_video_recs(df: pd.DataFrame) -> Dict[VideoId, Dict[str, Any]]:
         """Make Video records from dataframe, for SQLAlchemy object creation."""
         recs = (
             df.rename(columns={"video_id": "id",})[
@@ -223,7 +228,7 @@ class data_methods:
         return recs
 
     @staticmethod
-    def _make_caption_recs(df: pd.DataFrame) -> List[Dict[str, Any]]:
+    def _make_caption_recs(df: pd.DataFrame) -> Dict[VideoId, Dict[str, Any]]:
         """Make Caption records from dataframe, for SQLAlchemy object creation."""
         recs = (
             df.rename(
