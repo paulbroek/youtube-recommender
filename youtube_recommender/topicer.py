@@ -71,7 +71,7 @@ parser.add_argument(
     "--push_db",
     action="store_true",
     default=False,
-    help="push Video, Channel and Caption rows to postgres / redis`",
+    help="push Video, Channel and Caption rows to PostgreSQL`",
 )
 
 
@@ -118,19 +118,7 @@ if __name__ == "__main__":
         # todo: move code to data_methods.py
 
         # get list of dicts for Channel and Video
-        channel_recs = (
-            vdf.rename(
-                columns={
-                    "channel_id": "id",
-                    "Channel Name": "name",
-                    "Num_subscribers": "num_subscribers",
-                }
-            )[["id", "name", "num_subscribers"]]
-            .assign(index=vdf["channel_id"])
-            .set_index("index")
-            .drop_duplicates()
-            .to_dict("index")
-        )
+        channel_recs = dm.make_channel_recs(vdf)
 
         # create channels from same dataset
 
@@ -143,31 +131,7 @@ if __name__ == "__main__":
         # map the new channels into vdf
         vdf["channel"] = vdf["channel_id"].map(channels_dict)
 
-        video_recs = (
-            vdf.rename(
-                columns={
-                    "video_id": "id",
-                    "Title": "title",
-                    "Description": "description",
-                    "Views": "views",
-                    "Custom_Score": "custom_score",
-                }
-            )[
-                [
-                    "id",
-                    "title",
-                    "description",
-                    "views",
-                    "custom_score",
-                    "channel_id",
-                    "channel",
-                ]
-            ]
-            .assign(index=vdf["video_id"])
-            .set_index("index")
-            .drop_duplicates()
-            .to_dict("index")
-        )
+        video_recs = dm.make_video_recs(vdf)
 
         videos_dict = loop.run_until_complete(
             create_many_items(
@@ -180,7 +144,7 @@ if __name__ == "__main__":
         # map the videos into captions df
         df["video"] = df["video_id"].map(videos_dict)
 
-        # compress texts
+        # compress captions
         df["compr"] = df["text"].map(compress_caption)
         df["compr_length"] = df["compr"].map(len)
 

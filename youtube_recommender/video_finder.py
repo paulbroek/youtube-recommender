@@ -10,6 +10,8 @@ From:
 from typing import List, Union, Dict
 import logging
 from datetime import datetime, timedelta
+from time import time
+from pathlib import Path
 import asyncio
 
 import pandas as pd
@@ -34,8 +36,12 @@ async def search_each_term(search_terms: Union[str, List[str]], api_key, uploade
     if isinstance(search_terms, str):
         search_terms = [search_terms]
 
+    t0 = time()
+
     # list_of_dfs = find_all_terms(search_terms, api_key, uploaded_since, views_threshold)
     list_of_dfs  = await afind_all_terms(search_terms, api_key, uploaded_since, views_threshold)
+
+    elapsed = time() - t0
 
     # 1 - concatenate them all
     full_df = pd.concat((list_of_dfs), axis=0)
@@ -52,6 +58,8 @@ async def search_each_term(search_terms: Union[str, List[str]], api_key, uploade
 
     results_df_dict = dict(zip(search_terms, list_of_dfs))
     results_df_dict['top_videos'] = full_df
+
+    logger.info(f"got {len(full_df):,} rows in {elapsed:.2f} secs")
 
     return results_df_dict
 
@@ -158,6 +166,14 @@ def print_top_videos(df, num_to_print) -> None:
 with {} subscribers and can be viewed here: {}\n"\
                                         .format(i+1, title, views, subs, link))
             logger.debug("==========================\n")
+
+def save_feather(df: pd.DataFrame, videos_path) -> None:
+    assert isinstance(videos_path, Path)
+
+    df.to_feather(videos_path)
+    logger.info(
+        f"saved {len(df):,} top_videos metadata to {videos_path.as_posix()}"
+    )
 
 
 ## ======================================================================= ##

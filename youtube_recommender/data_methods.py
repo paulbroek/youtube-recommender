@@ -87,3 +87,53 @@ def merge_captions_with_videos(
     logger.info("merged df_captions with df_videos")
 
     return bdf
+
+
+def make_channel_recs(vdf):
+
+    recs = (
+        vdf.rename(
+            columns={
+                "channel_id": "id",
+                "Channel Name": "name",
+                "Num_subscribers": "num_subscribers",
+            }
+        )[["id", "name", "num_subscribers"]]
+        .assign(index=vdf["channel_id"])
+        .set_index("index")
+        .drop_duplicates()
+        .to_dict("index")
+    )
+
+    return recs
+
+
+def make_video_recs(vdf):
+
+    recs = (
+        vdf.rename(
+            columns={
+                "video_id": "id",
+                "Title": "title",
+                "Description": "description",
+                "Views": "views",
+                "Custom_Score": "custom_score",
+            }
+        )[
+            [
+                "id",
+                "title",
+                "description",
+                "views",
+                "custom_score",
+                "channel_id",
+                "channel",
+            ]
+        ]
+        .assign(index=vdf["video_id"])
+        .set_index("index")
+        .drop_duplicates()
+        .to_dict("index")
+    )
+
+    return recs

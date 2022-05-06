@@ -82,6 +82,7 @@ import logging
 from pathlib import Path
 
 import uuid
+
 # import json
 
 # from pprint import pprint
@@ -108,14 +109,6 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.schema import Table
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
-
-# from sqlalchemy.orm import selectinload
-
-# import pandas as pd
-
-# import numpy as np
-
-# from lorem_text import lorem
 
 from rarc_utils.sqlalchemy_base import (
     async_main,
@@ -153,6 +146,16 @@ psession = get_session(psql)()
 DATA_DIR = Path("data")
 
 Base = declarative_base()
+
+query_video_association = Table(
+    "query_video_association",
+    Base.metadata,
+    Column("video_id", String, ForeignKey("video.id")),
+    Column(
+        "query_result_id", String, ForeignKey("query_result.id")
+    ),  # a query result can have multiple videos
+    UniqueConstraint("video_id", "query_result_id"),
+)
 
 
 class Video(Base, UtilityBase):
@@ -219,10 +222,10 @@ class Channel(Base, UtilityBase):
 
 
 class Caption(Base, UtilityBase):
-    """Caption: contains compressed captions in Bytes for YouTube videos """
+    """Caption: contains compressed captions in Bytes for YouTube videos"""
 
     __tablename__ = "caption"
-    id              = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
 
     video_id = Column(String, ForeignKey("video.id"), nullable=False)
     video = relationship("Video", uselist=False, lazy="selectin")
@@ -240,11 +243,47 @@ class Caption(Base, UtilityBase):
 
     def __repr__(self):
         return "Caption(id={}, length={}, compr_length{}, compr%={.2f})".format(
-            self.id, self.length, self.compr_length, self.compr_pct() 
+            self.id, self.length, self.compr_length, self.compr_pct()
         )
 
     def compr_pct(self):
         return self.compr_length / self.length
+
+    def as_dict(self) -> dict:
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+    def json(self) -> dict:
+        return self.as_dict()
+
+
+class queryResult(Base, UtilityBase):
+    """queryResult: YouTube API search query, used to cache search results, to not overrequest their API"""
+
+    __tablename__ = "query_result"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+
+    # use one to many
+    # video_id = Column(String, ForeignKey("video.id"), nullable=False)
+    # video = relationship("Video", uselist=False, lazy="selectin")
+
+    # make sure to lower the string before entering
+    query = Column(String, nullable=False, unique=False) # not unique, but will only add new query_results after N days have elapsed
+    # nresult = Column(Integer, nullable=False, unique=False)
+
+    videos = relationship(
+        "Video", uselist=True, secondary=query_video_association, lazy=True
+    )
+
+    created = Column(DateTime, server_default=func.now())  # current_timestamp()
+    updated = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    # add this so that it can be accessed
+    __mapper_args__ = {"eager_defaults": True}
+
+    def __repr__(self):
+        return "queryResult(id={}, query={}, nresult={})".format(
+            self.id, self.query, len(self.videos)
+        )
 
     def as_dict(self) -> dict:
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
