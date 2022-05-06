@@ -1,16 +1,17 @@
 """helpers.py, helper methods for SQLAlchemy models, listed in models.py."""
 import zlib
 from datetime import datetime, timedelta
-from typing import Any, List, Optional  # Dict, Set, List, Tuple
+from typing import Any, List, Optional  # Dict, Set, Tuple
 
 from rarc_utils.sqlalchemy_base import aget_str_mappings as aget_str_mappings_custom
 from rarc_utils.sqlalchemy_base import create_many
 from rarc_utils.sqlalchemy_base import get_str_mappings as get_str_mappings_custom
+from sqlalchemy import and_
 from sqlalchemy.future import select
 
-from .core.types import VideoId
+from ..core.types import VideoId
+from ..settings import PSQL_HOURS_AGO
 from .models import Caption, queryResult
-from .settings import PSQL_HOURS_AGO
 
 # from .models import *
 
@@ -25,22 +26,6 @@ async def aget_all(session, model=None, skip: int = 0, limit: int = 100):
     assert model is not None
     # async with asession() as session:
     query = select(model).offset(skip).limit(limit)
-    res = await session.execute(query)
-    return list(res.scalars())
-
-
-async def aget_all_by_userid(
-    session, model, user_id: int, skip: int = 0, limit: int = 100
-):
-    """Get all items for a model for given user_id.
-
-    usage:
-        loop.run_until_complete(run_in_session(async_session, aget_all_by_userid, model=Activity, user_id=2))
-    """
-    # async with asession() as session:
-    query = (
-        select(model).filter_by(user_id=user_id).offset(skip).limit(limit)
-    )  # .join(Habbit, Habbit.id == Activity.habbit_id)
     res = await session.execute(query)
     return list(res.scalars())
 
@@ -109,7 +94,7 @@ async def get_captions_by_video_ids(
 
     async with asession() as session:
         query = select(Caption).where(
-            Caption.video_id.in_(video_ids) and Caption.updated > since
+            and_(Caption.video_id.in_(video_ids), Caption.updated > since)
         )
         res = await session.execute(query)
 

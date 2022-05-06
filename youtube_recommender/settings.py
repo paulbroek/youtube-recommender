@@ -1,7 +1,4 @@
-""" settings.py
-    
-general settings for youtube-recommender
-"""
+"""Settings.py, general settings for youtube-recommender."""
 
 from pathlib import Path
 

@@ -29,14 +29,6 @@ __all__ = [
 ]
 
 
-# organizing this module as class, better?
-# class VideoFinder:
-#     def __init__(self):
-#         pass
-
-#     @staticmethod
-
-
 # ======================================================================= #
 # ======                       PUBLIC METHODS                      ====== #
 # ======================================================================= #
@@ -148,7 +140,7 @@ def _find_videos(search_terms, api_key, views_threshold, uploaded_since):
     return results_df
 
 
-def _find_all_terms(search_terms, api_key, uploaded_since, views_threshold):
+def _find_all_terms(search_terms: List[str], api_key, uploaded_since, views_threshold):
     """Find all terms in search terms."""
     list_of_dfs = []
     for index, _ in enumerate(search_terms):
@@ -164,7 +156,9 @@ def _find_all_terms(search_terms, api_key, uploaded_since, views_threshold):
     return list_of_dfs
 
 
-async def _afind_all_terms(search_terms, api_key, uploaded_since, views_threshold):
+async def _afind_all_terms(
+    search_terms: List[str], api_key, uploaded_since, views_threshold
+):
     """Speed up downloading of captions by running them concurrently.
 
     usage:
@@ -183,7 +177,7 @@ async def _afind_all_terms(search_terms, api_key, uploaded_since, views_threshol
     return list_of_dfs
 
 
-def _search_api(search_terms, api_key, uploaded_since):
+def _search_api(search_terms: List[str], api_key, uploaded_since):
     """Execute search through API and returns result."""
     # Initialise API call
     youtube_api = build("youtube", "v3", developerKey=api_key)

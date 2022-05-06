@@ -21,13 +21,6 @@ from .data_methods import data_methods as dm
 logger = logging.getLogger(__name__)
 
 
-# def search_each_video(
-#     search_terms: Union[str, List[str]], api_key
-# ) -> Dict[str, pd.DataFrame]:
-#     """search each video for captions"""
-
-#     pass
-
 # ======================================================================= #
 # ======                       PUBLIC METHODS                      ====== #
 # ======================================================================= #
@@ -124,6 +117,8 @@ def select_video_ids(df: pd.DataFrame, n=0) -> List[VideoId]:
 def captions_to_df(captions: List[Dict[str, Any]], classify_lang=True) -> pd.DataFrame:
     """Parse list of captions to Pandas DataFrame."""
     df = pd.DataFrame(captions)
+    if df.empty:
+        return df
     assert "text" in df.columns
     assert "video_id" in df.columns
     df["text_len"] = df["text"].map(len)

@@ -99,14 +99,17 @@ if __name__ == "__main__":
     if args.dryrun or vdf.empty:
         sys.exit()
 
-    # get captions from cache
+    # check cache for existing captions
     existing_captions = loop.run_until_complete(
         get_captions_by_video_ids(async_session, video_ids)
     )
+    # logger.info(f"{len(existing_captions)=} {existing_captions=}")
+    if len(existing_captions) > 0:
+        logger.info(f"using {len(existing_captions)} existing captions")
+    existing_video_ids = set(c.video.id for c in existing_captions)
 
     # filter video_ids based on those existing_captions
-
-    logger.info(f"{len(existing_captions)=} {existing_captions=}")
+    video_ids = list(set(video_ids) - existing_video_ids)
 
     # download captions
     # captions = download_captions(video_ids) # blocking way
@@ -114,6 +117,10 @@ if __name__ == "__main__":
         adownload_captions(video_ids)
     )
     df = captions_to_df(captions_list)
+
+    if df.empty:
+        logger.info("nothing to do")
+        sys.exit()
 
     if args.merge_with_videos:
         df = dm.merge_captions_with_videos(df, vdf)
