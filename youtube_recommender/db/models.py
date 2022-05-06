@@ -14,8 +14,8 @@ now connect using:
     docker exec -it trade-postgres bash -c 'psql youtube -U postgres'
 
 create some tables using (from ./rarc/rarc directory):
-    ipython --no-confirm-exit ~/repos/youtube-recommender/youtube-recommender/db/models.py -i -- --create 1
-    ipython --no-confirm-exit ~/repos/youtube-recommender/youtube-recommender/db/models.py -i -- --create 1 -f  (create without asking for confirmation to delete existing models, use with caution)
+    ipy -m youtube_recommender.db.models -- --create 0
+    ipy -m youtube_recommender.db.models -- --create 1 -f  (create without asking for confirmation to delete existing models, use with caution)
 
 list data:
     ipython --no-confirm-exit ~/repos/youtube/youtube/models.py -i -- --create 0
@@ -103,7 +103,8 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.schema import Table
 from youtube_recommender import config as config_dir
 
-from .helpers import aget_str_mappings
+# no imports from helpers in this file
+# from .helpers import aget_str_mappings
 
 # __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
@@ -222,11 +223,11 @@ class Caption(Base, UtilityBase):
     __mapper_args__ = {"eager_defaults": True}
 
     def __repr__(self):
-        return "Caption(id={}, length={}, compr_length{}, compr%={.2f})".format(
+        return "Caption(id={}, length={}, compr_length{}, compr%={:.2f})".format(
             self.id, self.length, self.compr_length, self.compr_pct()
         )
 
-    def compr_pct(self):
+    def compr_pct(self) -> float:
         return self.compr_length / self.length
 
     def as_dict(self) -> dict:
@@ -332,4 +333,4 @@ if __name__ == "__main__":
         # data = loop.run_until_complete(get_data2(psql))
         # raise NotImplementedError
 
-    strMappings = loop.run_until_complete(aget_str_mappings(psql))
+    # strMappings = loop.run_until_complete(aget_str_mappings(psql))

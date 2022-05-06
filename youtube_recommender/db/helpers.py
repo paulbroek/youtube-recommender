@@ -1,14 +1,15 @@
 """helpers.py, helper methods for SQLAlchemy models, listed in models.py."""
 import zlib
 from datetime import datetime, timedelta
-from typing import Any, Optional  # Dict, Set, List, Tuple
+from typing import Any, List, Optional  # Dict, Set, List, Tuple
 
 from rarc_utils.sqlalchemy_base import aget_str_mappings as aget_str_mappings_custom
 from rarc_utils.sqlalchemy_base import create_many
 from rarc_utils.sqlalchemy_base import get_str_mappings as get_str_mappings_custom
 from sqlalchemy.future import select
 
-# from .models import Video, Channel, Caption, queryResult
+from .models import Caption, queryResult
+
 # from .models import *
 
 # async def aget_all(asession, model, skip: int = 0, limit: int = 100):
@@ -92,15 +93,26 @@ def get_all(session, model):
     return list(session.execute(stmt).scalars())
 
 
-def get_last_query_results(session, query: str, model=None, maxHoursAgo: int = 7 * 24):
+async def get_captions_by_video_ids(asession, video_ids: List[str]):
+
+    async with asession() as session:
+        query = select(Caption).where(Caption.video_id.in_(video_ids))
+        res = await session.execute(query)
+
+        instances = res.scalars().fetchall()
+
+    return instances
+
+
+def get_last_query_results(session, query: str, maxHoursAgo: int = 7 * 24):
 
     since = datetime.utcnow() - timedelta(hours=maxHoursAgo)
 
     stmt = (
-        select(model)
-        .filter(model.query == query)
-        .where(model.updated > since)
-        .order_by(model.updated.desc())
+        select(queryResult)
+        .filter(queryResult.query == query)
+        .where(queryResult.updated > since)
+        .order_by(queryResult.updated.desc())
     )
     return list(session.execute(stmt).scalars())
 

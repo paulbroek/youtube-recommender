@@ -4,8 +4,7 @@ from .caption_finder import (
     download_captions,
     save_feather,
 )
-
-# from .topicer import *
+from .topicer import *
 from .video_finder import (
     get_start_date_string,
     load_feather,

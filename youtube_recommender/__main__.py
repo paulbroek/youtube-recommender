@@ -22,7 +22,7 @@ from youtube_recommender import config as config_dir
 
 from .data_methods import data_methods as dm
 from .db.helpers import get_last_query_results
-from .db.models import psql, queryResult
+from .db.models import psql
 from .settings import CONFIG_FILE, VIDEOS_PATH
 from .utils.misc import load_yaml
 from .video_finder import get_start_date_string, save_feather, search_each_term
@@ -96,9 +96,7 @@ if __name__ == "__main__":
     if not args.force:
         # before calling YouTube API, use PostgreSQL cache for search results younger than 7 days
         for query in args.search_terms:
-            qrs = get_last_query_results(
-                psession, query=query, model=queryResult
-            )  # maxHoursAgo=2
+            qrs = get_last_query_results(psession, query=query)  # maxHoursAgo=2
             if len(qrs) > 0:
                 logger.info(
                     f"got cache results for {query=:<25}, dismissing it from search_terms"
