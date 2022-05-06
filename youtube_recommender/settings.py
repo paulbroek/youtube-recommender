@@ -1,5 +1,5 @@
 """ settings.py
-	
+    
 general settings for youtube-recommender
 """
 
@@ -10,6 +10,12 @@ __all__ = [
     "CAPTIONS_PATH",
     "SPACY_MODEL",
 ]
+
+######################
+##### cfg paths ######
+######################
+
+CONFIG_PATH = "config/config.yaml"
 
 ######################
 ##### File paths #####

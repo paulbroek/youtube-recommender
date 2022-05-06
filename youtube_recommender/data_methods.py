@@ -116,7 +116,6 @@ class data_methods:
             df.rename(
                 columns={
                     "video_id": "id",
-                    "Title": "title",
                     "Description": "description",
                     "Views": "views",
                     "Custom_Score": "custom_score",

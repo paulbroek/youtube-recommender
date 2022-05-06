@@ -34,7 +34,7 @@ Extends on [this](https://github.com/chris-lovejoy/YouTube-video-finder) repo, b
 ## 2.1 How to install
 
 ```bash
-# add YouTube v3 API key to config.yaml first!
+# add YouTube v3 API key to youtube_recommender/config.yaml first!
 # structure:
 # api_key:
 #   "your_api_key"
@@ -54,13 +54,13 @@ Search for YouTube videos, example usage:
 ```bash
 # alias ipy="ipython --no-confirm-exit --no-banner -i"
 
-ipy youtube-recommender/main.py -- 'search term 1' 'search term 2'
+ipy -m youtube-recommender -- 'search term 1' 'search term 2'
 
 # with different search-period (default is 7 days)
-ipy youtube-recommender/main.py -- 'search term 1' --search-period 29
+ipy -m youtube-recommender -- 'search term 1' --search-period 29
 
 # save top_videos to feather
-ipy youtube-recommender/main.py -- 'search term 1' 'search term 2' --save
+ipy -m youtube-recommender -- 'search term 1' 'search term 2' --save
 
 # to inspect results, inspect `res` object`, or `df` for only top_videos
 ```

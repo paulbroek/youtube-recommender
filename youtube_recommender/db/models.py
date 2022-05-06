@@ -1,81 +1,77 @@
-"""
-    youtube SQLAlchemy models
-    creating a data model for any type of messages / tasks, ordering them by priority, sending reminders to a variety of sources, ...
+r"""Youtube-recommender SQLAlchemy models.
 
-    based on:
-         https://docs.sqlalchemy.org/en/14/orm/extensions/asyncio.html 
+creating a data model for any type of messages / tasks, ordering them by priority, sending reminders to a variety of sources, ...
 
-    create database 'youtube' in psql (command line tool for postgres):
-        (go inside psql) docker exec -it trade-postgres bash -c 'psql -U postgres -W'   ENTER PASSWORD, see file: trade/docker-compose-trade.yml
-        
-        CREATE DATABASE "youtube";
+based on:
+    https://docs.sqlalchemy.org/en/14/orm/extensions/asyncio.html
 
-    now connect using:
-        docker exec -it trade-postgres bash -c 'psql youtube -U postgres'
+create database 'youtube' in psql (command line tool for postgres):
+    (go inside psql) docker exec -it trade-postgres bash -c 'psql -U postgres -W'   ENTER PASSWORD, see file: trade/docker-compose-trade.yml
 
-    create some tables using (from ./rarc/rarc directory):
-        ipython --no-confirm-exit ~/repos/youtube-recommender/youtube-recommender/db/models.py -i -- --create 1
-        ipython --no-confirm-exit ~/repos/youtube-recommender/youtube-recommender/db/models.py -i -- --create 1 -f  (create without asking for confirmation to delete existing models, use with caution)
+    CREATE DATABASE "youtube";
 
-    list data:
-        ipython --no-confirm-exit ~/repos/youtube/youtube/models.py -i -- --create 0
+now connect using:
+    docker exec -it trade-postgres bash -c 'psql youtube -U postgres'
 
-    For migrations use alembic. First install `pip install psycopg2-binary` and `pip install alembic` in current conda environment. Run `alembic init alembic`  in this folder, 
-    and update "alembic.ini" by changing sqlalchemy.url to `postgresql://postgres:PASSWORD@80.56.112.182/youtube`
-        - update the env.py file by importing your model: 
-            from models import *
-            from models import Base
-            target_metadata = Base.metadata
+create some tables using (from ./rarc/rarc directory):
+    ipython --no-confirm-exit ~/repos/youtube-recommender/youtube-recommender/db/models.py -i -- --create 1
+    ipython --no-confirm-exit ~/repos/youtube-recommender/youtube-recommender/db/models.py -i -- --create 1 -f  (create without asking for confirmation to delete existing models, use with caution)
 
-        - Change something in the model below, and run 
-            alembic revision --autogenerate -m "Add sum_amount column for Position"    for example
-            Check the contents of the new alembic/versions/****Add_sum... file and if it correct run:
+list data:
+    ipython --no-confirm-exit ~/repos/youtube/youtube/models.py -i -- --create 0
 
-        - `alembic upgrade head` to commit all changes
+For migrations use alembic. First install `pip install psycopg2-binary` and `pip install alembic` in current conda environment. Run `alembic init alembic`  in this folder, 
+and update "alembic.ini" by changing sqlalchemy.url to `postgresql://postgres:PASSWORD@80.56.112.182/youtube`
+    - update the env.py file by importing your model:
+        from models import *
+        from models import Base
+        target_metadata = Base.metadata
 
-        - Excellent documentations on: https://alembic.sqlalchemy.org/en/latest/autogenerate.html
+    - Change something in the model below, and run
+        alembic revision --autogenerate -m "Add sum_amount column for Position"    for example
+        Check the contents of the new alembic/versions/****Add_sum... file and if it correct run:
 
-    Frequently used queries:
+    - `alembic upgrade head` to commit all changes
 
-        see views.sql
-        execute inside psql:
-        docker exec -it postgres-master bash -c 'psql youtube -U postgres -f /youtube_data/db/views.sql'
+    - Excellent documentations on: https://alembic.sqlalchemy.org/en/latest/autogenerate.html
 
-   Add trigger functions, so most frequently used views are always up to date:
+Frequently used queries:
 
-        see triggers.sql
-        execute inside psql:
-        docker exec -it postgres-master bash -c 'psql youtube -U postgres -f /youtube_data/db/triggers.sql'
+    see views.sql
+    execute inside psql:
+    docker exec -it postgres-master bash -c 'psql youtube -U postgres -f /youtube_data/db/views.sql'
 
-    Get last messages:
+Add trigger functions, so most frequently used views are always up to date:
 
-        (show view content)
-        SELECT * FROM last_messages;
+    see triggers.sql
+    execute inside psql:
+    docker exec -it postgres-master bash -c 'psql youtube -U postgres -f /youtube_data/db/triggers.sql'
 
-    Get tasks by user:
+Get last messages:
 
-        REFRESH MATERIALIZED VIEW last_tasks;
-        SELECT *, NOW() - task.updated AS updated_ago, task.due_date - NOW() AS till_due
-        FROM last_tasks AS task
-        WHERE user_id = 2;
+    (show view content)
+    SELECT * FROM last_messages;
 
-    Refresh and show any materialized view:
-        REFRESH MATERIALIZED VIEW last_messages;
-        SELECT * FROM last_messages;
+Get tasks by user:
 
-    Show materialized views using: 
+    REFRESH MATERIALIZED VIEW last_tasks;
+    SELECT *, NOW() - task.updated AS updated_ago, task.due_date - NOW() AS till_due
+    FROM last_tasks AS task
+    WHERE user_id = 2;
+
+Refresh and show any materialized view:
+    REFRESH MATERIALIZED VIEW last_messages;
+    SELECT * FROM last_messages;
+
+Show materialized views using:
         \dm
-
 """
-
 import argparse
 import asyncio
 import configparser
 import logging
 import uuid
 from datetime import datetime  # , timedelta
-
-# from random import sample, choice
 from pathlib import Path
 
 import timeago
@@ -83,7 +79,6 @@ from rarc_utils.log import loggingLevelNames, set_log_level, setup_logger
 from rarc_utils.misc import AttrDict, trunc_msg  # , timeago_series
 from rarc_utils.sqlalchemy_base import (
     UtilityBase,
-    aget_or_create,
     async_main,
     get_async_db,
     get_async_session,
@@ -95,7 +90,6 @@ from sqlalchemy import (
     Float,
     ForeignKey,
     Integer,
-    Interval,
     LargeBinary,
     String,
     UniqueConstraint,
@@ -109,12 +103,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.schema import Table
 from youtube_recommender import config as config_dir
 
-from .helpers import *
-
-# import json
-# from pprint import pprint
-# from yapic import json
-
+from .helpers import aget_str_mappings
 
 # __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
@@ -131,7 +120,7 @@ cfgFile = p.with_name("postgres.cfg")
 parser = configparser.ConfigParser()
 parser.read(cfgFile)
 psql = AttrDict(parser["psql"])
-assert psql["db"] == "youtube"  # just to be save to not overwrite existing other db
+assert psql["db"] == "youtube"  # do not overwrite existing other db
 psession = get_session(psql)()
 
 DATA_DIR = Path("data")
@@ -213,7 +202,7 @@ class Channel(Base, UtilityBase):
 
 
 class Caption(Base, UtilityBase):
-    """Caption: contains compressed captions in Bytes for YouTube videos"""
+    """Caption: contains compressed captions in Bytes for YouTube videos."""
 
     __tablename__ = "caption"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -248,7 +237,10 @@ class Caption(Base, UtilityBase):
 
 
 class queryResult(Base, UtilityBase):
-    """queryResult: YouTube API search query, used to cache search results, to not overrequest their API"""
+    """queryResult: YouTube API search query, used to cache search results.
+
+    To not overrequest their API
+    """
 
     __tablename__ = "query_result"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -309,7 +301,8 @@ if __name__ == "__main__":
         "--force",
         action="store_true",
         default=False,
-        help="don't ask for model creation confirmation. caution: deletes all existing models",
+        help="don't ask for model creation confirmation. \
+            caution: deletes all existing models",
     )
 
     args = CLI.parse_args()
