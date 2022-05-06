@@ -30,7 +30,7 @@ from .video_finder import get_start_date_string, save_feather, search_each_term
 p = Path(config_dir.__file__)
 cfgFile = p.with_name(CONFIG_FILE)
 
-log_fmt = "%(asctime)s - %(module)-16s - %(lineno)-4s - %(funcName)-16s - %(levelname)-7s - %(message)s"  # name
+log_fmt = "%(asctime)s - %(module)-16s - %(lineno)-4s - %(funcName)-20s - %(levelname)-7s - %(message)s"  # name
 logger = setup_logger(
     cmdLevel=logging.INFO, saveFile=0, savePandas=1, fmt=log_fmt
 )  # DEBUG
@@ -134,7 +134,8 @@ if __name__ == "__main__":
 
     if args.push_db:
 
-        datad = dm.push_videos(df, async_session)
+        datad = loop.run_until_complete(dm.push_videos(df, async_session))
+        # assert isinstance(datad, dict)
         videos_dict = datad["video"]
 
         # save queryResults

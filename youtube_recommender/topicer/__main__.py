@@ -24,7 +24,7 @@ from ..db.models import psql
 from ..settings import CAPTIONS_PATH, VIDEOS_PATH
 from ..video_finder import load_feather
 
-log_fmt = "%(asctime)s - %(module)-16s - %(lineno)-4s - %(funcName)-18s - %(levelname)-7s - %(message)s"  # name
+log_fmt = "%(asctime)s - %(module)-16s - %(lineno)-4s - %(funcName)-20s - %(levelname)-7s - %(message)s"  # name
 logger = setup_logger(
     cmdLevel=logging.INFO, saveFile=0, savePandas=1, fmt=log_fmt
 )  # DEBUG
@@ -116,4 +116,4 @@ if __name__ == "__main__":
     if args.push_db:
         # dm.push_captions(df, vdf, async_session)
 
-        _ = loop.run_until_complete(dm.push_captions(df, vdf, async_session))
+        captions = loop.run_until_complete(dm.push_captions(df, vdf, async_session))

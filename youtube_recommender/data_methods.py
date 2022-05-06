@@ -94,14 +94,14 @@ class data_methods:
         return bdf
 
     @classmethod
-    async def push_videos(cls, df, async_session) -> None:
+    async def push_videos(cls, df, async_session) -> dict:
         """Push videos to db.
 
         First create Channel items
 
         returnExisting:     return videos after creating them
         """
-        channel_recs = cls.make_channel_recs(df)
+        channel_recs = cls._make_channel_recs(df)
 
         data = dict()
         # create channels from same dataset
@@ -112,18 +112,20 @@ class data_methods:
         # map the new channels into vdf
         df["channel"] = df["channel_id"].map(data["channel"])
 
-        video_recs = cls.make_video_recs(df)
+        video_recs = cls._make_video_recs(df)
 
         data["video"] = await create_many_items(
             async_session, Video, video_recs, nameAttr="id", returnExisting=True
         )
+
+        logger.info("finished")
 
         return data
 
     @classmethod
     async def push_captions(
         cls, df, video_df, async_session, returnExisting=True
-    ) -> None:
+    ) -> dict:
         """Push captions to db.
 
         First create Channel and Video items
@@ -131,7 +133,7 @@ class data_methods:
         returnExisting:     return captions after creating them
         """
         # get list of dicts for Channel and Video
-        channel_recs = cls.make_channel_recs(video_df)
+        channel_recs = cls._make_channel_recs(video_df)
 
         # create channels from same dataset
 
@@ -142,7 +144,7 @@ class data_methods:
         # map the new channels into vdf
         video_df["channel"] = video_df["channel_id"].map(channels_dict)
 
-        video_recs = cls.make_video_recs(video_df)
+        video_recs = cls._make_video_recs(video_df)
 
         videos_dict = await create_many_items(
             async_session, Video, video_recs, nameAttr="id", returnExisting=True
@@ -157,7 +159,7 @@ class data_methods:
         df["compr"] = df["text"].map(compress_caption)
         df["compr_length"] = df["compr"].map(len)
 
-        caption_recs = cls.make_caption_recs(df)
+        caption_recs = cls._make_caption_recs(df)
 
         # captions_dict =
         captions = await create_many_items(
@@ -167,6 +169,8 @@ class data_methods:
             nameAttr="video_id",
             returnExisting=returnExisting,
         )
+
+        logger.info("finished")
 
         return captions
 
@@ -178,8 +182,14 @@ class data_methods:
             session.add(qr)
             session.commit()
 
+        logger.info("finished")
+
+    # ======================================================================= #
+    # ======                       PRIVATE METHODS                     ====== #
+    # ======================================================================= #
+
     @staticmethod
-    def make_channel_recs(df: pd.DataFrame) -> List[Dict[str, Any]]:
+    def _make_channel_recs(df: pd.DataFrame) -> List[Dict[str, Any]]:
         """Make Channel records from dataframe, for SQLAlchemy object creation."""
         recs = (
             df.rename(
@@ -197,7 +207,7 @@ class data_methods:
         return recs
 
     @staticmethod
-    def make_video_recs(df: pd.DataFrame) -> List[Dict[str, Any]]:
+    def _make_video_recs(df: pd.DataFrame) -> List[Dict[str, Any]]:
         """Make Video records from dataframe, for SQLAlchemy object creation."""
         recs = (
             df.rename(columns={"video_id": "id",})[
@@ -220,7 +230,7 @@ class data_methods:
         return recs
 
     @staticmethod
-    def make_caption_recs(df: pd.DataFrame) -> List[Dict[str, Any]]:
+    def _make_caption_recs(df: pd.DataFrame) -> List[Dict[str, Any]]:
         """Make Caption records from dataframe, for SQLAlchemy object creation."""
         recs = (
             df.rename(
