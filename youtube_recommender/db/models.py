@@ -134,7 +134,7 @@ query_video_association = Table(
     Column("video_id", String, ForeignKey("video.id")),
     Column(
         "query_result_id", String, ForeignKey("query_result.id")
-    ),  # a query result can have multiple videos
+    ),  # a query result can have multiple videos, a video can belong to multiple query results
     UniqueConstraint("video_id", "query_result_id"),
 )
 
@@ -144,7 +144,6 @@ class Video(Base, UtilityBase):
 
     __tablename__ = "video"
     id = Column(String, primary_key=True)
-    # id              = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     title = Column(String, nullable=False, unique=False)
     description = Column(String, nullable=True, unique=False)
     views = Column(Integer, nullable=False, unique=False)
@@ -178,9 +177,7 @@ class Channel(Base, UtilityBase):
     """Channel: contains metadata of YouTube channels: num_subscribers, id, etc."""
 
     __tablename__ = "channel"
-    # id              = Column(Integer, primary_key=True)
     id = Column(String, primary_key=True)
-    # id              = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String, nullable=False, unique=False)
     num_subscribers = Column(Integer, nullable=False, unique=False)
 
@@ -223,8 +220,12 @@ class Caption(Base, UtilityBase):
     __mapper_args__ = {"eager_defaults": True}
 
     def __repr__(self):
-        return "Caption(id={}, length={}, compr_length{}, compr%={:.2f})".format(
-            self.id, self.length, self.compr_length, self.compr_pct()
+        return "Caption(id={}, video.title={}, length={:_}, compr_length={:_}, compr%={:.2%})".format(
+            self.id,
+            trunc_msg(self.video.title, 20),
+            self.length,
+            self.compr_length,
+            self.compr_pct(),
         )
 
     def compr_pct(self) -> float:
@@ -245,10 +246,6 @@ class queryResult(Base, UtilityBase):
 
     __tablename__ = "query_result"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-
-    # use one to many
-    # video_id = Column(String, ForeignKey("video.id"), nullable=False)
-    # video = relationship("Video", uselist=False, lazy="selectin")
 
     # make sure to lower the string before entering
     query = Column(

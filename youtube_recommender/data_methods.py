@@ -1,7 +1,7 @@
 """data_methods.py, contains methods for working with dataframes."""
 import logging
 from operator import itemgetter
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import langid
 import pandas as pd
@@ -98,7 +98,9 @@ class data_methods:
         return bdf
 
     @classmethod
-    async def push_videos(cls, vdf, async_session) -> dict:
+    async def push_videos(
+        cls, vdf: pd.DataFrame, async_session
+    ) -> Dict[str, Dict[str, "model"]]:
         """Push videos to db.
 
         First create Channel items
@@ -125,7 +127,9 @@ class data_methods:
         return data
 
     @classmethod
-    async def push_captions(cls, df, vdf, async_session, returnExisting=True) -> dict:
+    async def push_captions(
+        cls, df: pd.DataFrame, vdf: pd.DataFrame, async_session, returnExisting=True
+    ) -> Dict[str, Caption]:
         """Push captions to db.
 
         First create Channel and Video items
@@ -162,7 +166,9 @@ class data_methods:
         return captions
 
     @classmethod
-    def push_query_results(cls, queries, videos_dict, session) -> None:
+    def push_query_results(
+        cls, queries: List[str], videos_dict: List[dict], session
+    ) -> None:
         """Push queryResults to db."""
         for query in queries:
             qr = queryResult(query=query, videos=list(videos_dict.values()))

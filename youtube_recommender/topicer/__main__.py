@@ -21,7 +21,7 @@ from ..caption_finder import (
 )
 from ..data_methods import data_methods as dm
 from ..db.helpers import get_captions_by_video_ids
-from ..db.models import psql
+from ..db.models import Caption, psql
 from ..settings import CAPTIONS_PATH, VIDEOS_PATH
 from ..video_finder import load_feather
 
@@ -122,4 +122,6 @@ if __name__ == "__main__":
     if args.push_db:
         # dm.push_captions(df, vdf, async_session)
 
-        captions = loop.run_until_complete(dm.push_captions(df, vdf, async_session))
+        captions: Dict[str, Caption] = loop.run_until_complete(
+            dm.push_captions(df, vdf, async_session, returnExisting=True)
+        )
