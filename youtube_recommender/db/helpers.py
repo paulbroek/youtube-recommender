@@ -1,27 +1,23 @@
-""" helpers.py 
-
-    helper methods for SQLAlchemy models, listed in models.py
-"""
-
-from typing import Any, Optional  # Dict, Set, List, Tuple
-from datetime import datetime, timedelta
-
+"""helpers.py, helper methods for SQLAlchemy models, listed in models.py."""
 import zlib
-from sqlalchemy.future import select
+from datetime import datetime, timedelta
+from typing import Any, Optional  # Dict, Set, List, Tuple
 
+from rarc_utils.sqlalchemy_base import aget_str_mappings as aget_str_mappings_custom
 from rarc_utils.sqlalchemy_base import create_many
 from rarc_utils.sqlalchemy_base import get_str_mappings as get_str_mappings_custom
-from rarc_utils.sqlalchemy_base import aget_str_mappings as aget_str_mappings_custom
+from sqlalchemy.future import select
 
 # from .models import Video, Channel, Caption, queryResult
 # from .models import *
 
 # async def aget_all(asession, model, skip: int = 0, limit: int = 100):
 async def aget_all(session, model=None, skip: int = 0, limit: int = 100):
-    """generic method to get all items for a model
+    """Get all items for a model.
 
-    loop.run_until_complete(run_in_session(async_session, aget_all, model=Habbit))
-    loop.run_until_complete(run_in_session(async_session, aget_all, model=genericTask))
+    usage:
+        loop.run_until_complete(run_in_session(async_session, aget_all, model=Habbit))
+        loop.run_until_complete(run_in_session(async_session, aget_all, model=genericTask))
     """
     assert model is not None
     # async with asession() as session:
@@ -33,9 +29,10 @@ async def aget_all(session, model=None, skip: int = 0, limit: int = 100):
 async def aget_all_by_userid(
     session, model, user_id: int, skip: int = 0, limit: int = 100
 ):
-    """generic method to get all items for a model for given user_id
+    """Get all items for a model for given user_id.
 
-    loop.run_until_complete(run_in_session(async_session, aget_all_by_userid, model=Activity, user_id=2))
+    usage:
+        loop.run_until_complete(run_in_session(async_session, aget_all_by_userid, model=Activity, user_id=2))
     """
     # async with asession() as session:
     query = (
@@ -46,10 +43,12 @@ async def aget_all_by_userid(
 
 
 async def aget_by_name(session, model, name: str) -> Optional[Any]:
-    """generic method to get item for a given model by name
+    """Get item for a given model by name.
+
     used to search for items
 
-    loop.run_until_complete(run_in_session(async_session, aget_by_name, model=genericTask, name='read'))
+    usage:
+        loop.run_until_complete(run_in_session(async_session, aget_by_name, model=genericTask, name='read'))
     """
     # async with asession() as session:
     query = select(model).filter_by(name=name).limit(1)

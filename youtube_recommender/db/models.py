@@ -68,73 +68,64 @@
 
 """
 
-import os
 import argparse
-
-from datetime import datetime # , timedelta
-
-# from collections import defaultdict
-import configparser
 import asyncio
+import configparser
 import logging
+import uuid
+from datetime import datetime  # , timedelta
 
 # from random import sample, choice
 from pathlib import Path
 
-import uuid
 import timeago
+from rarc_utils.log import loggingLevelNames, set_log_level, setup_logger
+from rarc_utils.misc import AttrDict, trunc_msg  # , timeago_series
+from rarc_utils.sqlalchemy_base import (
+    UtilityBase,
+    aget_or_create,
+    async_main,
+    get_async_db,
+    get_async_session,
+    get_session,
+)
+from sqlalchemy import (
+    Column,
+    DateTime,
+    Float,
+    ForeignKey,
+    Integer,
+    Interval,
+    LargeBinary,
+    String,
+    UniqueConstraint,
+    func,
+)
+from sqlalchemy.dialects.postgresql import UUID
+
+# from sqlalchemy.dialects.postgresql import JSON #, UUID
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
+from sqlalchemy.schema import Table
+from youtube_recommender import config as config_dir
+
+from .helpers import *
 
 # import json
 # from pprint import pprint
 # from yapic import json
 
-# from sqlalchemy import and_
-from sqlalchemy import (
-    Column,
-    DateTime,
-    ForeignKey,
-    func,
-    Integer,
-    BigInteger,
-    String,
-    Interval,
-    Boolean,
-    Float,
-    LargeBinary,
-)  # , Index, PickleType
-from sqlalchemy import UniqueConstraint, CheckConstraint  # ,  ForeignKeyConstraint
 
-# from sqlalchemy.dialects.postgresql import JSON #, UUID
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.schema import Table
-from sqlalchemy.orm import relationship
-from sqlalchemy.dialects.postgresql import UUID
-
-from rarc_utils.sqlalchemy_base import (
-    async_main,
-    get_session,
-    get_async_session,
-    get_async_db,
-    aget_or_create,
-    UtilityBase,
-)  # , run_in_session, get_or_create, AbstractBase,
-from rarc_utils.log import setup_logger, set_log_level, loggingLevelNames
-from rarc_utils.misc import AttrDict, trunc_msg  # , timeago_series
-
-# import rarc_utils.config.redis as redis_config
-# from youtube import config as config_dir
-from .helpers import *
-
-__location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
+# __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
 LOG_FMT = "%(asctime)s - %(module)-16s - %(lineno)-4s - %(funcName)-16s - %(levelname)-7s - %(message)s"  # title
-logger = logging.getLogger(__name__)
-print(f"{__location__=}")
+# logger = logging.getLogger(__name__)
+# print(f"{__location__=}")
 
 # ugly way of retrieving postgres cfg file
-# p = Path(config_dir.__file__)
-p = Path(__location__)
-p = p / "db"
+p = Path(config_dir.__file__)
+# p = Path(__location__)
+# p = p / "db"
 cfgFile = p.with_name("postgres.cfg")
 
 parser = configparser.ConfigParser()
@@ -159,7 +150,7 @@ query_video_association = Table(
 
 
 class Video(Base, UtilityBase):
-    """Video: contains metadata of YouTube videos: views, title, id, etc"""
+    """Video: contains metadata of YouTube videos: views, title, id, etc."""
 
     __tablename__ = "video"
     id = Column(String, primary_key=True)
@@ -194,7 +185,7 @@ class Video(Base, UtilityBase):
 
 
 class Channel(Base, UtilityBase):
-    """Channel: contains metadata of YouTube channels: num_subscribers, id, ..."""
+    """Channel: contains metadata of YouTube channels: num_subscribers, id, etc."""
 
     __tablename__ = "channel"
     # id              = Column(Integer, primary_key=True)
@@ -284,7 +275,10 @@ class queryResult(Base, UtilityBase):
 
     def __repr__(self):
         return "queryResult(id={}, query={}, nresult={}, updated_ago={})".format(
-            self.id, self.query, len(self.videos), timeago.format(self.updated, datetime.utcnow())
+            self.id,
+            self.query,
+            len(self.videos),
+            timeago.format(self.updated, datetime.utcnow()),
         )
 
     def as_dict(self) -> dict:

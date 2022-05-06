@@ -4,19 +4,18 @@
 Created on Wed Nov 11 16:09:52 2020.
 
 @author: chrislovejoy
-From: 
+From:
     https://github.com/chris-lovejoy/YouTube-video-finder/
 """
-from typing import List, Union, Dict
-import logging
-from os import path
-from datetime import datetime, timedelta
-from time import time
-from pathlib import Path
 import asyncio
+import logging
+from datetime import datetime, timedelta
+from os import path
+from pathlib import Path
+from time import time
+from typing import Dict, List, Union
 
 import pandas as pd
-
 from apiclient.discovery import build
 
 logger = logging.getLogger(__name__)
@@ -38,9 +37,9 @@ __all__ = [
 #     @staticmethod
 
 
-## ======================================================================= ##
-## ======                       PUBLIC METHODS                      ====== ##
-## ======================================================================= ##
+# ======================================================================= #
+# ======                       PUBLIC METHODS                      ====== #
+# ======================================================================= #
 
 
 def get_start_date_string(search_period_days: int) -> str:
@@ -100,7 +99,8 @@ def load_feather(videos_path: Path) -> pd.DataFrame:
     # check if file exists, or warn user to run main.py first
     assert path.exists(
         videos_path
-    ), f"{videos_path.as_posix()} does not exist, create it by running e.g.: `ipy youtube-recommender/main.py -- 'robbins' 'earth' --save`"
+    ), f"{videos_path.as_posix()} does not exist, create it by running e.g.: \
+        `ipy youtube-recommender/main.py -- 'robbins' 'earth' --save`"
     vdf = pd.read_feather(videos_path)
 
     return vdf
@@ -114,9 +114,9 @@ def save_feather(df: pd.DataFrame, videos_path: Path) -> None:
     logger.info(f"saved {len(df):,} top_videos metadata to {videos_path.as_posix()}")
 
 
-## ======================================================================= ##
-## ======                       PRIVATE METHODS                     ====== ##
-## ======================================================================= ##
+# ======================================================================= #
+# ======                       PRIVATE METHODS                     ====== #
+# ======================================================================= #
 
 
 def _find_videos(search_terms, api_key, views_threshold, uploaded_since):
@@ -262,9 +262,9 @@ with {} subscribers and can be viewed here: {}\n".format(
             logger.debug("==========================\n")
 
 
-## ======================================================================= ##
-## ====== SERIES OF FUNCTIONS TO PARSE KEY INFORMATION ABOUT VIDEOS ====== ##
-## ======================================================================= ##
+# ======================================================================= #
+# ====== SERIES OF FUNCTIONS TO PARSE KEY INFORMATION ABOUT VIDEOS ====== #
+# ======================================================================= #
 
 
 def _find_title(item):

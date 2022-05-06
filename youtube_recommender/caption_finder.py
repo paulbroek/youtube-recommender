@@ -1,25 +1,21 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Find and download captions from YouTube API
-"""
+"""Find and download captions from YouTube API."""
 
-from typing import List, Dict, Any, Optional  # , Union
-from os import path
-from pathlib import Path
-import logging
 import asyncio
+import logging
+from pathlib import Path
+from typing import Any, Dict, List, Optional  # , Union
 
 import pandas as pd
-
 from apiclient.discovery import build
 from youtube_transcript_api import (
-    YouTubeTranscriptApi,
     NoTranscriptFound,
     TranscriptsDisabled,
+    YouTubeTranscriptApi,
 )
 
-import data_methods as dm
+from .data_methods import data_methods as dm
 
 logger = logging.getLogger(__name__)
 
@@ -31,10 +27,13 @@ logger = logging.getLogger(__name__)
 
 #     pass
 
+# ======================================================================= #
+# ======                       PUBLIC METHODS                      ====== #
+# ======================================================================= #
+
 
 def list_captions(video_id: str, api_key: str):
-    """Executes captions search through API and returns result."""
-
+    """Execute captions search through API and returns result."""
     # Initialise API call
     youtube_api = build("youtube", "v3", developerKey=api_key)
 
@@ -44,7 +43,8 @@ def list_captions(video_id: str, api_key: str):
 
 
 def download_caption(caption_id: str, youtube_api, tfmt: str):
-    """download caption using YouTube API
+    """Download caption using YouTube API.
+
     Caution: requires OAuth credentials, cannot fetch caption for other user's videos
     """
     subtitle = youtube_api.captions().download(id=caption_id, tfmt=tfmt).execute()
@@ -55,8 +55,7 @@ def download_caption(caption_id: str, youtube_api, tfmt: str):
 
 
 def download_caption_v2(video_id: str) -> Optional[List[Dict[str, Any]]]:
-    """download caption using youtube_transcript_api"""
-
+    """Download caption using youtube_transcript_api."""
     captions: Optional[List[Dict[str, Any]]] = None
 
     try:
@@ -69,27 +68,27 @@ def download_caption_v2(video_id: str) -> Optional[List[Dict[str, Any]]]:
         logger.error(f"captions are disabled for {video_id=}, dismissing it")
 
     if captions is not None:
-        return captions_to_dict(captions, video_id)
+        return _captions_to_dict(captions, video_id)
 
     return captions
 
 
 def download_captions(video_ids: List[str]) -> List[Dict[str, Any]]:
-    """download captions in blocking way
+    """Download captions in blocking way.
+
     usage:
         captions = cf.download_captions(video_ids)
     """
-
     res = [download_caption_v2(video_id) for video_id in video_ids]
     return list(filter(None, res))
 
 
 async def adownload_captions(video_ids: List[str]) -> List[Dict[str, Any]]:
-    """speeding up downloading of captions by running them concurrently
+    """Speed up downloading of captions by running them concurrently.
+
     usage:
         captions = loop.run_until_complete(cf.adownload_captions(video_ids))
     """
-
     loop = asyncio.get_running_loop()
 
     cors = [
@@ -101,34 +100,41 @@ async def adownload_captions(video_ids: List[str]) -> List[Dict[str, Any]]:
     return list(filter(None, captions))
 
 
-def captions_to_dict(captions, video_id) -> dict:
-    return dict(text=captions_to_str(captions, sep=", "), video_id=video_id)
+def save_feather(df: pd.DataFrame, captions_path) -> None:
+    """Save captions dataframe to feather."""
+    assert isinstance(captions_path, Path)
+
+    df.to_feather(captions_path)
+    logger.info(f"saved {len(df):,} captions to {captions_path.as_posix()}")
 
 
 def captions_to_df(captions: List[Dict[str, Any]], classify_lang=True) -> pd.DataFrame:
+    """Parse list of captions to Pandas DataFrame."""
     df = pd.DataFrame(captions)
     assert "text" in df.columns
     assert "video_id" in df.columns
     df["text_len"] = df["text"].map(len)
 
-    # can be removed, since download_captions automatically dismisses non-english captions and therefore videos?
+    # download_captions automatically dismisses non-english captions and therefore videos?
+    # so can be removed?
     if classify_lang:
         df = dm.classify_language(df, "text")
 
     return df
 
 
-def captions_to_str(captions: List[Dict[str, Any]], sep=", ") -> str:
-    """join caption strs into one str"""
+# ======================================================================= #
+# ======                       PRIVATE METHODS                     ====== #
+# ======================================================================= #
 
+
+def _captions_to_dict(captions, video_id) -> dict:
+    return dict(text=_captions_to_str(captions, sep=", "), video_id=video_id)
+
+
+def _captions_to_str(captions: List[Dict[str, Any]], sep=", ") -> str:
+    """Join caption strs into one str."""
     assert len(captions) > 0
     texts = [t["text"] for t in captions]
 
     return sep.join(texts)
-
-
-def save_feather(df: pd.DataFrame, captions_path) -> None:
-    assert isinstance(captions_path, Path)
-
-    df.to_feather(captions_path)
-    logger.info(f"saved {len(df):,} captions to {captions_path.as_posix()}")

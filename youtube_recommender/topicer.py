@@ -1,27 +1,27 @@
-""" topicer.py
-CLI tool to extract topics from youtube videos 
+"""topicer.py, CLI tool to extract topics from youtube videos.
+
 @author: paulbroek
 """
 
-from typing import List, Dict, Any
 import argparse
-import sys
-import logging
 import asyncio
-import uvloop
+import logging
+import sys
+from typing import Any, Dict, List
 
+import uvloop
 from rarc_utils.log import setup_logger
-from rarc_utils.sqlalchemy_base import (
+from rarc_utils.sqlalchemy_base import (  # , aget_or_create_many
     get_async_session,
     get_session,
-)  # , aget_or_create_many
+)
 
-import video_finder as vf
-import caption_finder as cf
-import data_methods as dm
-from db.models import Video, Channel, Caption, psql
-from db.helpers import create_many_items, compress_caption
-from settings import VIDEOS_PATH, CAPTIONS_PATH
+from .caption_finder import adownload_captions, captions_to_df, save_feather
+from .data_methods import data_methods as dm
+from .db.helpers import compress_caption, create_many_items
+from .db.models import Caption, Channel, Video, psql
+from .settings import CAPTIONS_PATH, VIDEOS_PATH
+from .video_finder import load_feather
 
 log_fmt = "%(asctime)s - %(module)-16s - %(lineno)-4s - %(funcName)-18s - %(levelname)-7s - %(message)s"  # name
 logger = setup_logger(
@@ -29,6 +29,7 @@ logger = setup_logger(
 )  # DEBUG
 
 parser = argparse.ArgumentParser(description="Defining parameters")
+
 parser.add_argument(
     "video_ids",
     type=str,
@@ -66,7 +67,6 @@ parser.add_argument(
     default=False,
     help=f"Save captions to `{CAPTIONS_PATH.as_posix()}`",
 )
-
 parser.add_argument(
     "-p",
     "--push_db",
@@ -88,7 +88,7 @@ if __name__ == "__main__":
 
     # parse video_ids
     if args.from_feather:
-        vdf = vf.load_feather(VIDEOS_PATH)
+        vdf = load_feather(VIDEOS_PATH)
         video_ids = vdf.video_id.to_list()
         if args.n > 0:
             video_ids = video_ids[: args.n]
@@ -102,17 +102,17 @@ if __name__ == "__main__":
         sys.exit()
 
     # download captions
-    # captions = cf.download_captions(video_ids) # blocking way
+    # captions = download_captions(video_ids) # blocking way
     captions: List[Dict[str, Any]] = loop.run_until_complete(
-        cf.adownload_captions(video_ids)
+        adownload_captions(video_ids)
     )
-    df = cf.captions_to_df(captions)
+    df = captions_to_df(captions)
 
     if args.merge_with_videos:
         df = dm.merge_captions_with_videos(df, vdf)
 
     if args.save_captions:
-        cf.save_feather(df, CAPTIONS_PATH)
+        save_feather(df, CAPTIONS_PATH)
 
     if args.push_db:
 
@@ -151,7 +151,8 @@ if __name__ == "__main__":
 
         caption_recs = dm.make_caption_recs(df)
 
-        captions_dict = loop.run_until_complete(
+        # captions_dict =
+        _ = loop.run_until_complete(
             create_many_items(
                 async_session,
                 Caption,
