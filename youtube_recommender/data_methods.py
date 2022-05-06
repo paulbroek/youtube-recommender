@@ -3,6 +3,7 @@
     methods related to working with dataframes
 """
 
+from typing import List, Dict, Any
 from operator import itemgetter
 import logging
 from yapic import json
@@ -89,17 +90,17 @@ def merge_captions_with_videos(
     return bdf
 
 
-def make_channel_recs(vdf):
+def make_channel_recs(df: pd.DataFrame) -> List[Dict[str, Any]]:
 
     recs = (
-        vdf.rename(
+        df.rename(
             columns={
                 "channel_id": "id",
                 "Channel Name": "name",
                 "Num_subscribers": "num_subscribers",
             }
         )[["id", "name", "num_subscribers"]]
-        .assign(index=vdf["channel_id"])
+        .assign(index=df["channel_id"])
         .set_index("index")
         .drop_duplicates()
         .to_dict("index")
@@ -108,10 +109,10 @@ def make_channel_recs(vdf):
     return recs
 
 
-def make_video_recs(vdf):
+def make_video_recs(df: pd.DataFrame) -> List[Dict[str, Any]]:
 
     recs = (
-        vdf.rename(
+        df.rename(
             columns={
                 "video_id": "id",
                 "Title": "title",
@@ -130,7 +131,25 @@ def make_video_recs(vdf):
                 "channel",
             ]
         ]
-        .assign(index=vdf["video_id"])
+        .assign(index=df["video_id"])
+        .set_index("index")
+        .drop_duplicates()
+        .to_dict("index")
+    )
+
+    return recs
+
+
+def make_caption_recs(df: pd.DataFrame) -> List[Dict[str, Any]]:
+
+    recs = (
+        df.rename(
+            columns={
+                "text_len": "length",
+                "language_code": "lang",
+            }
+        )[["video_id", "video", "length", "compr", "compr_length", "lang"]]
+        .assign(index=df["video_id"])
         .set_index("index")
         .drop_duplicates()
         .to_dict("index")

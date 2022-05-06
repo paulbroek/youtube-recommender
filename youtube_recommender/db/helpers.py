@@ -4,6 +4,7 @@
 """
 
 from typing import Any, Optional  # Dict, Set, List, Tuple
+from datetime import datetime, timedelta
 
 import zlib
 from sqlalchemy.future import select
@@ -11,6 +12,9 @@ from sqlalchemy.future import select
 from rarc_utils.sqlalchemy_base import create_many
 from rarc_utils.sqlalchemy_base import get_str_mappings as get_str_mappings_custom
 from rarc_utils.sqlalchemy_base import aget_str_mappings as aget_str_mappings_custom
+
+# from .models import Video, Channel, Caption, queryResult
+# from .models import *
 
 # async def aget_all(asession, model, skip: int = 0, limit: int = 100):
 async def aget_all(session, model=None, skip: int = 0, limit: int = 100):
@@ -89,8 +93,21 @@ def get_all(session, model):
     return list(session.execute(stmt).scalars())
 
 
+def get_last_query_results(session, query: str, model=None, maxHoursAgo: int = 7 * 24):
+
+    since = datetime.utcnow() - timedelta(hours=maxHoursAgo)
+
+    stmt = (
+        select(model)
+        .filter(model.query == query)
+        .where(model.updated > since)
+        .order_by(model.updated.desc())
+    )
+    return list(session.execute(stmt).scalars())
+
+
 def compress_caption(caption: str) -> bytes:
-    """ compress str caption using zlib, saves ~ 50% storage """
+    """compress str caption using zlib, saves ~ 50% storage"""
 
     assert isinstance(caption, str)
     return zlib.compress(caption.encode())

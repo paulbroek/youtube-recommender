@@ -10,6 +10,7 @@ and print results to the console.
 """
 
 import argparse
+import sys
 import logging
 import asyncio
 import uvloop
@@ -23,7 +24,7 @@ from rarc_utils.sqlalchemy_base import (
 import video_finder as vf
 import data_methods as dm
 from db.models import Video, Channel, queryResult, psql
-from db.helpers import create_many_items
+from db.helpers import create_many_items, get_last_query_results
 from utils.misc import load_yaml
 from settings import VIDEOS_PATH
 
@@ -38,6 +39,12 @@ parser.add_argument(
 )
 parser.add_argument(
     "--search-period", type=int, default=7, help="The number of days to search for."
+)
+parser.add_argument(
+    "--dryrun",
+    action="store_true",
+    default=False,
+    help="only load modules, do not requests APIs",
 )
 parser.add_argument(
     "--filter",
@@ -74,32 +81,58 @@ if __name__ == "__main__":
 
     start_date_string = vf.get_start_date_string(args.search_period)
 
-    # todo: before calling YouTube API, use PostgreSQL cache for search results younger than 7 days
-    # queryResult.filter(queryResult.query = query).where(created < 7 days)
+    if args.dryrun:
+        sys.exit()
 
-    # res = vf.search_each_term(args.search_terms, config["api_key"], start_date_string) # blocking code
-    res = loop.run_until_complete(
-        vf.search_each_term(args.search_terms, config["api_key"], start_date_string)
-    )
-    df = res["top_videos"].reset_index(drop=True)
+    search_terms = set(args.search_terms)
+    # before calling YouTube API, use PostgreSQL cache for search results younger than 7 days
+    for query in args.search_terms:
+        qrs = get_last_query_results(
+            psession, query=query, model=queryResult
+        )  # maxHoursAgo=2
+        if len(qrs) > 0:
+            logger.info(
+                f"got cache results for {query=:<25}, dismissing it from search_terms"
+            )
+            # filter out the query
+            search_terms.discard(query)
+
+        psession.close()
+
+    # todo: recreate dataframe for cached search terms
+
+    if len(search_terms) > 0:
+        # res = vf.search_each_term(search_terms, config["api_key"], start_date_string) # blocking code
+        res = loop.run_until_complete(
+            vf.search_each_term(
+                list(search_terms), config["api_key"], start_date_string
+            )
+        )
+        df = res["top_videos"].reset_index(drop=True)
+
+    else:
+        logger.info("nothing to do")
+        sys.exit()
 
     if args.filter:
         df = dm.classify_language(df, "Title")
         df = dm.keep_language(df, "en")
 
-    if args.save:
-        # extract video_id from url
-        df = dm.extract_video_id(df)
-        df = dm.extract_channel_id(df)
+    # extract video_id from url
+    # df = dm.extract_video_id(df)
+    # df = dm.extract_channel_id(df)
 
-        # save video metadata to feather file
+    # cleaner code than above?
+    df = df.pipe(dm.extract_video_id).pipe(dm.extract_channel_id)
+
+    # save video metadata to feather file
+    if args.save:
         vf.save_feather(df, VIDEOS_PATH)
 
     if args.push_db:
         channel_recs = dm.make_channel_recs(df)
 
         # create channels from same dataset
-
         channels_dict = loop.run_until_complete(
             create_many_items(
                 async_session, Channel, channel_recs, nameAttr="id", returnExisting=True

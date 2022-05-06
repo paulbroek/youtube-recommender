@@ -71,7 +71,7 @@
 import os
 import argparse
 
-# from datetime import timedelta, datetime
+from datetime import datetime # , timedelta
 
 # from collections import defaultdict
 import configparser
@@ -82,9 +82,9 @@ import logging
 from pathlib import Path
 
 import uuid
+import timeago
 
 # import json
-
 # from pprint import pprint
 # from yapic import json
 
@@ -283,8 +283,8 @@ class queryResult(Base, UtilityBase):
     __mapper_args__ = {"eager_defaults": True}
 
     def __repr__(self):
-        return "queryResult(id={}, query={}, nresult={})".format(
-            self.id, self.query, len(self.videos)
+        return "queryResult(id={}, query={}, nresult={}, updated_ago={})".format(
+            self.id, self.query, len(self.videos), timeago.format(self.updated, datetime.utcnow())
         )
 
     def as_dict(self) -> dict:

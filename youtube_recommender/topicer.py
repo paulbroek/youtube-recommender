@@ -148,18 +148,7 @@ if __name__ == "__main__":
         df["compr"] = df["text"].map(compress_caption)
         df["compr_length"] = df["compr"].map(len)
 
-        caption_recs = (
-            df.rename(
-                columns={
-                    "text_len": "length",
-                    "language_code": "lang",
-                }
-            )[["video_id", "video", "length", "compr", "compr_length", "lang"]]
-            .assign(index=vdf["video_id"])
-            .set_index("index")
-            .drop_duplicates()
-            .to_dict("index")
-        )
+        caption_recs = dm.make_caption_recs(df)
 
         captions_dict = loop.run_until_complete(
             create_many_items(
