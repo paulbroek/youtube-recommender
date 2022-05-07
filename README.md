@@ -36,7 +36,7 @@ Extends on [this](https://github.com/chris-lovejoy/YouTube-video-finder) repo, b
 ## 2.1 How to install
 
 ```bash
-# add YouTube v3 API key to youtube_recommender/config.yaml first!
+# add YouTube v3 API key to youtube_recommender/config/config.yaml first!
 # structure:
 # api_key:
 #   "your_api_key"
@@ -47,6 +47,13 @@ pip install -r requirements.txt
 
 # download english corpus for SpaCy
 python -m spacy download en_core_web_sm
+
+# install app
+pip install -U ~/repos/youtube_recommender
+
+# copy configuration files
+```bash
+cp -r ${SECRETS_DIR}/rarc/config/youtube_recommender/*  ~/anaconda3/envs/py39/lib/python3.9/site-packages/youtube_recommender/config
 ```
 
 ## 2.2 How to run
