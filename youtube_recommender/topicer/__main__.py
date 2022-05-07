@@ -30,6 +30,12 @@ logger = setup_logger(
     cmdLevel=logging.INFO, saveFile=0, savePandas=1, color=1, fmt=log_fmt
 )  # DEBUG
 
+asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+loop = asyncio.new_event_loop()
+
+async_session = get_async_session(psql)
+psession = get_session(psql)()
+
 parser = argparse.ArgumentParser(description="Defining parameters")
 
 parser.add_argument(
@@ -57,6 +63,12 @@ parser.add_argument(
     help="only load data, do not download captions",
 )
 parser.add_argument(
+    "--no_cache",
+    action="store_true",
+    default=False,
+    help="do not use cache, always download new captions",
+)
+parser.add_argument(
     "--merge_with_videos",
     action="store_true",
     default=False,
@@ -79,16 +91,10 @@ parser.add_argument(
 
 
 if __name__ == "__main__":
-
     args = parser.parse_args()
+    exiting = False
 
-    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-    loop = asyncio.new_event_loop()
-
-    async_session = get_async_session(psql)
-    psession = get_session(psql)()
-
-    # load videos file and select video_ids
+    # load videos df and select video_ids
     if args.from_feather:
         vdf = load_feather(VIDEOS_PATH)
         video_ids = select_video_ids(vdf, n=args.n)
@@ -100,16 +106,16 @@ if __name__ == "__main__":
         sys.exit()
 
     # check cache for existing captions
-    existing_captions = loop.run_until_complete(
-        get_captions_by_video_ids(async_session, video_ids)
-    )
-    # logger.info(f"{len(existing_captions)=} {existing_captions=}")
-    if len(existing_captions) > 0:
-        logger.info(f"using {len(existing_captions)} existing captions")
-    existing_video_ids = set(c.video.id for c in existing_captions)
+    if not args.no_cache:
+        existing_captions = loop.run_until_complete(
+            get_captions_by_video_ids(async_session, video_ids)
+        )
+        if len(existing_captions) > 0:
+            logger.info(f"using {len(existing_captions)} existing captions")
+            existing_video_ids = set(c.video.id for c in existing_captions)
 
-    # filter video_ids based on those existing_captions
-    video_ids = list(set(video_ids) - existing_video_ids)
+            # filter video_ids based on those existing_captions
+            video_ids = list(set(video_ids) - existing_video_ids)
 
     # download captions
     # captions = download_captions(video_ids) # blocking way
@@ -120,17 +126,17 @@ if __name__ == "__main__":
 
     if df.empty:
         logger.info("nothing to do")
-        sys.exit()
+        exiting = True
+        # sys.exit()  # deletes variables, not what you want
 
-    if args.merge_with_videos:
-        df = dm.merge_captions_with_videos(df, vdf)
+    if not exiting:
+        if args.merge_with_videos:
+            df = dm.merge_captions_with_videos(df, vdf)
 
-    if args.save_captions:
-        save_feather(df, CAPTIONS_PATH)
+        if args.save_captions:
+            save_feather(df, CAPTIONS_PATH)
 
-    if args.push_db:
-        # dm.push_captions(df, vdf, async_session)
-
-        captions: Dict[str, Caption] = loop.run_until_complete(
-            dm.push_captions(df, vdf, async_session, returnExisting=True)
-        )
+        if args.push_db:
+            captions: Dict[str, Caption] = loop.run_until_complete(
+                dm.push_captions(df, vdf, async_session, returnExisting=True)
+            )

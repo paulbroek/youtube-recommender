@@ -27,13 +27,22 @@ from .settings import CONFIG_FILE, VIDEOS_PATH
 from .utils.misc import load_yaml
 from .video_finder import get_start_date_string, save_feather, search_each_term
 
-p = Path(config_dir.__file__)
-cfgFile = p.with_name(CONFIG_FILE)
-
 log_fmt = "%(asctime)s - %(module)-16s - %(lineno)-4s - %(funcName)-20s - %(levelname)-7s - %(message)s"  # name
 logger = setup_logger(
     cmdLevel=logging.INFO, saveFile=0, savePandas=1, color=1, fmt=log_fmt
 )  # DEBUG
+
+p = Path(config_dir.__file__)
+cfgFile = p.with_name(CONFIG_FILE)
+
+config = load_yaml(cfgFile)
+
+asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+loop = asyncio.new_event_loop()
+
+async_session = get_async_session(psql)
+psession = get_session(psql)()
+
 
 parser = argparse.ArgumentParser(description="Defining search parameters")
 parser.add_argument(
@@ -79,14 +88,6 @@ parser.add_argument(
 if __name__ == "__main__":
     args = parser.parse_args()
 
-    config = load_yaml(cfgFile)
-
-    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-    loop = asyncio.new_event_loop()
-
-    async_session = get_async_session(psql)
-    psession = get_session(psql)()
-
     start_date_string = get_start_date_string(args.search_period)
 
     if args.dryrun:
@@ -117,7 +118,7 @@ if __name__ == "__main__":
 
     else:
         logger.info("nothing to do")
-        sys.exit()
+        # sys.exit()
 
     if args.filter:
         df = dm.classify_language(df, "title")

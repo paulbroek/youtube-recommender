@@ -98,6 +98,12 @@ class data_methods:
 
         return bdf
 
+    @staticmethod
+    def create_df_from_cache():
+        """Create DataFrame from PostgreSQL cache."""
+
+        pass
+
     @classmethod
     async def push_videos(
         cls, vdf: pd.DataFrame, async_session
