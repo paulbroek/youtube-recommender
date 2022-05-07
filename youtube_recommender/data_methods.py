@@ -1,7 +1,7 @@
 """data_methods.py, contains methods for working with dataframes."""
 import logging
 from operator import itemgetter
-from typing import Any, Dict, List
+from typing import Dict, List, Sequence
 
 import langid
 import pandas as pd
@@ -108,9 +108,6 @@ class data_methods:
         df["video_url"] = YOUTUBE_VIDEO_PREFIX + df["video_id"]
         df["channel_url"] = YOUTUBE_CHANNEL_PREFIX + df["channel_id"]
         df["qr_id"] = df["qr_id"].map(str)
-        # rename some columns
-
-        # todo 7-5: also join Channel on last_videos, since channel_num and num_subscribers are needed
 
         return df
 
@@ -124,24 +121,24 @@ class data_methods:
         """
         channel_recs = cls._make_channel_recs(vdf)
 
-        data = dict()
+        records_dict = {}
         # create channels from same dataset
-        data["channel"] = await create_many_items(
+        records_dict["channel"] = await create_many_items(
             async_session, Channel, channel_recs, nameAttr="id", returnExisting=True
         )
 
         # map the new channels into vdf
-        vdf["channel"] = vdf["channel_id"].map(data["channel"])
+        vdf["channel"] = vdf["channel_id"].map(records_dict["channel"])
 
         video_recs = cls._make_video_recs(vdf)
 
-        data["video"] = await create_many_items(
+        records_dict["video"] = await create_many_items(
             async_session, Video, video_recs, nameAttr="id", returnExisting=True
         )
 
         logger.info("finished")
 
-        return data
+        return records_dict
 
     @classmethod
     async def push_captions(
@@ -153,15 +150,14 @@ class data_methods:
 
         returnExisting:     return captions after creating them
         """
+        records_dict = await cls.push_videos(vdf, async_session)
 
-        datad = await cls.push_videos(vdf, async_session)
-
-        videos_dict = datad["video"]
+        video_records = records_dict["video"]
 
         # save captions to postgres, or what other database: Redis, CassandraDB, DynamoDB?
 
         # map the videos into captions df
-        df["video"] = df["video_id"].map(videos_dict)
+        df["video"] = df["video_id"].map(video_records)
 
         # compress captions
         df["compr"] = df["text"].map(compress_caption)
@@ -184,15 +180,22 @@ class data_methods:
 
     @classmethod
     def push_query_results(
-        cls, queries: List[str], videos_dict: Dict[VideoId, Dict[str, Any]], session
+        cls, queries: Sequence[str], video_records: Dict[VideoId, VideoRec], session
     ) -> None:
         """Push queryResults to db."""
+        if len(queries) == 0:
+            return
+
+        # fixme: link query to video_records, since now all videos are linked to the same query
+        videos: List[VideoRec] = list(video_records.values())
+
         for query in queries:
-            qr = queryResult(query=query, videos=list(videos_dict.values()))
+            qr = queryResult(query=query, videos=videos)
             session.add(qr)
             session.commit()
 
-        logger.info("finished")
+        qrs = "queryResult" if len(queries) == 1 else "queryResults"
+        logger.info(f"pushed {len(queries)} {qrs} to db")
 
     # ======================================================================= #
     # ======                       PRIVATE METHODS                     ====== #

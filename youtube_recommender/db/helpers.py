@@ -4,7 +4,6 @@ import zlib
 from datetime import datetime, timedelta
 from typing import Any, List, Optional  # Dict, Set, Tuple
 
-import pandas as pd
 from rarc_utils.sqlalchemy_base import aget_str_mappings as aget_str_mappings_custom
 from rarc_utils.sqlalchemy_base import create_many
 from rarc_utils.sqlalchemy_base import get_str_mappings as get_str_mappings_custom
@@ -112,7 +111,7 @@ async def get_videos_by_query(
 
         # todo: this can be done with SQLAlchemy models, raw SQL is not needed
         query_ = f"SELECT * FROM last_videos WHERE query = '{query}' AND qr_updated > '{since.isoformat()}' LIMIT {n};"
-        logger.info(f"{query_=}")
+        # logger.info(f"{query_=}")
 
         res = await session.execute(query_)
 
@@ -121,7 +120,7 @@ async def get_videos_by_query(
     return instances
 
 
-async def get_captions_by_video_ids(
+async def get_captions_by_vids(
     asession, video_ids: List[VideoId], maxHoursAgo: int = PSQL_HOURS_AGO
 ):
     """Get Captions by video_ids from db.
@@ -137,6 +136,8 @@ async def get_captions_by_video_ids(
         res = await session.execute(query)
 
         instances = res.scalars().fetchall()
+
+    logger.info(f"using {len(instances)} existing captions")
 
     return instances
 

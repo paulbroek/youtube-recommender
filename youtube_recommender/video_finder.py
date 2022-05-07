@@ -66,8 +66,7 @@ async def search_each_term(
     elapsed = time() - t0
 
     # 1 - concatenate them all
-    full_df = pd.concat((list_of_dfs), axis=0)
-    full_df = full_df.sort_values(["custom_score"], ascending=[0])
+    full_df = concat_dfs(list_of_dfs)
     logger.debug("THE TOP VIDEOS OVERALL ARE:")
     _print_top_videos(full_df, num_to_print)
     logger.debug("==========================\n")
@@ -84,6 +83,16 @@ async def search_each_term(
     logger.info(f"got {len(full_df):,} rows in {elapsed:.2f} secs")
 
     return results_df_dict
+
+
+def concat_dfs(list_of_dfs: List[pd.DataFrame]) -> pd.DataFrame:
+    if len(list_of_dfs) == 0:
+        return pd.DataFrame()
+
+    full_df = pd.concat((list_of_dfs), axis=0)
+    full_df = full_df.sort_values(["custom_score"], ascending=[0])
+
+    return full_df
 
 
 def load_feather(videos_path: Path) -> pd.DataFrame:

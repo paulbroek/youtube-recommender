@@ -25,7 +25,12 @@ from .db.helpers import get_last_query_results, get_videos_by_query
 from .db.models import psql
 from .settings import CONFIG_FILE, VIDEOS_PATH
 from .utils.misc import load_yaml
-from .video_finder import get_start_date_string, save_feather, search_each_term
+from .video_finder import (
+    concat_dfs,
+    get_start_date_string,
+    save_feather,
+    search_each_term,
+)
 
 log_fmt = "%(asctime)s - %(module)-16s - %(lineno)-4s - %(funcName)-20s - %(levelname)-7s - %(message)s"  # name
 logger = setup_logger(
@@ -108,15 +113,16 @@ if __name__ == "__main__":
 
             psession.close()
 
+    # todo: distinguish between search_terms from cache and others, combine results later. are df's of same shape?
     if len(search_terms) > 0:
-        # res = earch_each_term(search_terms, config["api_key"], start_date_string) # blocking code
+        # res = search_each_term(search_terms, config["api_key"], start_date_string) # blocking code
         res = loop.run_until_complete(
             search_each_term(list(search_terms), config["api_key"], start_date_string)
         )
         df = res["top_videos"].reset_index(drop=True)
 
     else:
-        # todo: recreate dataframe for cached search terms
+        # recreate dataframe for cached search terms
         # get dataframes per search query, combine them later
         dfs = []
         for query in args.search_terms:
@@ -125,17 +131,20 @@ if __name__ == "__main__":
             dfs.append(df_)
 
         # combine dataframes
-        df = dfs[0]  # todo: fix this line! combine first!
+        df = concat_dfs(dfs)
 
         # logger.info("nothing to do")
         # sys.exit()
         # exiting = True
 
+    if df.empty:
+        logger.info("nothing to do")
+        exiting = True
+
     if not exiting:
         if args.filter:
             df = dm.classify_language(df, "title")
             df = dm.keep_language(df, "en")
-            assert not df.empty
 
         # extract video_id and channel_id from respective urls
         df = df.pipe(dm.extract_video_id).pipe(dm.extract_channel_id)
@@ -150,5 +159,5 @@ if __name__ == "__main__":
             # assert isinstance(datad, dict)
             videos_dict = datad["video"]
 
-            # save queryResults
-            dm.push_query_results(args.search_terms, videos_dict, psession)
+            # save queryResults, but only if search terms where queried
+            dm.push_query_results(search_terms, videos_dict, psession)

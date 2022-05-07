@@ -20,7 +20,7 @@ from ..caption_finder import (
     select_video_ids,
 )
 from ..data_methods import data_methods as dm
-from ..db.helpers import get_captions_by_video_ids
+from ..db.helpers import get_captions_by_vids
 from ..db.models import Caption, psql
 from ..settings import CAPTIONS_PATH, VIDEOS_PATH
 from ..video_finder import load_feather
@@ -109,10 +109,9 @@ if __name__ == "__main__":
     # check cache for existing captions
     if not args.force:
         existing_captions = loop.run_until_complete(
-            get_captions_by_video_ids(async_session, video_ids)
+            get_captions_by_vids(async_session, video_ids)
         )
         if len(existing_captions) > 0:
-            logger.info(f"using {len(existing_captions)} existing captions")
             existing_video_ids = set(c.video.id for c in existing_captions)
 
             # filter video_ids based on those existing_captions
