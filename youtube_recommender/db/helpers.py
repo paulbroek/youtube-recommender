@@ -11,7 +11,7 @@ from sqlalchemy.future import select
 
 from ..core.types import VideoId
 from ..settings import PSQL_HOURS_AGO
-from .models import Caption, queryResult
+from .models import Caption, Video, queryResult
 
 # from .models import *
 
@@ -81,6 +81,28 @@ def get_all(session, model):
     stmt = select(model).filter()
 
     return list(session.execute(stmt).scalars())
+
+
+async def get_videos_by_ids(asession, video_ids: List[VideoId]):
+    """Get Videos by video_ids from db."""
+    async with asession() as session:
+        query = select(Video).where(Video.id.in_(video_ids))
+        res = await session.execute(query)
+
+        instances = res.scalars().fetchall()
+
+    return instances
+
+
+async def get_videos_by_query_result(asession, qr: queryResult):
+    """Get Videos associated with `queryResult` from db."""
+    async with asession() as session:
+        query = select(Video).where(Video.id.in_(video_ids))
+        res = await session.execute(query)
+
+        instances = res.scalars().fetchall()
+
+    return instances
 
 
 async def get_captions_by_video_ids(

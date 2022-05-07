@@ -87,6 +87,7 @@ parser.add_argument(
 
 if __name__ == "__main__":
     args = parser.parse_args()
+    exiting = False
 
     start_date_string = get_start_date_string(args.search_period)
 
@@ -107,8 +108,6 @@ if __name__ == "__main__":
 
             psession.close()
 
-    # todo: recreate dataframe for cached search terms
-
     if len(search_terms) > 0:
         # res = earch_each_term(search_terms, config["api_key"], start_date_string) # blocking code
         res = loop.run_until_complete(
@@ -117,26 +116,30 @@ if __name__ == "__main__":
         df = res["top_videos"].reset_index(drop=True)
 
     else:
+        # todo: recreate dataframe for cached search terms
+        res = loop.run_until_complete(get_videos_by_query_result())
         logger.info("nothing to do")
         # sys.exit()
+        exiting = True
 
-    if args.filter:
-        df = dm.classify_language(df, "title")
-        df = dm.keep_language(df, "en")
-        assert not df.empty
+    if not exiting:
+        if args.filter:
+            df = dm.classify_language(df, "title")
+            df = dm.keep_language(df, "en")
+            assert not df.empty
 
-    # extract video_id and channel_id from respective urls
-    df = df.pipe(dm.extract_video_id).pipe(dm.extract_channel_id)
+        # extract video_id and channel_id from respective urls
+        df = df.pipe(dm.extract_video_id).pipe(dm.extract_channel_id)
 
-    # save video metadata to feather file
-    if args.save:
-        save_feather(df, VIDEOS_PATH)
+        # save video metadata to feather file
+        if args.save:
+            save_feather(df, VIDEOS_PATH)
 
-    if args.push_db:
+        if args.push_db:
 
-        datad = loop.run_until_complete(dm.push_videos(df, async_session))
-        # assert isinstance(datad, dict)
-        videos_dict = datad["video"]
+            datad = loop.run_until_complete(dm.push_videos(df, async_session))
+            # assert isinstance(datad, dict)
+            videos_dict = datad["video"]
 
-        # save queryResults
-        dm.push_query_results(args.search_terms, videos_dict, psession)
+            # save queryResults
+            dm.push_query_results(args.search_terms, videos_dict, psession)

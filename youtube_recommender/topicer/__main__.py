@@ -63,10 +63,11 @@ parser.add_argument(
     help="only load data, do not download captions",
 )
 parser.add_argument(
-    "--no_cache",
+    "-f",
+    "--force",
     action="store_true",
     default=False,
-    help="do not use cache, always download new captions",
+    help="force to download captions, do not use cache",
 )
 parser.add_argument(
     "--merge_with_videos",
@@ -106,7 +107,7 @@ if __name__ == "__main__":
         sys.exit()
 
     # check cache for existing captions
-    if not args.no_cache:
+    if not args.force:
         existing_captions = loop.run_until_complete(
             get_captions_by_video_ids(async_session, video_ids)
         )
