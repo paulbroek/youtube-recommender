@@ -21,7 +21,7 @@ from rarc_utils.sqlalchemy_base import get_async_session, get_session
 from youtube_recommender import config as config_dir
 
 from .data_methods import data_methods as dm
-from .db.helpers import get_last_query_results
+from .db.helpers import get_last_query_results, get_videos_by_query
 from .db.models import psql
 from .settings import CONFIG_FILE, VIDEOS_PATH
 from .utils.misc import load_yaml
@@ -117,7 +117,16 @@ if __name__ == "__main__":
 
     else:
         # todo: recreate dataframe for cached search terms
-        res = loop.run_until_complete(get_videos_by_query_result())
+        # get dataframes per search query, combine them later
+        dfs = []
+        for query in args.search_terms:
+            recs = loop.run_until_complete(get_videos_by_query(async_session, query))
+            df_ = dm.create_df_from_cache(recs)
+            dfs.append(df_)
+
+        # combine dataframes
+        df = dfs[0]  # remove this line!
+
         logger.info("nothing to do")
         # sys.exit()
         exiting = True

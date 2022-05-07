@@ -1,8 +1,10 @@
 """helpers.py, helper methods for SQLAlchemy models, listed in models.py."""
+import logging
 import zlib
 from datetime import datetime, timedelta
 from typing import Any, List, Optional  # Dict, Set, Tuple
 
+import pandas as pd
 from rarc_utils.sqlalchemy_base import aget_str_mappings as aget_str_mappings_custom
 from rarc_utils.sqlalchemy_base import create_many
 from rarc_utils.sqlalchemy_base import get_str_mappings as get_str_mappings_custom
@@ -14,6 +16,8 @@ from ..settings import PSQL_HOURS_AGO
 from .models import Caption, Video, queryResult
 
 # from .models import *
+
+logger = logging.getLogger(__name__)
 
 # async def aget_all(asession, model, skip: int = 0, limit: int = 100):
 async def aget_all(session, model=None, skip: int = 0, limit: int = 100):
@@ -94,13 +98,25 @@ async def get_videos_by_ids(asession, video_ids: List[VideoId]):
     return instances
 
 
-async def get_videos_by_query_result(asession, qr: queryResult):
-    """Get Videos associated with `queryResult` from db."""
-    async with asession() as session:
-        query = select(Video).where(Video.id.in_(video_ids))
-        res = await session.execute(query)
+async def get_videos_by_query(
+    asession, query: str, maxHoursAgo: int = PSQL_HOURS_AGO, n=200
+):  # qr: queryResult
+    """Get Videos associated with `queryResult` from db.
 
-        instances = res.scalars().fetchall()
+    maxHoursAgo:    only include captions that are less than `maxHoursAgo`
+    """
+    since = datetime.utcnow() - timedelta(hours=maxHoursAgo)
+
+    # uses materialized view `last_videos`, assuming it refreshes on every query_result record insert
+    async with asession() as session:
+
+        # todo: this can be done with SQLAlchemy models, raw SQL is not needed
+        query_ = f"SELECT * FROM last_videos WHERE query = '{query}' AND qr_updated > '{since.isoformat()}' LIMIT {n};"
+        logger.info(f"{query_=}")
+
+        res = await session.execute(query_)
+
+        instances = res.mappings().fetchall()
 
     return instances
 

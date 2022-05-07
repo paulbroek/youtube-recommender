@@ -10,6 +10,7 @@ from yapic import json
 from .core.types import ChannelId, TableTypes, VideoId
 from .db.helpers import compress_caption, create_many_items
 from .db.models import Caption, Channel, Video, queryResult
+from .settings import YOUTUBE_CHANNEL_PREFIX, YOUTUBE_VIDEO_PREFIX
 
 logger = logging.getLogger(__name__)
 
@@ -99,10 +100,19 @@ class data_methods:
         return bdf
 
     @staticmethod
-    def create_df_from_cache():
+    def create_df_from_cache(recs: List[dict]) -> pd.DataFrame:
         """Create DataFrame from PostgreSQL cache."""
+        df = pd.DataFrame(recs)
 
-        pass
+        # add urlCol
+        df["video_url"] = YOUTUBE_VIDEO_PREFIX + df["video_id"]
+        df["channel_url"] = YOUTUBE_CHANNEL_PREFIX + df["channel_id"]
+        df["qr_id"] = df["qr_id"].map(str)
+        # rename some columns
+
+        # todo 7-5: also join Channel on last_videos, since channel_num and num_subscribers are needed
+
+        return df
 
     @classmethod
     async def push_videos(
