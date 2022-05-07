@@ -15,7 +15,7 @@ Extends on [this](https://github.com/chris-lovejoy/YouTube-video-finder) repo, b
 - [x] Cache search results in PostgreSQL
 - [x] Make package installable
 - [x] Also cache load captions in `topicer/__main__.py`
-- [ ] Reconstruct videos tables from cache results
+- [x] Reconstruct videos tables from cache results
 - [ ] Create fastAPI api to retrieve this data
 - [ ] Create job to collect search results for popular/personal search terms, in order not to exceed API quota (10_000 units/day, [extend quota here](https://support.google.com/youtube/contact/yt_api_form))
 - [ ] Retrieve personal watch history

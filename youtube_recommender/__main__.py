@@ -125,11 +125,11 @@ if __name__ == "__main__":
             dfs.append(df_)
 
         # combine dataframes
-        df = dfs[0]  # remove this line!
+        df = dfs[0]  # todo: fix this line! combine first!
 
-        logger.info("nothing to do")
+        # logger.info("nothing to do")
         # sys.exit()
-        exiting = True
+        # exiting = True
 
     if not exiting:
         if args.filter:

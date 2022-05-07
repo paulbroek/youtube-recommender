@@ -1,5 +1,5 @@
-DROP MATERIALIZED VIEW last_videos;
 DROP MATERIALIZED VIEW vw_last_videos;
+DROP MATERIALIZED VIEW last_videos;
 
 CREATE MATERIALIZED VIEW last_videos AS
 SELECT
@@ -18,7 +18,7 @@ SELECT
     date_trunc('seconds', video.updated) AS updated
 FROM
     query_video_association qva
-    LEFT JOIN video ON qva.video_id = video.id
+    INNER JOIN video ON qva.video_id = video.id
     INNER JOIN channel ON channel.id = video.channel_id
     LEFT JOIN query_result ON qva.query_result_id = query_result.id
 ORDER BY
