@@ -7,7 +7,7 @@ import langid
 import pandas as pd
 from yapic import json
 
-from .core.types import ChannelId, TableTypes, VideoId
+from .core.types import CaptionRec, ChannelId, ChannelRec, TableTypes, VideoId, VideoRec
 from .db.helpers import compress_caption, create_many_items
 from .db.models import Caption, Channel, Video, queryResult
 from .settings import YOUTUBE_CHANNEL_PREFIX, YOUTUBE_VIDEO_PREFIX
@@ -199,7 +199,7 @@ class data_methods:
     # ======================================================================= #
 
     @staticmethod
-    def _make_channel_recs(df: pd.DataFrame) -> Dict[ChannelId, Dict[str, Any]]:
+    def _make_channel_recs(df: pd.DataFrame) -> Dict[ChannelId, ChannelRec]:
         """Make Channel records from dataframe, for SQLAlchemy object creation."""
         recs = (
             df.rename(
@@ -217,7 +217,7 @@ class data_methods:
         return recs
 
     @staticmethod
-    def _make_video_recs(df: pd.DataFrame) -> Dict[VideoId, Dict[str, Any]]:
+    def _make_video_recs(df: pd.DataFrame) -> Dict[VideoId, VideoRec]:
         """Make Video records from dataframe, for SQLAlchemy object creation."""
         recs = (
             df.rename(columns={"video_id": "id",})[
@@ -240,7 +240,7 @@ class data_methods:
         return recs
 
     @staticmethod
-    def _make_caption_recs(df: pd.DataFrame) -> Dict[VideoId, Dict[str, Any]]:
+    def _make_caption_recs(df: pd.DataFrame) -> Dict[VideoId, CaptionRec]:
         """Make Caption records from dataframe, for SQLAlchemy object creation."""
         recs = (
             df.rename(
