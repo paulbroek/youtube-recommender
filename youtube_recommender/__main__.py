@@ -54,7 +54,7 @@ parser.add_argument(
     "search_terms", type=str, nargs="+", help="The terms to query. Can be multiple."
 )
 parser.add_argument(
-    "--search-period", type=int, default=7, help="The number of days to search for."
+    "--search-period", type=int, default=365, help="The number of days to search for."
 )
 parser.add_argument(
     "--dryrun",
@@ -155,9 +155,17 @@ if __name__ == "__main__":
 
         if args.push_db:
 
-            datad = loop.run_until_complete(dm.push_videos(df, async_session))
-            # assert isinstance(datad, dict)
-            videos_dict = datad["video"]
+            res.pop("top_videos")
+            query_dict = {}
+            # push per query
+            for query, df_ in res.items():
+                df_ = df_.pipe(dm.extract_video_id).pipe(dm.extract_channel_id)
+
+                datad = loop.run_until_complete(dm.push_videos(df_, async_session))
+                # assert isinstance(datad, dict)
+                query_dict[query] = datad["video"]
+
+            psession.close()
 
             # save queryResults, but only if search terms where queried
-            dm.push_query_results(search_terms, videos_dict, psession)
+            dm.push_query_results(query_dict, psession)  # search_terms,

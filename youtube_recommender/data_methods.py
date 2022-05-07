@@ -180,22 +180,26 @@ class data_methods:
 
     @classmethod
     def push_query_results(
-        cls, queries: Sequence[str], video_records: Dict[VideoId, VideoRec], session
+        # cls, queries: Sequence[str], video_records: Dict[VideoId, VideoRec], session
+        cls,
+        queryDict: Dict[str, Dict[str, TableTypes]],
+        session,
     ) -> None:
         """Push queryResults to db."""
-        if len(queries) == 0:
+        if len(queryDict) == 0:
             return
 
         # fixme: link query to video_records, since now all videos are linked to the same query
-        videos: List[VideoRec] = list(video_records.values())
 
-        for query in queries:
+        # for query in queries:
+        for query, video_records in queryDict.items():
+            videos: List[VideoRec] = list(video_records.values())
             qr = queryResult(query=query, videos=videos)
             session.add(qr)
             session.commit()
 
-        qrs = "queryResult" if len(queries) == 1 else "queryResults"
-        logger.info(f"pushed {len(queries)} {qrs} to db")
+        qrs = "queryResult" if len(queryDict) == 1 else "queryResults"
+        logger.info(f"pushed {len(queryDict)} {qrs} to db")
 
     # ======================================================================= #
     # ======                       PRIVATE METHODS                     ====== #
