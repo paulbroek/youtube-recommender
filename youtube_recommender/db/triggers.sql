@@ -20,9 +20,9 @@ END $$;
 
 DROP TRIGGER IF EXISTS tr_refresh_last_videos_by_query ON query_result;
 CREATE TRIGGER tr_refresh_last_videos_by_query
-AFTER INSERT OR UPDATE OR DELETE
-ON "query_result"
-FOR EACH ROW
+    AFTER INSERT OR UPDATE OR DELETE
+    ON "query_result"
+    FOR EACH ROW
 EXECUTE PROCEDURE refresh_last_videos();
 
 DROP TRIGGER IF EXISTS tr_refresh_last_query_results ON query_result;
