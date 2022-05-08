@@ -18,16 +18,18 @@ END $$;
 
 -- triggers
 
-DROP TRIGGER IF EXISTS refresh_last_videos_by_query ON query_result;
+DROP TRIGGER IF EXISTS refresh_last_videos_by_query ON video;
 CREATE TRIGGER refresh_last_videos_by_query
 AFTER INSERT OR UPDATE OR DELETE
-ON query_result
+ON video
+-- ON query_result
 FOR EACH ROW
 EXECUTE PROCEDURE refresh_last_videos();
 
-DROP TRIGGER IF EXISTS refresh_last_query_results ON query_result;
+DROP TRIGGER IF EXISTS refresh_last_query_results ON video;
 CREATE TRIGGER refresh_last_query_results
 AFTER INSERT OR UPDATE OR DELETE
-ON query_result
+ON video
+-- ON query_result
 FOR EACH ROW
 EXECUTE PROCEDURE refresh_last_query_results();
