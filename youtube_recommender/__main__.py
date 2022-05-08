@@ -14,6 +14,7 @@ import asyncio
 import logging
 import sys
 from pathlib import Path
+from time import sleep
 
 import uvloop
 from rarc_utils.log import setup_logger
@@ -170,7 +171,7 @@ if __name__ == "__main__":
 
             psession.close()
 
-            # time.sleep(2)
+            sleep(3)
 
             # save queryResults, but only if search terms where queried
             dm.push_query_results(query_dict, psession)  # search_terms,
