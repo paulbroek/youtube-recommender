@@ -39,8 +39,7 @@ SELECT
     concat(left(lv.description, 60), '...') AS trunc_description,
     NOW() - lv.updated AS updated_ago
 FROM
-    last_videos lv
-WITH DATA;
+    last_videos lv WITH DATA;
 
 DROP MATERIALIZED VIEW last_query_results;
 CREATE MATERIALIZED VIEW last_query_results AS
