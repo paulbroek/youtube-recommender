@@ -20,7 +20,7 @@ END $$;
 
 DROP TRIGGER IF EXISTS refresh_last_query_results ON query_result;
 CREATE TRIGGER refresh_last_query_results
-AFTER INSERT OR UPDATE OR DELETE
+BEFORE INSERT OR UPDATE OR DELETE
 ON query_result
 -- FOR EACH ROW
 FOR EACH STATEMENT
