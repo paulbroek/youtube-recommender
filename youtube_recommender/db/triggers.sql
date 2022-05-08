@@ -20,14 +20,14 @@ END $$;
 
 DROP TRIGGER IF EXISTS refresh_last_query_results ON query_result;
 CREATE TRIGGER refresh_last_query_results
-    AFTER INSERT OR UPDATE OR DELETE
-    ON "query_result"
-    FOR EACH ROW
+AFTER INSERT OR UPDATE OR DELETE
+ON query_result
+FOR EACH ROW
 EXECUTE PROCEDURE refresh_last_query_results();
 
 DROP TRIGGER IF EXISTS refresh_last_videos ON query_result;
 CREATE TRIGGER refresh_last_videos
-    AFTER INSERT OR UPDATE OR DELETE
-    ON "query_result"
-    FOR EACH ROW
+AFTER INSERT OR UPDATE OR DELETE
+ON query_result
+FOR EACH ROW
 EXECUTE PROCEDURE refresh_last_videos();

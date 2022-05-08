@@ -189,14 +189,14 @@ class data_methods:
         if len(queryDict) == 0:
             return
 
-        # fixme: link query to video_records, since now all videos are linked to the same query
-
         # for query in queries:
         for query, video_records in queryDict.items():
             videos: List[VideoRec] = list(video_records.values())
             qr = queryResult(query=query, videos=videos)
             session.add(qr)
             session.commit()
+
+        session.close()  # does not closing prevent triggers from triggering?
 
         qrs = "queryResult" if len(queryDict) == 1 else "queryResults"
         logger.info(f"pushed {len(queryDict)} {qrs} to db")

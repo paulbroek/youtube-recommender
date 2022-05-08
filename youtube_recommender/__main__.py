@@ -166,7 +166,11 @@ if __name__ == "__main__":
                 # assert isinstance(datad, dict)
                 query_dict[query] = datad["video"]
 
+            # time.sleep(2)
+
             psession.close()
+
+            # time.sleep(2)
 
             # save queryResults, but only if search terms where queried
             dm.push_query_results(query_dict, psession)  # search_terms,
