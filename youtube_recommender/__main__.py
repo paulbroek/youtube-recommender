@@ -26,12 +26,8 @@ from .db.helpers import get_last_query_results, get_videos_by_query
 from .db.models import psql
 from .settings import CONFIG_FILE, VIDEOS_PATH
 from .utils.misc import load_yaml
-from .video_finder import (
-    concat_dfs,
-    get_start_date_string,
-    save_feather,
-    search_each_term,
-)
+from .video_finder import (concat_dfs, get_start_date_string, save_feather,
+                           search_each_term)
 
 log_fmt = "%(asctime)s - %(module)-16s - %(lineno)-4s - %(funcName)-20s - %(levelname)-7s - %(message)s"  # name
 logger = setup_logger(
@@ -167,11 +163,9 @@ if __name__ == "__main__":
                 # assert isinstance(datad, dict)
                 query_dict[query] = datad["video"]
 
-            # time.sleep(2)
-
             psession.close()
 
-            sleep(3)
+            # sleep(3)
 
             # save queryResults, but only if search terms where queried
             dm.push_query_results(query_dict, psession)  # search_terms,

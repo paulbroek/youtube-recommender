@@ -8,3 +8,4 @@ spacy
 gensim
 bertopic
 pre-commit
+pyarrow
