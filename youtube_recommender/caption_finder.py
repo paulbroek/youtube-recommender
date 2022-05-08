@@ -48,6 +48,16 @@ def download_caption(caption_id: CaptionId, youtube_api, tfmt: str):
     return subtitle
 
 
+def download_captions(video_ids: List[VideoId]) -> List[Dict[str, Any]]:
+    """Download captions in blocking way.
+
+    usage:
+        captions = cf.download_captions(video_ids)
+    """
+    res = [download_caption_v2(video_id) for video_id in video_ids]
+    return list(filter(None, res))
+
+
 def download_caption_v2(video_id: VideoId) -> Optional[List[Dict[str, Any]]]:
     """Download caption using youtube_transcript_api."""
     captions: Optional[List[Dict[str, Any]]] = None
@@ -65,16 +75,6 @@ def download_caption_v2(video_id: VideoId) -> Optional[List[Dict[str, Any]]]:
         return _captions_to_dict(captions, video_id)
 
     return captions
-
-
-def download_captions(video_ids: List[VideoId]) -> List[Dict[str, Any]]:
-    """Download captions in blocking way.
-
-    usage:
-        captions = cf.download_captions(video_ids)
-    """
-    res = [download_caption_v2(video_id) for video_id in video_ids]
-    return list(filter(None, res))
 
 
 async def adownload_captions(video_ids: List[VideoId]) -> List[Dict[str, Any]]:

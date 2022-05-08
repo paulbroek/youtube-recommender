@@ -153,10 +153,11 @@ if __name__ == "__main__":
         if args.save:
             save_feather(df, VIDEOS_PATH)
 
-        if args.push_db:
+        if args.push_db and len(search_terms) > 0:
 
             res.pop("top_videos")
             query_dict = {}
+
             # push per query
             for query, df_ in res.items():
                 df_ = df_.pipe(dm.extract_video_id).pipe(dm.extract_channel_id)
