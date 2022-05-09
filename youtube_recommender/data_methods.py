@@ -7,8 +7,7 @@ import langid
 import pandas as pd
 from yapic import json
 
-from .core.types import (CaptionRec, ChannelId, ChannelRec, TableTypes,
-                         VideoId, VideoRec)
+from .core.types import CaptionRec, ChannelId, ChannelRec, TableTypes, VideoId, VideoRec
 from .db.helpers import compress_caption, create_many_items
 from .db.models import Caption, Channel, Video, queryResult
 from .settings import YOUTUBE_CHANNEL_PREFIX, YOUTUBE_VIDEO_PREFIX
@@ -192,7 +191,12 @@ class data_methods:
 
         npushed: int = 0
 
-        # for query in queries:
+        # qrs = [
+        #     queryResult(query=query, videos=list(video_records.values()))
+        #     for query, video_records in queryDict.items()
+        # ]
+        # session.add_all(qrs)
+
         for query, video_records in queryDict.items():
             videos: List[VideoRec] = list(video_records.values())
             qr = queryResult(query=query, videos=videos)
@@ -202,12 +206,13 @@ class data_methods:
                 session.commit()
                 npushed += 1
             except Exception as e:
-                logger.warning(f"could not create queryResult: \
-                    \n\nqr.as_dict: \n{qr.as_dict()}")
-                # \n{qr}
-                # raise
+                logger.warning(
+                    f"could not create queryResults: \
+                    \n\nqr: \n{qr.as_dict()}"
+                )
+            # \n{qr}
 
-        session.close()  # does not closing prevent triggers from triggering?
+        # session.close()  # does not closing prevent triggers from triggering?
 
         qrs = "queryResult" if npushed == 1 else "queryResults"
         logger.info(f"pushed {npushed} {qrs} to db")
