@@ -165,7 +165,6 @@ class data_methods:
 
         caption_recs = cls._make_caption_recs(df)
 
-        # captions_dict =
         captions = await create_many_items(
             async_session,
             Caption,
