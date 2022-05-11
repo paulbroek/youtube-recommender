@@ -1,7 +1,7 @@
 """data_methods.py, contains methods for working with dataframes."""
 import logging
 from operator import itemgetter
-from typing import Dict, List, Sequence
+from typing import Dict, List  # , Sequence
 
 import langid
 import pandas as pd

@@ -4,9 +4,10 @@ import zlib
 from datetime import datetime, timedelta
 from typing import Any, List, Optional  # Dict, Set, Tuple
 
-from rarc_utils.sqlalchemy_base import aget_str_mappings as aget_str_mappings_custom
+# from rarc_utils.sqlalchemy_base import aget_str_mappings as aget_str_mappings_custom
 from rarc_utils.sqlalchemy_base import create_many
-from rarc_utils.sqlalchemy_base import get_str_mappings as get_str_mappings_custom
+
+# from rarc_utils.sqlalchemy_base import get_str_mappings as get_str_mappings_custom
 from sqlalchemy import and_
 from sqlalchemy.future import select
 
@@ -19,46 +20,46 @@ from .models import Caption, Video, queryResult
 logger = logging.getLogger(__name__)
 
 # async def aget_all(asession, model, skip: int = 0, limit: int = 100):
-async def aget_all(session, model=None, skip: int = 0, limit: int = 100):
-    """Get all items for a model.
+# async def aget_all(session, model=None, skip: int = 0, limit: int = 100):
+#     """Get all items for a model.
 
-    usage:
-        loop.run_until_complete(run_in_session(async_session, aget_all, model=Habbit))
-        loop.run_until_complete(run_in_session(async_session, aget_all, model=genericTask))
-    """
-    assert model is not None
-    # async with asession() as session:
-    query = select(model).offset(skip).limit(limit)
-    res = await session.execute(query)
-    return list(res.scalars())
+#     usage:
+#         loop.run_until_complete(run_in_session(async_session, aget_all, model=Habbit))
+#         loop.run_until_complete(run_in_session(async_session, aget_all, model=genericTask))
+#     """
+#     assert model is not None
+#     # async with asession() as session:
+#     query = select(model).offset(skip).limit(limit)
+#     res = await session.execute(query)
+#     return list(res.scalars())
 
 
-async def aget_by_name(session, model, name: str) -> Optional[Any]:
-    """Get item for a given model by name.
+# async def aget_by_name(session, model, name: str) -> Optional[Any]:
+#     """Get item for a given model by name.
 
-    used to search for items
+#     used to search for items
 
-    usage:
-        loop.run_until_complete(run_in_session(async_session, aget_by_name, model=genericTask, name='read'))
-    """
-    # async with asession() as session:
-    query = select(model).filter_by(name=name).limit(1)
-    res = (await session.execute(query)).first()
-    if res is not None:
-        return res[0]
-    return res
+#     usage:
+#         loop.run_until_complete(run_in_session(async_session, aget_by_name, model=genericTask, name='read'))
+#     """
+#     # async with asession() as session:
+#     query = select(model).filter_by(name=name).limit(1)
+#     res = (await session.execute(query)).first()
+#     if res is not None:
+#         return res[0]
+#     return res
 
 
 # str_mappings = loop.run_until_complete(aget_str_mappings(psql))
-async def aget_str_mappings(psqConfig, models=()):
+# async def aget_str_mappings(psqConfig, models=()):
 
-    return await aget_str_mappings_custom(psqConfig, models)
+#     return await aget_str_mappings_custom(psqConfig, models)
 
 
-# str_mappings = get_str_mappings(s)
-def get_str_mappings(psqConfig, models=()):
+# # str_mappings = get_str_mappings(s)
+# def get_str_mappings(psqConfig, models=()):
 
-    return get_str_mappings_custom(psqConfig, models)
+#     return get_str_mappings_custom(psqConfig, models)
 
 
 async def create_many_items(
