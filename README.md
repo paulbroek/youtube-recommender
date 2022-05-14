@@ -121,7 +121,7 @@ ipy -m youtube_recommender.topicer -- --from_feather -sp
 `python -m youtube_recommender.topicer --help`:
 
 ```
-usage: __main__.py [-h] [--from_feather] [-n N] [--dryrun] [--merge_with_videos] [-s] [-p] [video_ids ...]
+usage: __main__.py [-h] [--from_feather] [-n N] [--dryrun] [-f] [--merge_with_videos] [-s] [-p] [video_ids ...]
 
 Defining parameters
 
@@ -133,6 +133,7 @@ optional arguments:
   --from_feather       Import video ids from `/home/paul/repos/youtube-recommender/youtube_recommender/data/top_videos.feather`, created in main.py. ignores any manually passed video_ids
   -n N                 select first `n` rows from feather file
   --dryrun             only load data, do not download captions
+  -f, --force          force to download captions, do not use cache
   --merge_with_videos  merge resulting captions dataset with videos metadata
   -s, --save_captions  Save captions to `/home/paul/repos/youtube-recommender/youtube_recommender/data/captions.feather`
   -p, --push_db        push Video, Channel and Caption rows to PostgreSQL`
