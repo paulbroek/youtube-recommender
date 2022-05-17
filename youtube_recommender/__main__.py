@@ -14,7 +14,6 @@ import asyncio
 import logging
 import sys
 from pathlib import Path
-from time import sleep
 
 import uvloop
 from rarc_utils.log import setup_logger
