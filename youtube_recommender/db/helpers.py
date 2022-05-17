@@ -1,13 +1,11 @@
 """helpers.py, helper methods for SQLAlchemy models, listed in models.py."""
+
 import logging
 import zlib
 from datetime import datetime, timedelta
 from typing import List  # Any, Optional, Dict, Set, Tuple
 
-# from rarc_utils.sqlalchemy_base import aget_str_mappings as aget_str_mappings_custom
 from rarc_utils.sqlalchemy_base import create_many
-
-# from rarc_utils.sqlalchemy_base import get_str_mappings as get_str_mappings_custom
 from sqlalchemy import and_
 from sqlalchemy.future import select
 
@@ -23,7 +21,7 @@ logger = logging.getLogger(__name__)
 async def create_many_items(
     asession, model, itemDicts, nameAttr="name", returnExisting=False
 ):
-
+    """Create many SQLAlchemy model items in db."""
     async with asession() as session:
         items = await create_many(
             session, model, itemDicts, nameAttr=nameAttr, returnExisting=returnExisting
@@ -58,8 +56,8 @@ async def get_videos_by_ids(asession, video_ids: List[VideoId]):
 
 async def get_videos_by_query(
     asession, query: str, maxHoursAgo: int = PSQL_HOURS_AGO, n=200
-):  # qr: queryResult
-    """Get Videos associated with `queryResult` from db.
+):
+    """Get Videos associated with `query` from db.
 
     maxHoursAgo:    only include captions that are less than `maxHoursAgo`
     """

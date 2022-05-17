@@ -1,7 +1,8 @@
 """data_methods.py, contains methods for working with dataframes."""
+
 import logging
 from operator import itemgetter
-from typing import Dict, List  # , Sequence
+from typing import Dict, List
 
 import langid
 import pandas as pd
@@ -104,7 +105,7 @@ class data_methods:
         """Create DataFrame from PostgreSQL cache."""
         df = pd.DataFrame(recs)
 
-        # add urlCol
+        # reconstruct URL columns
         df["video_url"] = YOUTUBE_VIDEO_PREFIX + df["video_id"]
         df["channel_url"] = YOUTUBE_CHANNEL_PREFIX + df["channel_id"]
         df["qr_id"] = df["qr_id"].map(str)
@@ -179,7 +180,6 @@ class data_methods:
 
     @classmethod
     def push_query_results(
-        # cls, queries: Sequence[str], video_records: Dict[VideoId, VideoRec], session
         cls,
         queryDict: Dict[str, Dict[str, TableTypes]],
         session,
@@ -207,9 +207,8 @@ class data_methods:
             except Exception as e:
                 logger.warning(
                     f"could not create queryResults: \
-                    \n\nqr: \n{qr.as_dict()}"
+                    \n\nqr: \n{qr.as_dict()} \n{e=!r}"
                 )
-            # \n{qr}
 
         # session.close()  # does not closing prevent triggers from triggering?
 
