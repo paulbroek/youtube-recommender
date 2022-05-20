@@ -16,7 +16,7 @@ COPY . /tmp
 RUN pip install -U git+https://git@github.com/paulbroek/rarc-utils.git 
 
 # download english corpus for SpaCy
-python -m spacy download en_core_web_sm
+RUN python -m spacy download en_core_web_sm
 
 # install package
 RUN pip install /tmp/
