@@ -25,12 +25,8 @@ from .db.helpers import get_last_query_results, get_videos_by_query
 from .db.models import psql
 from .settings import CONFIG_FILE, VIDEOS_PATH
 from .utils.misc import load_yaml
-from .video_finder import (
-    concat_dfs,
-    get_start_date_string,
-    save_feather,
-    search_each_term,
-)
+from .video_finder import (concat_dfs, get_start_date_string, save_feather,
+                           search_each_term)
 
 log_fmt = "%(asctime)s - %(module)-16s - %(lineno)-4s - %(funcName)-20s - %(levelname)-7s - %(message)s"  # name
 logger = setup_logger(
@@ -76,6 +72,12 @@ parser.add_argument(
     help="filter non English titles from dataset using langid",
 )
 parser.add_argument(
+    "-n",
+    "--nitems",
+    default=50,
+    help="Max search results to fetch from YouTube API",
+)
+parser.add_argument(
     "-s",
     "--save",
     action="store_true",
@@ -117,7 +119,9 @@ if __name__ == "__main__":
     if len(search_terms) > 0:
         # res = search_each_term(search_terms, config["api_key"], start_date_string) # blocking code
         res = loop.run_until_complete(
-            search_each_term(list(search_terms), config["api_key"], start_date_string)
+            search_each_term(
+                list(search_terms), config["api_key"], start_date_string, n=int(args.nitems)
+            )
         )
         df = res["top_videos"].reset_index(drop=True)
 

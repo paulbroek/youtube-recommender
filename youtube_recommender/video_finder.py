@@ -13,13 +13,15 @@ from datetime import datetime, timedelta
 from os import path
 from pathlib import Path
 from time import time
-from typing import Dict, List, Union
+from typing import Any, Dict, List, Union
 
 import pandas as pd
 from apiclient.discovery import build
 
 logger = logging.getLogger(__name__)
 
+RESULT_PER_PAGE = 50
+MAX_RESULTS = 100
 
 __all__ = [
     "get_start_date_string",
@@ -51,6 +53,7 @@ async def search_each_term(
     uploaded_since,
     views_threshold=5000,
     num_to_print=5,
+    n=MAX_RESULTS,
 ) -> Dict[str, pd.DataFrame]:
     """Use search term list to execute API calls and print results."""
     if isinstance(search_terms, str):
@@ -60,7 +63,7 @@ async def search_each_term(
 
     # list_of_dfs = _find_all_terms(search_terms, api_key, uploaded_since, views_threshold)
     list_of_dfs = await _afind_all_terms(
-        search_terms, api_key, uploaded_since, views_threshold
+        search_terms, api_key, uploaded_since, views_threshold, n=n
     )
 
     elapsed = time() - t0
@@ -120,7 +123,7 @@ def save_feather(df: pd.DataFrame, videos_path: Path) -> None:
 # ======================================================================= #
 
 
-def _find_videos(search_terms, api_key, views_threshold, uploaded_since):
+def _find_videos(search_terms, api_key, views_threshold, uploaded_since, n=MAX_RESULTS):
     """Call other functions (below) to find results and populate dataframe."""
     # Initialise results dataframe
     dataframe = pd.DataFrame(
@@ -138,7 +141,11 @@ def _find_videos(search_terms, api_key, views_threshold, uploaded_since):
     )
 
     # Run search
-    search_results, youtube_api = _search_api(search_terms, api_key, uploaded_since)
+    search_results, youtube_api = _search_api(
+        search_terms, api_key, uploaded_since, n=n
+    )
+
+    # raise SystemError("debugging")
 
     results_df = _populate_dataframe(
         search_results, youtube_api, dataframe, views_threshold
@@ -166,7 +173,7 @@ def _find_all_terms(search_terms: List[str], api_key, uploaded_since, views_thre
 
 
 async def _afind_all_terms(
-    search_terms: List[str], api_key, uploaded_since, views_threshold
+    search_terms: List[str], api_key, uploaded_since, views_threshold, n=MAX_RESULTS
 ):
     """Speed up downloading of captions by running them concurrently.
 
@@ -177,7 +184,7 @@ async def _afind_all_terms(
 
     cors = [
         loop.run_in_executor(
-            None, _find_videos, search_term, api_key, views_threshold, uploaded_since
+            None, _find_videos, search_term, api_key, views_threshold, uploaded_since, n
         )
         for search_term in search_terms
     ]
@@ -186,7 +193,7 @@ async def _afind_all_terms(
     return list_of_dfs
 
 
-def _search_api(search_terms: List[str], api_key, uploaded_since):
+def _search_api(search_terms: List[str], api_key, uploaded_since, n=300):
     """Execute search through API and returns result."""
     # Initialise API call
     youtube_api = build("youtube", "v3", developerKey=api_key)
@@ -194,21 +201,41 @@ def _search_api(search_terms: List[str], api_key, uploaded_since):
     # Make the search
     # update by paul: I set relevanceLanguage to 'en', but it will still return other language videos
     # filter them out later by classifying the related caption
-    results = (
-        youtube_api.search()
-        .list(
-            q=search_terms,
-            part="snippet",
-            type="video",
-            order="viewCount",
-            maxResults=50,
-            publishedAfter=uploaded_since,
-            relevanceLanguage="en",
-        )
-        .execute()
-    )
+    # keep polling API, until maxn is reached
+    niter = 0
+    search_response: Dict[str, Any] = {"nextPageToken": None, "items": []}
+    nextPageToken = search_response.get("nextPageToken")
+    while (niter == 0 or "nextPageToken" in search_response) and len(
+        search_response["items"]
+    ) < n:
 
-    return results, youtube_api
+        nextPage = (
+            youtube_api.search()
+            .list(
+                q=search_terms,
+                part="snippet",
+                type="video",
+                order="viewCount",
+                maxResults=RESULT_PER_PAGE,
+                publishedAfter=uploaded_since,
+                pageToken=nextPageToken,
+                relevanceLanguage="en",
+            )
+            .execute()
+        )
+
+        search_response["items"] += nextPage["items"]
+
+        niter += 1
+
+        # print(f"{niter=}")
+
+        if "nextPageToken" not in nextPage:
+            search_response.pop("nextPageToken", None)
+        else:
+            nextPageToken = nextPage["nextPageToken"]
+
+    return search_response, youtube_api
 
 
 def _populate_dataframe(results, youtube_api, df, views_threshold) -> pd.DataFrame:
