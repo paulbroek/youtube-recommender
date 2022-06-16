@@ -1,14 +1,17 @@
 """data_methods.py, contains methods for working with dataframes."""
 
 import logging
+import traceback
 from operator import itemgetter
 from typing import Dict, List
 
-import langid
+import langid  # type: ignore[import]
 import pandas as pd
-from yapic import json
+from rarc_utils.misc import plural
+from yapic import json  # type: ignore[import]
 
-from .core.types import CaptionRec, ChannelId, ChannelRec, TableTypes, VideoId, VideoRec
+from .core.types import (CaptionRec, ChannelId, ChannelRec, TableTypes,
+                         VideoId, VideoRec)
 from .db.helpers import compress_caption, create_many_items
 from .db.models import Caption, Channel, Video, queryResult
 from .settings import YOUTUBE_CHANNEL_PREFIX, YOUTUBE_VIDEO_PREFIX
@@ -198,7 +201,9 @@ class data_methods:
 
         for query, video_records in queryDict.items():
             videos: List[VideoRec] = list(video_records.values())
+
             qr = queryResult(query=query, videos=videos)
+            print(f"{qr=}")
             session.add(qr)
 
             try:
@@ -207,13 +212,15 @@ class data_methods:
             except Exception as e:
                 logger.warning(
                     f"could not create queryResults: \
-                    \n\nqr: \n{qr.as_dict()} \n{e=!r}"
+                    \n\n{qr=} \nqr.dict={qr.as_dict()} \n\n{e=!r} \
+                    \ntraceback: \n"
                 )
+                print(traceback.format_exc())
 
         # session.close()  # does not closing prevent triggers from triggering?
 
-        qrs = "queryResult" if npushed == 1 else "queryResults"
-        logger.info(f"pushed {npushed} {qrs} to db")
+        query_results = plural(npushed, 'queryResult')
+        logger.info(f"pushed {npushed} {query_results} to db")
 
     # ======================================================================= #
     # ======                       PRIVATE METHODS                     ====== #

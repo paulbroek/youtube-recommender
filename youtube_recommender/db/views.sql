@@ -35,8 +35,14 @@ SELECT
     lv.qr_id,
     lv.query,
     lv.qr_updated,
-    concat(left(lv.title, 60), '...') AS trunc_title,
-    concat(left(lv.description, 60), '...') AS trunc_description,
+    CASE
+        WHEN LENGTH (title) > 60 THEN concat(trim(left(title, 60)), '...')
+        ELSE title
+    END AS trunc_title,
+        CASE
+        WHEN LENGTH (lv.description) > 60 THEN concat(trim(left(lv.description, 60)), '...')
+        ELSE lv.description
+    END AS trunc_description,
     NOW() - lv.updated AS updated_ago
 FROM
     last_videos lv WITH DATA;

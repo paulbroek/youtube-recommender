@@ -1,10 +1,17 @@
-from typing import Any, Dict, NewType, Type, Union
+"""types.py, define types for youtube-recommender."""
+
+from typing import Any, Dict, NewType, Union  # , Type
 
 VideoId = NewType("VideoId", str)
 ChannelId = NewType("ChannelId", str)
 CaptionId = NewType("CaptionId", str)
 
-TableTypes = Union[Type["Video"], Type["Channel"], Type["queryResult"]]
+Video = NewType("Video", dict)
+Channel = NewType("Channel", dict)
+queryResult = NewType("queryResult", dict)
+
+# TableTypes = Union[Type["Video"], Type["Channel"], Type["queryResult"]]
+TableTypes = Union[Video, Channel, queryResult]
 
 Record = NewType("Record", Dict[str, Any])
 

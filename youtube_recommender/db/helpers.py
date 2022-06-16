@@ -7,10 +7,10 @@ from typing import List  # Any, Optional, Dict, Set, Tuple
 
 from rarc_utils.sqlalchemy_base import create_many
 from sqlalchemy import and_
-from sqlalchemy.future import select
+from sqlalchemy.future import select  # type: ignore[import]
 
 from ..core.types import VideoId
-from ..settings import PSQL_HOURS_AGO
+from ..settings import HOUR_LIMIT, PSQL_HOURS_AGO
 from .models import Caption, Video, queryResult
 
 # from .models import *
@@ -61,6 +61,7 @@ async def get_videos_by_query(
 
     maxHoursAgo:    only include captions that are less than `maxHoursAgo`
     """
+    maxHoursAgo = min(maxHoursAgo, HOUR_LIMIT)
     since = datetime.utcnow() - timedelta(hours=maxHoursAgo)
 
     # uses materialized view `last_videos`, assuming it refreshes on every query_result record insert
@@ -84,6 +85,7 @@ async def get_captions_by_vids(
 
     maxHoursAgo:    only include captions that are less than `maxHoursAgo`
     """
+    maxHoursAgo = min(maxHoursAgo, HOUR_LIMIT)
     since = datetime.utcnow() - timedelta(hours=maxHoursAgo)
 
     async with asession() as session:
@@ -104,6 +106,7 @@ def get_last_query_results(session, query: str, maxHoursAgo: int = PSQL_HOURS_AG
 
     maxHoursAgo:    only include captions that are less than `maxHoursAgo`
     """
+    maxHoursAgo = min(maxHoursAgo, HOUR_LIMIT)
     since = datetime.utcnow() - timedelta(hours=maxHoursAgo)
 
     stmt = (

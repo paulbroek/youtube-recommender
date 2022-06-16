@@ -16,7 +16,7 @@ from time import time
 from typing import Any, Dict, List, Union
 
 import pandas as pd
-from apiclient.discovery import build
+from apiclient.discovery import build  # type: ignore[import]
 
 logger = logging.getLogger(__name__)
 

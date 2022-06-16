@@ -40,5 +40,6 @@ SPACY_MODEL = "en_core_web_sm"
 
 # max hours ago for cache item to remain valid
 PSQL_HOURS_AGO = 7 * 24
+HOUR_LIMIT = 99_999_999
 YOUTUBE_VIDEO_PREFIX = "https://www.youtube.com/watch?v="
 YOUTUBE_CHANNEL_PREFIX = "https://www.youtube.com/channel/"

@@ -47,17 +47,12 @@ Add trigger functions, so most frequently used views are always up to date:
     execute inside psql:
     docker exec -it postgres-master bash -c 'psql youtube -U postgres -f /youtube_data/db/triggers.sql'
 
-Get last messages:
 
-    (show view content)
-    SELECT * FROM last_messages;
+Get last videos:
+    see queries.sql
 
-Get tasks by user:
-
-    REFRESH MATERIALIZED VIEW last_tasks;
-    SELECT *, NOW() - task.updated AS updated_ago, task.due_date - NOW() AS till_due
-    FROM last_tasks AS task
-    WHERE user_id = 2;
+    or query materialized view vw_last_videos:
+        select * from vw_last_videos limit 5;
 
 Refresh and show any materialized view:
     REFRESH MATERIALIZED VIEW last_messages;
@@ -71,40 +66,21 @@ import asyncio
 import configparser
 import logging
 import uuid
-from datetime import datetime  # , timedelta
+from datetime import datetime
 from pathlib import Path
 
-import timeago
+import timeago  # type: ignore[import]
 from rarc_utils.log import loggingLevelNames, set_log_level, setup_logger
-from rarc_utils.misc import AttrDict, trunc_msg  # , timeago_series
-from rarc_utils.sqlalchemy_base import (
-    UtilityBase,
-    async_main,
-    get_async_db,
-    get_async_session,
-    get_session,
-)
-from sqlalchemy import (
-    Column,
-    DateTime,
-    Float,
-    ForeignKey,
-    Integer,
-    LargeBinary,
-    String,
-    UniqueConstraint,
-    func,
-)
+from rarc_utils.misc import AttrDict, trunc_msg
+from rarc_utils.sqlalchemy_base import (UtilityBase, async_main, get_async_db,
+                                        get_async_session, get_session)
+from sqlalchemy import (Column, DateTime, Float, ForeignKey, Integer,
+                        LargeBinary, String, UniqueConstraint, func)
 from sqlalchemy.dialects.postgresql import UUID
-
-# from sqlalchemy.dialects.postgresql import JSON #, UUID
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy.schema import Table
 from youtube_recommender import config as config_dir
-
-# no imports from helpers in this file
-# from .helpers import aget_str_mappings
 
 # __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
@@ -128,14 +104,13 @@ DATA_DIR = Path("data")
 
 Base = declarative_base()
 
+# a query_result can have multiple videos, a video can belong to multiple query results
 query_video_association = Table(
     "query_video_association",
     Base.metadata,
+    Column("query_result_id", UUID(as_uuid=True), ForeignKey("query_result.id")),
     Column("video_id", String, ForeignKey("video.id")),
-    Column(
-        "query_result_id", String, ForeignKey("query_result.id")
-    ),  # a query result can have multiple videos, a video can belong to multiple query results
-    UniqueConstraint("video_id", "query_result_id"),
+    UniqueConstraint("query_result_id", "video_id"),
 )
 
 
@@ -245,17 +220,18 @@ class queryResult(Base, UtilityBase):
     """
 
     __tablename__ = "query_result"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(UUID(as_uuid=True), primary_key=True, unique=True, nullable=False, default=uuid.uuid4)
 
+    # todo: save the entire query, also `publishedAfter` and `relevanceLanguage`
     # make sure to lower the string before entering
-    query = Column(
-        String, nullable=False, unique=False
-    )  # not unique, but will only add new query_results after N days have elapsed
+    query = Column(String, nullable=False, unique=False)
+    # not unique, but will only add new query_results after N days have elapsed
     # nresult = Column(Integer, nullable=False, unique=False)
 
     videos = relationship(
-        "Video", uselist=True, secondary=query_video_association, lazy=True
+        "Video", uselist=True, secondary=query_video_association, lazy="selectin"
     )
+    # lazy=True
 
     created = Column(DateTime, server_default=func.now())  # current_timestamp()
     updated = Column(DateTime, server_default=func.now(), onupdate=func.now())
@@ -265,10 +241,10 @@ class queryResult(Base, UtilityBase):
 
     def __repr__(self):
         return "queryResult(id={}, query={}, nresult={}, updated_ago={})".format(
-            self.id,
+            str(self.id),
             self.query,
             len(self.videos),
-            timeago.format(self.updated, datetime.utcnow()),
+            timeago.format(self.updated, datetime.utcnow()) if self.updated else None,
         )
 
     def as_dict(self) -> dict:

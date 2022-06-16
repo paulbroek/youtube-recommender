@@ -21,7 +21,7 @@ Extends on [this](https://github.com/chris-lovejoy/YouTube-video-finder) repo, b
 - [ ] Create fastAPI api to retrieve this data
 - [ ] Create job to collect search results for popular/personal search terms, in order not to exceed API quota (10_000 units/day, [extend quota here](https://support.google.com/youtube/contact/yt_api_form))
 - [x] Export personal watch history from YouTube
-- [ ] Extract personal watch history from YouTube export file, is all metadata accessible?
+- [x] Extract personal watch history from YouTube export file, is all metadata accessible?
 - [ ] Get all, or popular video **genres**
 - [ ] With these genres, try to make **recommendations**
 - [ ] Extract plain text/captions from videos, so topic modeling can be applied to it
@@ -29,6 +29,7 @@ Extends on [this](https://github.com/chris-lovejoy/YouTube-video-finder) repo, b
 - [ ] Query on categories of videos you watched before: science, AI, ML, python, etc. \
        Collect best videos by custom rating of all these queries. \
        Start recommending videos based on this sample
+- [ ] Verify if pushing the same video to postgres only updates changed fields.
 - [ ] ...
 
 ## 1.2 Nice to haves

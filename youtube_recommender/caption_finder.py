@@ -5,15 +5,12 @@
 import asyncio
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional  # , Union
+from typing import Any, Dict, List, Optional
 
 import pandas as pd
-from apiclient.discovery import build
-from youtube_transcript_api import (
-    NoTranscriptFound,
-    TranscriptsDisabled,
-    YouTubeTranscriptApi,
-)
+from apiclient.discovery import build  # type: ignore[import]
+from youtube_transcript_api import NoTranscriptFound  # type: ignore[import]
+from youtube_transcript_api import TranscriptsDisabled, YouTubeTranscriptApi
 
 from .core.types import CaptionId, VideoId
 from .data_methods import data_methods as dm
@@ -58,7 +55,7 @@ def download_captions(video_ids: List[VideoId]) -> List[Dict[str, Any]]:
     return list(filter(None, res))
 
 
-def download_caption_v2(video_id: VideoId) -> Optional[List[Dict[str, Any]]]:
+def download_caption_v2(video_id: VideoId) -> Optional[Dict[str, Any]]:
     """Download caption using youtube_transcript_api."""
     captions: Optional[List[Dict[str, Any]]] = None
 
@@ -105,7 +102,7 @@ def save_feather(df: pd.DataFrame, captions_path: Path) -> None:
 def select_video_ids(df: pd.DataFrame, n=0) -> List[VideoId]:
     """Select video_ids from dataframe, optionally select first `n` rows."""
     assert isinstance(n, int)
-    video_ids = df.video_id.to_list()
+    video_ids = df.video_id.astype(str).to_list()
     if n > 0:
         video_ids = video_ids[:n]
 
@@ -147,4 +144,4 @@ def _captions_to_str(captions: List[Dict[str, Any]], sep=", ") -> str:
     assert len(captions) > 0
     texts = [t["text"] for t in captions]
 
-    return sep.join(texts)
+    return str(sep.join(texts))

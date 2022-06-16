@@ -13,7 +13,7 @@ requires = []
 
 setup(
     name="youtube_recommender",
-    version="0.0.3",
+    version="0.0.4",
     description="YouTube recommender - \
         gives you recommended YouTube videos based on your watch history",
     url="git@github.com:paulbroek/youtube-recommender.git",
