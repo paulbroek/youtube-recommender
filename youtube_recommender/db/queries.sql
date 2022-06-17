@@ -12,3 +12,19 @@ FROM
     last_videos
 LIMIT
     3;
+
+-- select most frequent used keywords
+select
+    keyword_id,
+    keyword.name,
+    count(keyword_id)
+from
+    video_keyword_association vka
+    INNER JOIN keyword ON vka.keyword_id = keyword.id
+group by
+    keyword_id,
+    keyword.name
+ORDER BY
+    count DESC
+limit
+    25;
