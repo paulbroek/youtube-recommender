@@ -14,7 +14,7 @@ from yapic import json  # type: ignore[import]
 from .core.types import (CaptionRec, ChannelId, ChannelRec, TableTypes,
                          VideoId, VideoRec)
 from .db.helpers import compress_caption, create_many_items
-from .db.models import Caption, Channel, Video, queryResult
+from .db.models import Caption, Channel, Keyword, Video, queryResult
 from .settings import YOUTUBE_CHANNEL_PREFIX, YOUTUBE_VIDEO_PREFIX
 
 logger = logging.getLogger(__name__)
@@ -122,12 +122,19 @@ class data_methods:
     ) -> Dict[str, Dict[str, TableTypes]]:
         """Push videos to db.
 
-        First create Channel items
+        First create Keyword and Channel items
         """
         vdf = vdf.copy()
-        channel_recs = cls._make_channel_recs(vdf)
 
         records_dict = {}
+
+        keyword_recs = cls._make_keyword_recs(vdf)
+        records_dict["keyword"] = await create_many_items(
+            async_session, Keyword, keyword_recs, nameAttr="name", returnExisting=True
+        )
+
+        channel_recs = cls._make_channel_recs(vdf)
+
         # create channels from same dataset
         records_dict["channel"] = await create_many_items(
             async_session, Channel, channel_recs, nameAttr="id", returnExisting=True
@@ -230,6 +237,20 @@ class data_methods:
     # ======================================================================= #
     # ======                       PRIVATE METHODS                     ====== #
     # ======================================================================= #
+
+    @staticmethod
+    def _make_keyword_recs(df: pd.DataFrame) -> Dict[str, dict]:
+        """Make Keyword records from dataframe, for SQLAlchemy object creation."""
+        if "keywords" not in df.columns:
+            return {}
+
+        l: List[List[str]] = df.keywords.to_list()
+        ll: List[str] = sum(l, [])
+        ll = list(set(ll))
+
+        recs = {k: {'name': k} for k in ll}
+
+        return recs
 
     @staticmethod
     def _make_channel_recs(df: pd.DataFrame) -> Dict[ChannelId, ChannelRec]:

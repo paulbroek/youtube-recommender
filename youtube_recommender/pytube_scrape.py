@@ -197,6 +197,8 @@ if __name__ == "__main__":
     # urls = Channel(channel_url)
     vurls = Channel(args.channel_url)
 
+    # slow call to urls.len? 
+    # logger.info(f"this channel has {len(vurls):,} videos")
     vres = mp_extract_videos(vurls[:nitems], nprocess=ncore)
     cres = mp_extract_channels(vres, nprocess=ncore)
     vdf = pd.DataFrame(vres)
@@ -214,6 +216,6 @@ if __name__ == "__main__":
         save_feather(df, PYTUBE_VIDEOS_PATH)
 
     # todo: extract and create Keywords
-    # push channels and videos to db
+    # push keywords, channels and videos to db
     if args.push_db:
         datad = loop.run_until_complete(dm.push_videos(df, async_session))
