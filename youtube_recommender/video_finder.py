@@ -111,11 +111,12 @@ def load_feather(videos_path: Path) -> pd.DataFrame:
 
 
 def save_feather(df: pd.DataFrame, videos_path: Path) -> None:
-    """Save top_videos metadata dataframe to feather."""
+    """Save video metadata dataframe to feather."""
+    assert isinstance(df, pd.DataFrame)
     assert isinstance(videos_path, Path)
 
     df.to_feather(videos_path)
-    logger.info(f"saved {len(df):,} top_videos metadata to {videos_path.as_posix()}")
+    logger.info(f"saved {len(df):,} video metadatas to {videos_path.as_posix()}")
 
 
 # ======================================================================= #

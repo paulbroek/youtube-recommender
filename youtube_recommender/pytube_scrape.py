@@ -202,10 +202,6 @@ if __name__ == "__main__":
     vdf = pd.DataFrame(vres)
     cdf = pd.DataFrame(cres)
 
-    if args.save:
-        # df.to_feather("data/pytube_videos.feather")
-        save_feather(vres, PYTUBE_VIDEOS_PATH)
-
     # todo: get num_subscibers through beautifulsoup or YouTube API
     cdf["num_subscribers"] = None
     vdf["custom_score"] = None
@@ -213,8 +209,9 @@ if __name__ == "__main__":
     # combine video and channel data into one dataset
     df = pd.merge(vdf, cdf, on=["channel_id"])
 
-    # recs = dm._make_channel_recs(df)
-    # df["channel"] = df["channel_id"].map(recs["channel"])
+    if args.save:
+        # df.to_feather("data/pytube_videos.feather")
+        save_feather(df, PYTUBE_VIDEOS_PATH)
 
     # todo: extract and create Keywords
     # push channels and videos to db
