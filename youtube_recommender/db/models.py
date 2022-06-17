@@ -104,6 +104,15 @@ DATA_DIR = Path("data")
 
 Base = declarative_base()
 
+# a video can have multiple keywords, a keyword can belong to multiple videos
+video_keyword_association = Table(
+    "video_keyword_association",
+    Base.metadata,
+    Column("video_id", String, ForeignKey("video.id")),
+    Column("keyword_id", Integer, ForeignKey("keyword.id")),
+    UniqueConstraint("video_id", "keyword_id"),
+)
+
 # a query_result can have multiple videos, a video can belong to multiple query results
 query_video_association = Table(
     "query_video_association",
@@ -123,6 +132,9 @@ class Video(Base, UtilityBase):
     description = Column(String, nullable=True, unique=False)
     views = Column(Integer, nullable=False, unique=False)
     custom_score = Column(Float, nullable=True, unique=False)
+    keywords = relationship(
+        "Keyword", uselist=True, secondary=video_keyword_association, lazy="selectin"
+    )
 
     channel_id = Column(String, ForeignKey("channel.id"), nullable=False)
     channel = relationship("Channel", uselist=False, lazy="selectin")
@@ -134,10 +146,11 @@ class Video(Base, UtilityBase):
     __mapper_args__ = {"eager_defaults": True}
 
     def __repr__(self):
-        return "Video(id={}, title={}, views={:,}, description={})".format(
+        return "Video(id={}, title={}, views={:,}, nkeyword={}, description={})".format(
             self.id,
             trunc_msg(self.title, 40),
             self.views,
+            len(self.keywords),
             trunc_msg(self.description, 40),
         )
 
@@ -154,7 +167,7 @@ class Channel(Base, UtilityBase):
     __tablename__ = "channel"
     id = Column(String, primary_key=True)
     name = Column(String, nullable=False, unique=False)
-    num_subscribers = Column(Integer, nullable=False, unique=False)
+    num_subscribers = Column(Integer, nullable=True, unique=False) # nullable=False for now, since pytube does not collect this information, can request later through youtube API v3 (single calls)
 
     created = Column(DateTime, server_default=func.now())  # current_timestamp()
     updated = Column(DateTime, server_default=func.now(), onupdate=func.now())
@@ -166,6 +179,28 @@ class Channel(Base, UtilityBase):
         return "Channel(id={}, name={}, num_subscribers={})".format(
             self.id, self.name, self.num_subscribers
         )
+
+    def as_dict(self) -> dict:
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+    def json(self) -> dict:
+        return self.as_dict()
+
+
+class Keyword(Base, UtilityBase):
+    """Keyword: every Video can contain keywords, set by the author."""
+
+    __tablename__ = "keyword"
+    id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False, unique=True)
+
+    created = Column(DateTime, server_default=func.now())  # current_timestamp()
+
+    # add this so that it can be accessed
+    __mapper_args__ = {"eager_defaults": True}
+
+    def __repr__(self):
+        return "Keyword(id={}, name={})".format(self.id, self.name)
 
     def as_dict(self) -> dict:
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
@@ -220,7 +255,13 @@ class queryResult(Base, UtilityBase):
     """
 
     __tablename__ = "query_result"
-    id = Column(UUID(as_uuid=True), primary_key=True, unique=True, nullable=False, default=uuid.uuid4)
+    id = Column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        unique=True,
+        nullable=False,
+        default=uuid.uuid4,
+    )
 
     # todo: save the entire query, also `publishedAfter` and `relevanceLanguage`
     # make sure to lower the string before entering

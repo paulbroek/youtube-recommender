@@ -2,6 +2,7 @@
 
 import logging
 import traceback
+import uuid
 from operator import itemgetter
 from typing import Dict, List
 
@@ -123,6 +124,7 @@ class data_methods:
 
         First create Channel items
         """
+        vdf = vdf.copy()
         channel_recs = cls._make_channel_recs(vdf)
 
         records_dict = {}
@@ -154,6 +156,7 @@ class data_methods:
 
         returnExisting:     return captions after creating them
         """
+        df, vdf = df.copy(), vdf.copy()
         records_dict = await cls.push_videos(vdf, async_session)
 
         video_records = records_dict["video"]
@@ -202,7 +205,9 @@ class data_methods:
         for query, video_records in queryDict.items():
             videos: List[VideoRec] = list(video_records.values())
 
-            qr = queryResult(query=query, videos=videos)
+            qr = queryResult(
+                id=uuid.uuid4(), query=query, videos=videos
+            )  # id=uuid.uuid4(),
             print(f"{qr=}")
             session.add(qr)
 
@@ -219,7 +224,7 @@ class data_methods:
 
         # session.close()  # does not closing prevent triggers from triggering?
 
-        query_results = plural(npushed, 'queryResult')
+        query_results = plural(npushed, "queryResult")
         logger.info(f"pushed {npushed} {query_results} to db")
 
     # ======================================================================= #

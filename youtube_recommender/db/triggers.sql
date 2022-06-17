@@ -21,7 +21,7 @@ END $$;
 -- todo: why is running AFTER last record was inserted? it lags behind by 1 
 DROP TRIGGER IF EXISTS refresh_last_query_results ON query_result;
 CREATE TRIGGER refresh_last_query_results
-BEFORE INSERT OR UPDATE OR DELETE
+AFTER INSERT OR UPDATE OR DELETE
 ON query_result
 FOR EACH ROW
 -- FOR EACH STATEMENT

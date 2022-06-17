@@ -28,6 +28,9 @@ VIDEOS_PATH = DATA_DIR / VIDEOS_FILE
 CAPTIONS_FILE = "captions.feather"
 CAPTIONS_PATH = DATA_DIR / CAPTIONS_FILE
 
+PYTUBE_VIDEOS_FILE = "pytube_videos.feather"
+PYTUBE_VIDEOS_PATH = DATA_DIR / PYTUBE_VIDEOS_FILE
+
 #################
 ##### SpaCy #####
 #################

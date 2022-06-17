@@ -9,3 +9,4 @@ gensim
 bertopic
 pre-commit
 pyarrow
+pytube

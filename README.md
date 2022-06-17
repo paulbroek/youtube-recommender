@@ -36,6 +36,8 @@ Extends on [this](https://github.com/chris-lovejoy/YouTube-video-finder) repo, b
 
 - [x] Use async http requests to query YouTube API
 - [x] Query captions asynchronously
+- [ ] Save Video keywords to db
+- [ ] Save Video rating to db
 
 ## 2.1 How to install
 
