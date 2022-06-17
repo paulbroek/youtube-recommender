@@ -160,6 +160,11 @@ parser.add_argument(
     help="channel url to fetch video metadatas from",
 )
 parser.add_argument(
+    "--skip",
+    default=0,
+    help="Skip first N items",
+)
+parser.add_argument(
     "-n",
     "--nitems",
     default=30,
@@ -184,6 +189,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     assert isinstance(args.channel_url, str), "pass url as string"
 
+    nskip = int(args.skip)
     nitems = int(args.nitems)
     ncore = int(args.ncore)
 
@@ -199,7 +205,7 @@ if __name__ == "__main__":
 
     # slow call to urls.len? 
     # logger.info(f"this channel has {len(vurls):,} videos")
-    vres = mp_extract_videos(vurls[:nitems], nprocess=ncore)
+    vres = mp_extract_videos(vurls[nskip:nitems], nprocess=ncore)
     cres = mp_extract_channels(vres, nprocess=ncore)
     vdf = pd.DataFrame(vres)
     cdf = pd.DataFrame(cres)
@@ -215,7 +221,6 @@ if __name__ == "__main__":
         # df.to_feather("data/pytube_videos.feather")
         save_feather(df, PYTUBE_VIDEOS_PATH)
 
-    # todo: extract and create Keywords
     # push keywords, channels and videos to db
     if args.push_db:
         datad = loop.run_until_complete(dm.push_videos(df, async_session))

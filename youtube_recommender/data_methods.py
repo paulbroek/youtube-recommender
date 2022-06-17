@@ -116,6 +116,11 @@ class data_methods:
 
         return df
 
+    @staticmethod
+    def map_list(l: list, d: dict) -> list:
+        """Map a dictionary over a list."""
+        return list(map(d.get, l))
+
     @classmethod
     async def push_videos(
         cls, vdf: pd.DataFrame, async_session
@@ -132,10 +137,15 @@ class data_methods:
         records_dict["keyword"] = await create_many_items(
             async_session, Keyword, keyword_recs, nameAttr="name", returnExisting=True
         )
+        # map the keyword objects into vdf
+        if "keywords" not in vdf.columns:
+            vdf["keywords"] = vdf.apply(lambda x: [], axis=1)  # set to empty lists
+        else:
+            vdf["keywords"] = vdf["keywords"].map(
+                lambda x: cls.map_list(x, records_dict["keyword"])
+            )
 
         channel_recs = cls._make_channel_recs(vdf)
-
-        # create channels from same dataset
         records_dict["channel"] = await create_many_items(
             async_session, Channel, channel_recs, nameAttr="id", returnExisting=True
         )
@@ -144,7 +154,6 @@ class data_methods:
         vdf["channel"] = vdf["channel_id"].map(records_dict["channel"])
 
         video_recs = cls._make_video_recs(vdf)
-
         records_dict["video"] = await create_many_items(
             async_session, Video, video_recs, nameAttr="id", returnExisting=True
         )
@@ -248,7 +257,7 @@ class data_methods:
         ll: List[str] = sum(l, [])
         ll = list(set(ll))
 
-        recs = {k: {'name': k} for k in ll}
+        recs = {k: {"name": k} for k in ll}
 
         return recs
 
@@ -283,11 +292,12 @@ class data_methods:
                     "custom_score",
                     "channel_id",
                     "channel",
+                    "keywords",
                 ]
             ]
             .assign(index=df["video_id"])
             .set_index("index")
-            .drop_duplicates()
+            .drop_duplicates(subset='id')
             .to_dict("index")
         )
 
