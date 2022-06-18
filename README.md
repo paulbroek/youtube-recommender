@@ -16,6 +16,7 @@ Extends on [this](https://github.com/chris-lovejoy/YouTube-video-finder) repo, b
 - [x] Make package installable
 - [x] Also cache load captions in `topicer/__main__.py`
 - [x] Reconstruct videos tables from cache results
+- [ ] Save favourite channels to channels.json, for easy reconstruction of db
 - [ ] Containerize the application
 - [ ] Run tests in GitHub Actions
 - [ ] Create fastAPI api to retrieve this data

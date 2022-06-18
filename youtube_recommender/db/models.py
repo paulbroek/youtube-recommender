@@ -74,7 +74,7 @@ from rarc_utils.log import loggingLevelNames, set_log_level, setup_logger
 from rarc_utils.misc import AttrDict, trunc_msg
 from rarc_utils.sqlalchemy_base import (UtilityBase, async_main, get_async_db,
                                         get_async_session, get_session)
-from sqlalchemy import (Column, DateTime, Float, ForeignKey, Integer,
+from sqlalchemy import (Boolean, Column, DateTime, Float, ForeignKey, Integer,
                         LargeBinary, String, UniqueConstraint, func)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declarative_base
@@ -123,6 +123,28 @@ query_video_association = Table(
 )
 
 
+class VideoCategory(Base, UtilityBase):
+    """VideoCategory: custom video categories for ease of filtering."""
+
+    __tablename__ = "video_category"
+    id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False, unique=False)
+
+    created = Column(DateTime, server_default=func.now())  # current_timestamp()
+
+    # add this so that it can be accessed
+    __mapper_args__ = {"eager_defaults": True}
+
+    def __repr__(self):
+        return "VideoCategory(name={})".format(self.name)
+
+    def as_dict(self) -> dict:
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+    def json(self) -> dict:
+        return self.as_dict()
+
+
 class Video(Base, UtilityBase):
     """Video: contains metadata of YouTube videos: views, title, id, etc."""
 
@@ -167,8 +189,10 @@ class Channel(Base, UtilityBase):
     __tablename__ = "channel"
     id = Column(String, primary_key=True)
     name = Column(String, nullable=False, unique=False)
-    num_subscribers = Column(Integer, nullable=True, unique=False) # nullable=False for now, since pytube does not collect this information, can request later through youtube API v3 (single calls)
-
+    num_subscribers = Column(
+        Integer, nullable=True, unique=False
+    )  # nullable=False for now, since pytube does not collect this information, can request later through youtube API v3 (single calls)
+    nvideo = Column(Integer, nullable=True, unique=False)
     created = Column(DateTime, server_default=func.now())  # current_timestamp()
     updated = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
@@ -176,8 +200,8 @@ class Channel(Base, UtilityBase):
     __mapper_args__ = {"eager_defaults": True}
 
     def __repr__(self):
-        return "Channel(id={}, name={}, num_subscribers={})".format(
-            self.id, self.name, self.num_subscribers
+        return "Channel(id={}, name={}, nvideo={}, num_subscribers={})".format(
+            self.id, self.name, self.nvideo, self.num_subscribers
         )
 
     def as_dict(self) -> dict:
@@ -240,6 +264,53 @@ class Caption(Base, UtilityBase):
 
     def compr_pct(self) -> float:
         return self.compr_length / self.length
+
+    def as_dict(self) -> dict:
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+    def json(self) -> dict:
+        return self.as_dict()
+
+
+class scrapeJob(Base, UtilityBase):
+    """scrapeJob: a scrapeJob is related to a Channel. Since channels can upload new videos,
+    this table shows user when it was scraped for the last time, and how many videos.
+
+    """
+
+    __tablename__ = "scrape_job"
+    id = Column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        unique=True,
+        nullable=False,
+        default=uuid.uuid4,
+    )
+
+    channel_id = Column(String, ForeignKey("channel.id"), nullable=False)
+    channel = relationship("Channel", uselist=False, lazy="selectin")
+
+    nupdate = Column(Integer, default=0)
+    done = Column(Boolean)
+
+    created = Column(DateTime, server_default=func.now())  # current_timestamp()
+    updated = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    # add this so that it can be accessed
+    __mapper_args__ = {"eager_defaults": True}
+
+    def __repr__(self):
+        return (
+            "scrapeJob(id={}, channel={}, nupdate={}, done={}, updated_ago={})".format(
+                str(self.id),
+                self.channel.name,
+                self.nupdate,
+                self.done,
+                timeago.format(self.updated, datetime.utcnow())
+                if self.updated
+                else None,
+            )
+        )
 
     def as_dict(self) -> dict:
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}

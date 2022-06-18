@@ -120,7 +120,10 @@ if __name__ == "__main__":
         # res = search_each_term(search_terms, config["api_key"], start_date_string) # blocking code
         res = loop.run_until_complete(
             search_each_term(
-                list(search_terms), config["api_key"], start_date_string, n=int(args.nitems)
+                list(search_terms),
+                config["api_key"],
+                start_date_string,
+                n=int(args.nitems),
             )
         )
         df = res["top_videos"].reset_index(drop=True)
