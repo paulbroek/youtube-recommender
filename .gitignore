@@ -6,7 +6,7 @@ __pycache__/
 config.yaml
 postgres.cfg
 # db/alembic/versions
-db/alembic
+db/alembic/*
 # alembic.ini
 
 # top_videos.feather
