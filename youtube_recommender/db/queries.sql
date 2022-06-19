@@ -27,19 +27,3 @@ ORDER BY
     count DESC
 limit
     25;
--- select top channels
-DROP VIEW top_channels;
-CREATE VIEW top_channels AS
-SELECT
-    channel.name,
-    channel.id,
-    COUNT(video) AS video_count
-FROM
-    video
-    INNER JOIN channel ON video.channel_id = channel.id
-GROUP BY
-    channel.id
-ORDER BY
-    video_count DESC
-LIMIT
-    5;
