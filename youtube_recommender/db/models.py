@@ -153,6 +153,8 @@ class Video(Base, UtilityBase):
     title = Column(String, nullable=False, unique=False)
     description = Column(String, nullable=True, unique=False)
     views = Column(Integer, nullable=False, unique=False)
+    length = Column(Integer, nullable=False)
+    publish_date = Column(DateTime)
     custom_score = Column(Float, nullable=True, unique=False)
     keywords = relationship(
         "Keyword", uselist=True, secondary=video_keyword_association, lazy="selectin"
@@ -168,10 +170,11 @@ class Video(Base, UtilityBase):
     __mapper_args__ = {"eager_defaults": True}
 
     def __repr__(self):
-        return "Video(id={}, title={}, views={:,}, nkeyword={}, description={})".format(
+        return "Video(id={}, title={}, views={:,}, minutes={:.1f}, nkeyword={}, description={})".format(
             self.id,
             trunc_msg(self.title, 40),
             self.views,
+            self.length / 60,
             len(self.keywords),
             trunc_msg(self.description, 40),
         )
