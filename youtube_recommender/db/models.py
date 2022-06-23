@@ -96,6 +96,7 @@ cfgFile = p.with_name("postgres.cfg")
 
 parser = configparser.ConfigParser()
 parser.read(cfgFile)
+assert "psql" in parser, f"'psql' not in {cfgFile=}"
 psql = AttrDict(parser["psql"])
 assert psql["db"] == "youtube"  # do not overwrite existing other db
 psession = get_session(psql)()
