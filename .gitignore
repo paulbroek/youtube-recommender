@@ -6,6 +6,7 @@ __pycache__/
 config.yaml
 postgres.cfg
 # db/alembic/versions
+youtube_recommender/db/alembic.ini
 youtube_recommender/db/alembic/versions
 # alembic.ini
 
