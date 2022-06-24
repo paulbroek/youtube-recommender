@@ -21,7 +21,7 @@ list data:
     ipython --no-confirm-exit ~/repos/youtube/youtube/models.py -i -- --create 0
 
 For migrations use alembic. First install `pip install psycopg2-binary` and `pip install alembic` in current conda environment. Run `alembic init alembic`  in this folder, 
-and update "alembic.ini" by changing sqlalchemy.url to `postgresql://postgres:PASSWORD@80.56.112.182/youtube`
+and update "alembic.ini" by changing sqlalchemy.url to `postgresql://postgres:PASSWORD@77.249.149.174/youtube`
     - update the env.py file by importing your model:
         from models import *
         from models import Base
