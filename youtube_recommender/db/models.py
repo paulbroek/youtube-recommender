@@ -75,7 +75,8 @@ from rarc_utils.misc import AttrDict, trunc_msg
 from rarc_utils.sqlalchemy_base import (UtilityBase, async_main, get_async_db,
                                         get_async_session, get_session)
 from sqlalchemy import (Boolean, Column, DateTime, Float, ForeignKey, Integer,
-                        LargeBinary, String, UniqueConstraint, func)
+                        LargeBinary, String, Time, UniqueConstraint, func,
+                        select)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
@@ -164,6 +165,8 @@ class Video(Base, UtilityBase):
     channel_id = Column(String, ForeignKey("channel.id"), nullable=False)
     channel = relationship("Channel", uselist=False, lazy="selectin")
 
+    chapters = relationship("Chapter", uselist=True, lazy="selectin")
+
     created = Column(DateTime, server_default=func.now())  # current_timestamp()
     updated = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
@@ -171,13 +174,14 @@ class Video(Base, UtilityBase):
     __mapper_args__ = {"eager_defaults": True}
 
     def __repr__(self):
-        return "Video(id={}, title={}, views={:,}, minutes={:.1f}, nkeyword={}, description={})".format(
+        return "Video(id={}, title={}, views={:,}, minutes={:.1f}, nkeyword={}, description={}, nchapter={})".format(
             self.id,
             trunc_msg(self.title, 40),
             self.views,
             self.length / 60,
             len(self.keywords),
             trunc_msg(self.description, 40),
+            len(self.chapters),
         )
 
     def as_dict(self) -> dict:
@@ -187,8 +191,51 @@ class Video(Base, UtilityBase):
         return self.as_dict()
 
 
+class Chapter(Base, UtilityBase):
+    """Chapter: relates to Video, contains a string that describes a part of the video, set by user."""
+
+    __tablename__ = "chapter"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    sub_id = Column(Integer, nullable=False, unique=True)
+
+    name = Column(
+        String, nullable=False, unique=True
+    )  # unique or not? are authors allowed to make mistakes in this?
+    video_id = Column(String, ForeignKey("video.id"), nullable=False)
+    video = relationship("Video", uselist=False, lazy="selectin")
+
+    start = Column(Time, nullable=False)
+    end = Column(Time, nullable=False)
+
+    created = Column(DateTime, server_default=func.now())  # current_timestamp()
+    updated = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    # add this so that it can be accessed
+    __mapper_args__ = {"eager_defaults": True}
+
+    def __repr__(self):
+        return "Chapter(id={}, video.title={}, sub_id={}, name={}, start={}, end={}, minute_length={:.1f})".format(
+            trunc_msg(self.id.__str__(), 8),
+            trunc_msg(self.video.title, 40),
+            self.sub_id,
+            self.name,
+            self.start,
+            self.end,
+            self.length(),
+        )
+
+    def length(self):
+        return (self.end - self.start).total_seconds() / 60
+
+    def as_dict(self) -> dict:
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+    def json(self) -> dict:
+        return self.as_dict()
+
+
 class Channel(Base, UtilityBase):
-    """Channel: contains metadata of YouTube channels: num_subscribers, id, etc."""
+    """Channel: contains compressed captions in Bytes for YouTube videos."""
 
     __tablename__ = "channel"
     id = Column(String, primary_key=True)
@@ -420,6 +467,5 @@ if __name__ == "__main__":
     else:
         print("get data")
         # data = loop.run_until_complete(get_data2(psql))
-        # raise NotImplementedError
 
     # strMappings = loop.run_until_complete(aget_str_mappings(psql))

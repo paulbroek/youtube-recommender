@@ -11,8 +11,8 @@ import pandas as pd
 from rarc_utils.misc import plural
 from yapic import json  # type: ignore[import]
 
-from .core.types import (CaptionRec, ChannelId, ChannelRec, TableTypes,
-                         VideoId, VideoRec)
+from .core.types import (CaptionRec, ChannelId, ChannelRec, ChapterRec,
+                         TableTypes, VideoId, VideoRec)
 from .db.helpers import compress_caption, create_many_items
 from .db.models import Caption, Channel, Keyword, Video, queryResult
 from .settings import YOUTUBE_CHANNEL_PREFIX, YOUTUBE_VIDEO_PREFIX
@@ -289,6 +289,8 @@ class data_methods:
                     "title",
                     "description",
                     "views",
+                    "length",
+                    "publish_date",
                     "custom_score",
                     "channel_id",
                     "channel",
@@ -306,6 +308,24 @@ class data_methods:
     @staticmethod
     def _make_caption_recs(df: pd.DataFrame) -> Dict[VideoId, CaptionRec]:
         """Make Caption records from dataframe, for SQLAlchemy object creation."""
+        recs = (
+            df.rename(
+                columns={
+                    "text_len": "length",
+                    "language_code": "lang",
+                }
+            )[["video_id", "video", "length", "compr", "compr_length", "lang"]]
+            .assign(index=df["video_id"])
+            .set_index("index")
+            .drop_duplicates()
+            .to_dict("index")
+        )
+
+        return recs
+
+    @staticmethod
+    def _make_chapter_recs(df: pd.DataFrame) -> Dict[VideoId, ChapterRec]:
+        """Make Chapter records from dataframe, for SQLAlchemy object creation."""
         recs = (
             df.rename(
                 columns={
