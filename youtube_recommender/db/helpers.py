@@ -3,6 +3,7 @@
 import logging
 import re
 import zlib
+from collections import defaultdict
 from datetime import datetime, time, timedelta
 from typing import List, Optional
 
@@ -12,15 +13,19 @@ from rarc_utils.sqlalchemy_base import create_many
 from sqlalchemy import and_
 from sqlalchemy.future import select  # type: ignore[import]
 
-from ..core.types import VideoId
+from ..core.types import VideoId, VideoRec
 from ..settings import HOUR_LIMIT, PSQL_HOURS_AGO
-from .models import Caption, Chapter, Video, queryResult
+from .models import Caption, Video, queryResult
 
 # from .models import *
 
 logger = logging.getLogger(__name__)
 
-time_pattern = re.compile(r"\d+:\d+:\d+")
+# time_pattern = re.compile(r"\d+:\d+:\d+")
+time_pattern = re.compile(r"(\d+:\d+:\d+)(.+)")
+# a group with time pattern and (hopefully) the name of the chapter, might leave orphaned ']'  or ')' bracket
+# removing this remainder bracket, use a replace pattern for now
+replace_pat = re.compile(r"^[\]|\)-]+")
 
 
 def match_video_locations():
@@ -34,7 +39,7 @@ def match_video_locations():
 
 
 def parse_isotime(row) -> Optional[time]:
-    # todo: datetime.time cannot be used, since sometimes hour > 24, use your own data structure 
+    # todo: datetime.time cannot be used, since sometimes hour > 24, use your own data structure
     # use interval?
     try:
         return time.fromisoformat(row.s)
@@ -42,46 +47,87 @@ def parse_isotime(row) -> Optional[time]:
         logger.error(f"cannot parse time: {row.s}, {row.video_id=}")
         return None
 
-def parse_time(row, level=0):
-    pass
+
+def parse_time(row, levels=("seconds", "minutes", "hours")) -> Optional[timedelta]:
+    """Parse time from YouTube chapter as generic as possible.
+
+    Caution: sometimes only M:S format: 23:20, sometimes full H:M:S format: 15:10:10
+    """
+    s = row.s
+    # split and reverse order (seconds first)
+    parts = s.split(":")[::-1]
+
+    # determine number of time parts
+    if len(parts) > 3:
+        logger.error(f"too many parts: {s=}, {row.video_id=}")
+        return None
+
+    dd_level = defaultdict(int)
+
+    for part, level in zip(parts, levels):
+        dd_level[level] = int(part)
+
+    # create timedelta object
+    return timedelta(**dd_level)
 
 
-def find_all_locations(videos: List[Video], display=False) -> List[dict]:
+def find_chapter_locations(video_recs: List[VideoRec], display=False) -> List[dict]:
     ret = []
-    for video in videos:
+    for video_rec in video_recs:
+        assert isinstance(video_rec, dict)
+        # rec_factory = lambda: dict(
+        #     video=video, video_id=video.id, video_description=video.description
+        # )
         rec_factory = lambda: dict(
-            video_id=video.id, video_description=video.description
+            video_id=video_rec["id"],
+            video_description=video_rec["description"],
+            video_length=video_rec["length"],
+            video_end=timedelta(seconds=video_rec["length"]),
         )
-        res = time_pattern.findall(video.description)
+        res = time_pattern.findall(video_rec["description"])
         if len(res) > 0:
             if display:
-                print(f"{video.title=}, \n{res=} \n\n")
+                print(f"{video_rec['title']=}, \n{res=} \n\n")
 
-        for i, r in enumerate(res):
+        for r in res:
             rec = rec_factory()
-            rec["s"] = r
-            # can parse time?
-            # start = parse_isotime(r)
-            # end comes after parsing all of them
-            # create Chapter objects
-            # Chapter(name=r, video=video, sub_id=i, start=0, end=0)
+            rec["s"] = r[0]
+            rec["name"] = re.sub(replace_pat, "", r[1]).strip()
             ret.append(rec)
 
     return ret
 
+
 def chapter_locations_to_df(ret: List[dict]) -> pd.DataFrame:
     df = pd.DataFrame(ret)
-    df['len'] = df['s'].map(len)
+    df["len"] = df["s"].map(len)
 
     # prepend a 0 when first item has len 1
-    df['s'] = np.where(df['len'] == 7, '0' + df['s'], df['s'])
+    # df['s'] = np.where(df['len'] == 7, '0' + df['s'], df['s'])
 
-    # todo: dismiss time strings with len >= 9? 
+    # todo: dismiss time strings with len >= 9?
 
     # df['start'] = df[['video_id','s']].map(parse_isotime)
-    df['start'] = df.apply(parse_isotime, axis=1)
+    df["start"] = df.apply(parse_time, axis=1)
+    df["start_seconds"] = df["start"].dt.total_seconds().astype(int)
+
+    # calculate end time, using next start time, if available
+    # df['end'] = None
+    by_vid = df.groupby("video_id")
+    df["end"] = by_vid["start"].shift(-1)
+    # make last chapter end equal to full video length
+    df["end"] = np.where(df["end"].isnull(), df["video_end"], df["end"])
+    df["end_seconds"] = df["end"].dt.total_seconds().astype(int)
+
+    df = df.sort_values(["start", "end"])
+    # drop duplicate start + name rows
+    df = df.drop_duplicates(subset=["video_id", "name", "start"])
+
+    # add sub_id per video
+    df["sub_id"] = by_vid["video_id"].cumcount()
 
     return df
+
 
 async def create_many_items(
     asession, model, itemDicts, nameAttr="name", returnExisting=False
