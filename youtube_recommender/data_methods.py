@@ -361,7 +361,6 @@ class data_methods:
             [
                 "sub_id",
                 "name",
-                "video_id",
                 "raw_str",
                 "start",
                 "end",

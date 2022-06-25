@@ -17,11 +17,8 @@ from ..core.types import VideoId, VideoRec
 from ..settings import HOUR_LIMIT, PSQL_HOURS_AGO
 from .models import Caption, Video, queryResult
 
-# from .models import *
-
 logger = logging.getLogger(__name__)
 
-# time_pattern = re.compile(r"\d+:\d+:\d+")
 time_pattern = re.compile(r"(\d+:\d+:\d+)(.+)")
 # a group with time pattern and (hopefully) the name of the chapter, might leave orphaned ']'  or ')' bracket
 # removing this remainder bracket, use a replace pattern for now
@@ -36,16 +33,6 @@ def match_video_locations():
         ⌨️ (0:00:34) Colab intro (importing wine dataset)
     """
     pass
-
-
-def parse_isotime(row) -> Optional[time]:
-    # todo: datetime.time cannot be used, since sometimes hour > 24, use your own data structure
-    # use interval?
-    try:
-        return time.fromisoformat(row.s)
-    except ValueError:
-        logger.error(f"cannot parse time: {row.s}, {row.video_id=}")
-        return None
 
 
 def parse_time(row, levels=("seconds", "minutes", "hours")) -> Optional[timedelta]:
@@ -75,9 +62,7 @@ def find_chapter_locations(video_recs: List[VideoRec], display=False) -> List[di
     ret = []
     for video_rec in video_recs:
         assert isinstance(video_rec, dict)
-        # rec_factory = lambda: dict(
-        #     video=video, video_id=video.id, video_description=video.description
-        # )
+
         rec_factory = lambda: dict(
             video_id=video_rec["id"],
             video_description=video_rec["description"],
@@ -107,12 +92,10 @@ def chapter_locations_to_df(ret: List[dict]) -> pd.DataFrame:
 
     # todo: dismiss time strings with len >= 9?
 
-    # df['start'] = df[['video_id','s']].map(parse_isotime)
     df["start"] = df.apply(parse_time, axis=1)
     df["start_seconds"] = df["start"].dt.total_seconds().astype(int)
 
     # calculate end time, using next start time, if available
-    # df['end'] = None
     by_vid = df.groupby("video_id")
     df["end"] = by_vid["start"].shift(-1)
     # make last chapter end equal to full video length
