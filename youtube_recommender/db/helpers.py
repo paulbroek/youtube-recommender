@@ -1,22 +1,87 @@
 """helpers.py, helper methods for SQLAlchemy models, listed in models.py."""
 
 import logging
+import re
 import zlib
-from datetime import datetime, timedelta
-from typing import List  # Any, Optional, Dict, Set, Tuple
+from datetime import datetime, time, timedelta
+from typing import List, Optional
 
+import numpy as np
+import pandas as pd
 from rarc_utils.sqlalchemy_base import create_many
 from sqlalchemy import and_
 from sqlalchemy.future import select  # type: ignore[import]
 
 from ..core.types import VideoId
 from ..settings import HOUR_LIMIT, PSQL_HOURS_AGO
-from .models import Caption, Video, queryResult
+from .models import Caption, Chapter, Video, queryResult
 
 # from .models import *
 
 logger = logging.getLogger(__name__)
 
+time_pattern = re.compile(r"\d+:\d+:\d+")
+
+
+def match_video_locations():
+    """Find lines in video description that capture time link data.
+
+    Example:
+        ⌨️ (0:00:00) Introduction
+        ⌨️ (0:00:34) Colab intro (importing wine dataset)
+    """
+    pass
+
+
+def parse_isotime(row) -> Optional[time]:
+    # todo: datetime.time cannot be used, since sometimes hour > 24, use your own data structure 
+    # use interval?
+    try:
+        return time.fromisoformat(row.s)
+    except ValueError:
+        logger.error(f"cannot parse time: {row.s}, {row.video_id=}")
+        return None
+
+def parse_time(row, level=0):
+    pass
+
+
+def find_all_locations(videos: List[Video], display=False) -> List[dict]:
+    ret = []
+    for video in videos:
+        rec_factory = lambda: dict(
+            video_id=video.id, video_description=video.description
+        )
+        res = time_pattern.findall(video.description)
+        if len(res) > 0:
+            if display:
+                print(f"{video.title=}, \n{res=} \n\n")
+
+        for i, r in enumerate(res):
+            rec = rec_factory()
+            rec["s"] = r
+            # can parse time?
+            # start = parse_isotime(r)
+            # end comes after parsing all of them
+            # create Chapter objects
+            # Chapter(name=r, video=video, sub_id=i, start=0, end=0)
+            ret.append(rec)
+
+    return ret
+
+def chapter_locations_to_df(ret: List[dict]) -> pd.DataFrame:
+    df = pd.DataFrame(ret)
+    df['len'] = df['s'].map(len)
+
+    # prepend a 0 when first item has len 1
+    df['s'] = np.where(df['len'] == 7, '0' + df['s'], df['s'])
+
+    # todo: dismiss time strings with len >= 9? 
+
+    # df['start'] = df[['video_id','s']].map(parse_isotime)
+    df['start'] = df.apply(parse_isotime, axis=1)
+
+    return df
 
 async def create_many_items(
     asession, model, itemDicts, nameAttr="name", returnExisting=False
