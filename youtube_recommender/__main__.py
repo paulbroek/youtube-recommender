@@ -169,7 +169,7 @@ if __name__ == "__main__":
             for query, df_ in res.items():
                 df_ = df_.pipe(dm.extract_video_id).pipe(dm.extract_channel_id)
 
-                datad = loop.run_until_complete(dm.push_videos(df_, async_session))
+                datad = loop.run_until_complete(dm.push_videos(df_, async_session, extract_chapters=True))
                 # assert isinstance(datad, dict)
                 query_dict[query] = datad["video"]
 

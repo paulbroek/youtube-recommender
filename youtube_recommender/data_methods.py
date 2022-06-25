@@ -3,6 +3,7 @@
 import logging
 import traceback
 import uuid
+from collections import defaultdict
 from operator import itemgetter
 from typing import Dict, List
 
@@ -13,8 +14,9 @@ from yapic import json  # type: ignore[import]
 
 from .core.types import (CaptionRec, ChannelId, ChannelRec, ChapterRec,
                          TableTypes, VideoId, VideoRec)
-from .db.helpers import compress_caption, create_many_items
-from .db.models import Caption, Channel, Keyword, Video, queryResult
+from .db.helpers import (chapter_locations_to_df, compress_caption,
+                         create_many_items, find_chapter_locations)
+from .db.models import Caption, Channel, Chapter, Keyword, Video, queryResult
 from .settings import YOUTUBE_CHANNEL_PREFIX, YOUTUBE_VIDEO_PREFIX
 
 logger = logging.getLogger(__name__)
@@ -122,24 +124,52 @@ class data_methods:
         return list(map(d.get, l))
 
     @classmethod
+    def extract_chapters(cls, vdf: pd.DataFrame) -> pd.DataFrame:
+        """Extract Chapter metadata from Video.description."""
+        logger.info(f"extracting chapters from video description")
+        chapter_res: List[dict] = find_chapter_locations(
+            vdf[["video_id", "length", "title", "description"]]
+            .rename(columns={"video_id": "id"})
+            .to_dict("records")
+        )
+        cdf = chapter_locations_to_df(chapter_res)
+
+        cdf = cls._make_chapter_df(cdf)
+
+        by_vid = cdf[["video_id", "chapter"]].copy().groupby("video_id")
+        chapters = by_vid["chapter"].apply(list).to_dict()
+
+        # insert chapter lists into vdf
+        # deal videos that do not have chapter information in description
+        dd: defaultdict = defaultdict(list)
+        dd.update(chapters)
+        vdf["chapters"] = vdf["video_id"].map(dd)
+        # assert vdf["chapters"].isnan().sum()
+
+        return vdf
+
+    @classmethod
     async def push_videos(
         cls, vdf: pd.DataFrame, async_session
     ) -> Dict[str, Dict[str, TableTypes]]:
         """Push videos to db.
 
-        First create Keyword and Channel items
+        First create Keyword, Chapter and Channel items
         """
         vdf = vdf.copy()
 
         records_dict = {}
 
         keyword_recs = cls._make_keyword_recs(vdf)
+        # todo: turn into transaction, since failing to create Video should remove the Keywords
         records_dict["keyword"] = await create_many_items(
             async_session, Keyword, keyword_recs, nameAttr="name", returnExisting=True
         )
         # map the keyword objects into vdf
         if "keywords" not in vdf.columns:
-            vdf["keywords"] = vdf.apply(lambda x: [], axis=1)  # set to empty lists
+            vdf["keywords"] = vdf.apply(
+                lambda x: [], axis=1
+            )  # set to empty lists first
         else:
             vdf["keywords"] = vdf["keywords"].map(
                 lambda x: cls.map_list(x, records_dict["keyword"])
@@ -154,6 +184,7 @@ class data_methods:
         vdf["channel"] = vdf["channel_id"].map(records_dict["channel"])
 
         video_recs = cls._make_video_recs(vdf)
+
         records_dict["video"] = await create_many_items(
             async_session, Video, video_recs, nameAttr="id", returnExisting=True
         )
@@ -295,11 +326,12 @@ class data_methods:
                     "channel_id",
                     "channel",
                     "keywords",
+                    "chapters",
                 ]
             ]
             .assign(index=df["video_id"])
             .set_index("index")
-            .drop_duplicates(subset='id')
+            .drop_duplicates(subset="id")
             .to_dict("index")
         )
 
@@ -324,19 +356,44 @@ class data_methods:
         return recs
 
     @staticmethod
+    def _make_chapter_df(df: pd.DataFrame) -> pd.DataFrame:
+        cdf = df.rename(columns={"s": "raw_str", "id": "video_id"})[
+            [
+                "sub_id",
+                "name",
+                "video_id",
+                "raw_str",
+                "start",
+                "end",
+            ]
+        ].copy()
+
+        cdf["chapter"] = cdf.apply(lambda x: Chapter(**x), axis=1)
+
+        return cdf
+
+    @staticmethod
     def _make_chapter_recs(df: pd.DataFrame) -> Dict[VideoId, ChapterRec]:
         """Make Chapter records from dataframe, for SQLAlchemy object creation."""
         recs = (
-            df.rename(
-                columns={
-                    "text_len": "length",
-                    "language_code": "lang",
-                }
-            )[["video_id", "video", "length", "compr", "compr_length", "lang"]]
-            .assign(index=df["video_id"])
+            df.rename(columns={"s": "raw_str"})[
+                [
+                    "sub_id",
+                    "name",
+                    "video_id",
+                    "raw_str",
+                    "start",
+                    "end",
+                ]
+            ]
+            .assign(
+                index=pd.MultiIndex.from_frame(df[["video_id", "sub_id"]])
+            )  # use both video_id and sub_id as index
             .set_index("index")
             .drop_duplicates()
             .to_dict("index")
         )
+
+        # todo: test if method works
 
         return recs

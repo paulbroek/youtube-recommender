@@ -75,7 +75,7 @@ from rarc_utils.misc import AttrDict, trunc_msg
 from rarc_utils.sqlalchemy_base import (UtilityBase, async_main, get_async_db,
                                         get_async_session, get_session)
 from sqlalchemy import (Boolean, Column, DateTime, Float, ForeignKey, Integer,
-                        LargeBinary, String, Time, UniqueConstraint, func,
+                        Interval, LargeBinary, String, UniqueConstraint, func,
                         select)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declarative_base
@@ -166,6 +166,7 @@ class Video(Base, UtilityBase):
     channel = relationship("Channel", uselist=False, lazy="selectin")
 
     chapters = relationship("Chapter", uselist=True, lazy="selectin")
+    # back_populates="video"
 
     created = Column(DateTime, server_default=func.now())  # current_timestamp()
     updated = Column(DateTime, server_default=func.now(), onupdate=func.now())
@@ -196,16 +197,20 @@ class Chapter(Base, UtilityBase):
 
     __tablename__ = "chapter"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    sub_id = Column(Integer, nullable=False, unique=True)
+    sub_id = Column(Integer, nullable=False, unique=False)
 
-    name = Column(
-        String, nullable=False, unique=True
-    )  # unique or not? are authors allowed to make mistakes in this?
+    # unique or not? are authors allowed to make mistakes in this?
+    name = Column(String, nullable=False, unique=False)
     video_id = Column(String, ForeignKey("video.id"), nullable=False)
     video = relationship("Video", uselist=False, lazy="selectin")
 
-    start = Column(Time, nullable=False)
-    end = Column(Time, nullable=False)
+    raw_str = Column(String, nullable=False)
+
+    # together, start and end should be unique, sometimes author makes a mistakes and reuses the same start value
+    # add unix index for this
+    start = Column(Interval, nullable=False, unique=False)
+    end = Column(Interval, nullable=False, unique=False)
+    UniqueConstraint("video_id", "sub_id", "start", "end", name="unique_start_end_chapter")
 
     created = Column(DateTime, server_default=func.now())  # current_timestamp()
     updated = Column(DateTime, server_default=func.now(), onupdate=func.now())
@@ -216,7 +221,7 @@ class Chapter(Base, UtilityBase):
     def __repr__(self):
         return "Chapter(id={}, video.title={}, sub_id={}, name={}, start={}, end={}, minute_length={:.1f})".format(
             trunc_msg(self.id.__str__(), 8),
-            trunc_msg(self.video.title, 40),
+            trunc_msg(self.video.title, 40) if self.video else "NaN",
             self.sub_id,
             self.name,
             self.start,
