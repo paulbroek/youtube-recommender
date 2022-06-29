@@ -134,17 +134,24 @@ class data_methods:
         )
         cdf = chapter_locations_to_df(chapter_res)
 
-        cdf = cls._make_chapter_df(cdf)
+        vdf["chapters"] = vdf["video_id"].map(lambda x: [])
 
-        by_vid = cdf[["video_id", "chapter"]].copy().groupby("video_id")
-        chapters = by_vid["chapter"].apply(list).to_dict()
+        if not cdf.empty:
+            cdf = cls._make_chapter_df(cdf)
 
-        # insert chapter lists into vdf
-        # deal videos that do not have chapter information in description
-        dd: defaultdict = defaultdict(list)
-        dd.update(chapters)
-        vdf["chapters"] = vdf["video_id"].map(dd)
-        # assert vdf["chapters"].isnan().sum()
+            by_vid = cdf[["video_id", "chapter"]].copy().groupby("video_id")
+            chapters = by_vid["chapter"].apply(list).to_dict()
+
+            # insert chapter lists into vdf
+            # deal videos that do not have chapter information in description
+            dd: defaultdict = defaultdict(list)
+            dd.update(chapters)
+
+            vdf["chapters"] = vdf["video_id"].map(dd)
+
+        vdf["nchapter"] = vdf["chapters"].map(len)
+
+        logger.info(f"chapters found: {vdf['nchapter'].sum():,}")
 
         return vdf
 
@@ -359,6 +366,7 @@ class data_methods:
     def _make_chapter_df(df: pd.DataFrame) -> pd.DataFrame:
         cdf = df.rename(columns={"s": "raw_str", "id": "video_id"})[
             [
+                "video_id",
                 "sub_id",
                 "name",
                 "raw_str",
@@ -367,7 +375,9 @@ class data_methods:
             ]
         ].copy()
 
-        cdf["chapter"] = cdf.apply(lambda x: Chapter(**x), axis=1)
+        cdf["chapter"] = cdf.drop("video_id", axis=1).apply(
+            lambda x: Chapter(**x), axis=1
+        )
 
         return cdf
 
