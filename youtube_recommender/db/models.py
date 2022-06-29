@@ -210,7 +210,9 @@ class Chapter(Base, UtilityBase):
     # add unix index for this
     start = Column(Interval, nullable=False, unique=False)
     end = Column(Interval, nullable=False, unique=False)
-    UniqueConstraint("video_id", "sub_id", "start", "end", name="unique_start_end_chapter")
+    UniqueConstraint(
+        "video_id", "sub_id", "start", "end", name="unique_start_end_chapter"
+    )
 
     created = Column(DateTime, server_default=func.now())  # current_timestamp()
     updated = Column(DateTime, server_default=func.now(), onupdate=func.now())
@@ -420,6 +422,16 @@ class queryResult(Base, UtilityBase):
 
     def json(self) -> dict:
         return self.as_dict()
+
+
+# def find_chapters_for_existing_videos(n=1_000) -> pd.DataFrame:
+
+#     q = select(Video).limit(5000)
+#     res = psession.execute(q).scalars().fetchall()
+#     ret = find_chapter_locations([r.as_dict() for r in res])
+#     df = chapter_locations_to_df(ret)
+
+#     return df
 
 
 if __name__ == "__main__":

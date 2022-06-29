@@ -4,7 +4,7 @@ import logging
 import re
 import zlib
 from collections import defaultdict
-from datetime import datetime, time, timedelta
+from datetime import datetime, timedelta
 from typing import List, Optional
 
 import numpy as np
@@ -23,16 +23,6 @@ time_pattern = re.compile(r"(\d+:\d+:\d+)(.+)")
 # a group with time pattern and (hopefully) the name of the chapter, might leave orphaned ']'  or ')' bracket
 # removing this remainder bracket, use a replace pattern for now
 replace_pat = re.compile(r"^[\]|\)-]+")
-
-
-def match_video_locations():
-    """Find lines in video description that capture time link data.
-
-    Example:
-        ⌨️ (0:00:00) Introduction
-        ⌨️ (0:00:34) Colab intro (importing wine dataset)
-    """
-    pass
 
 
 def parse_time(row, levels=("seconds", "minutes", "hours")) -> Optional[timedelta]:
@@ -59,16 +49,23 @@ def parse_time(row, levels=("seconds", "minutes", "hours")) -> Optional[timedelt
 
 
 def find_chapter_locations(video_recs: List[VideoRec], display=False) -> List[dict]:
+    """Find lines in video description that capture time link data.
+
+    Example:
+        ⌨️ (0:00:00) Introduction
+        ⌨️ (0:00:34) Colab intro (importing wine dataset)
+    """
     ret = []
     for video_rec in video_recs:
         assert isinstance(video_rec, dict)
 
-        rec_factory = lambda: dict(
-            video_id=video_rec["id"],
-            video_description=video_rec["description"],
-            video_length=video_rec["length"],
-            video_end=timedelta(seconds=video_rec["length"]),
-        )
+        rec_factory = lambda: {
+            "video_id": video_rec["id"],
+            "video_description": video_rec["description"],
+            "video_length": video_rec["length"],
+            "video_end": timedelta(seconds=video_rec["length"]),
+        }
+
         res = time_pattern.findall(video_rec["description"])
         if len(res) > 0:
             if display:
@@ -84,7 +81,13 @@ def find_chapter_locations(video_recs: List[VideoRec], display=False) -> List[di
 
 
 def chapter_locations_to_df(ret: List[dict]) -> pd.DataFrame:
+    """Parse list of chapter locations to pd.DataFrame."""
+    assert isinstance(ret, list), f"{type(ret)=}, should be list"
     df = pd.DataFrame(ret)
+
+    if df.empty:
+        return df
+
     df["len"] = df["s"].map(len)
 
     # prepend a 0 when first item has len 1
@@ -98,12 +101,12 @@ def chapter_locations_to_df(ret: List[dict]) -> pd.DataFrame:
     # calculate end time, using next start time, if available
     by_vid = df.groupby("video_id")
     df["end"] = by_vid["start"].shift(-1)
-    # make last chapter end equal to full video length
+    # make last chapter.end equal to video length
     df["end"] = np.where(df["end"].isnull(), df["video_end"], df["end"])
     df["end_seconds"] = df["end"].dt.total_seconds().astype(int)
 
     df = df.sort_values(["start", "end"])
-    # drop duplicate start + name rows
+    # drop duplicate (start, name) rows
     df = df.drop_duplicates(subset=["video_id", "name", "start"])
 
     # add sub_id per video
