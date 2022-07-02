@@ -9,7 +9,7 @@ from typing import Dict, List
 
 import langid  # type: ignore[import]
 import pandas as pd
-from rarc_utils.misc import plural
+from rarc_utils.misc import map_list, plural
 from yapic import json  # type: ignore[import]
 
 from .core.types import (CaptionRec, ChannelId, ChannelRec, ChapterRec,
@@ -118,11 +118,6 @@ class data_methods:
 
         return df
 
-    @staticmethod
-    def map_list(l: list, d: dict) -> list:
-        """Map a dictionary over a list."""
-        return list(map(d.get, l))
-
     @classmethod
     def extract_chapters(cls, vdf: pd.DataFrame) -> pd.DataFrame:
         """Extract Chapter metadata from Video.description."""
@@ -179,7 +174,7 @@ class data_methods:
             )  # set to empty lists first
         else:
             vdf["keywords"] = vdf["keywords"].map(
-                lambda x: cls.map_list(x, records_dict["keyword"])
+                lambda x: map_list(x, records_dict["keyword"])
             )
 
         channel_recs = cls._make_channel_recs(vdf)
