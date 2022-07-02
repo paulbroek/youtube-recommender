@@ -21,7 +21,7 @@ list data:
     ipython --no-confirm-exit ~/repos/youtube/youtube/models.py -i -- --create 0
 
 For migrations use alembic. First install `pip install psycopg2-binary` and `pip install alembic` in current conda environment. Run `alembic init alembic`  in this folder, 
-and update "alembic.ini" by changing sqlalchemy.url to `postgresql://postgres:PASSWORD@80.56.112.182/youtube`
+and update "alembic.ini" by changing sqlalchemy.url to `postgresql://postgres:PASSWORD@77.249.149.174/youtube`
     - update the env.py file by importing your model:
         from models import *
         from models import Base
@@ -75,7 +75,8 @@ from rarc_utils.misc import AttrDict, trunc_msg
 from rarc_utils.sqlalchemy_base import (UtilityBase, async_main, get_async_db,
                                         get_async_session, get_session)
 from sqlalchemy import (Boolean, Column, DateTime, Float, ForeignKey, Integer,
-                        LargeBinary, String, UniqueConstraint, func)
+                        Interval, LargeBinary, String, UniqueConstraint, func,
+                        select)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
@@ -164,6 +165,9 @@ class Video(Base, UtilityBase):
     channel_id = Column(String, ForeignKey("channel.id"), nullable=False)
     channel = relationship("Channel", uselist=False, lazy="selectin")
 
+    chapters = relationship("Chapter", uselist=True, lazy="selectin")
+    # back_populates="video"
+
     created = Column(DateTime, server_default=func.now())  # current_timestamp()
     updated = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
@@ -171,13 +175,14 @@ class Video(Base, UtilityBase):
     __mapper_args__ = {"eager_defaults": True}
 
     def __repr__(self):
-        return "Video(id={}, title={}, views={:,}, minutes={:.1f}, nkeyword={}, description={})".format(
+        return "Video(id={}, title={}, views={:,}, minutes={:.1f}, nkeyword={}, description={}, nchapter={})".format(
             self.id,
             trunc_msg(self.title, 40),
             self.views,
             self.length / 60,
             len(self.keywords),
             trunc_msg(self.description, 40),
+            len(self.chapters),
         )
 
     def as_dict(self) -> dict:
@@ -187,8 +192,57 @@ class Video(Base, UtilityBase):
         return self.as_dict()
 
 
+class Chapter(Base, UtilityBase):
+    """Chapter: relates to Video, contains a string that describes a part of the video, set by user."""
+
+    __tablename__ = "chapter"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    sub_id = Column(Integer, nullable=False, unique=False)
+
+    # unique or not? are authors allowed to make mistakes in this?
+    name = Column(String, nullable=False, unique=False)
+    video_id = Column(String, ForeignKey("video.id"), nullable=False)
+    video = relationship("Video", uselist=False, lazy="selectin")
+
+    raw_str = Column(String, nullable=False)
+
+    # together, start and end should be unique, sometimes author makes a mistakes and reuses the same start value
+    # add unix index for this
+    start = Column(Interval, nullable=False, unique=False)
+    end = Column(Interval, nullable=False, unique=False)
+    UniqueConstraint(
+        "video_id", "sub_id", "start", "end", name="unique_start_end_chapter"
+    )
+
+    created = Column(DateTime, server_default=func.now())  # current_timestamp()
+    updated = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    # add this so that it can be accessed
+    __mapper_args__ = {"eager_defaults": True}
+
+    def __repr__(self):
+        return "Chapter(id={}, video.title={}, sub_id={}, name={}, start={}, end={}, minute_length={:.1f})".format(
+            trunc_msg(self.id.__str__(), 8),
+            trunc_msg(self.video.title, 40) if self.video else "NaN",
+            self.sub_id,
+            self.name,
+            self.start,
+            self.end,
+            self.length(),
+        )
+
+    def length(self):
+        return (self.end - self.start).total_seconds() / 60
+
+    def as_dict(self) -> dict:
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+    def json(self) -> dict:
+        return self.as_dict()
+
+
 class Channel(Base, UtilityBase):
-    """Channel: contains metadata of YouTube channels: num_subscribers, id, etc."""
+    """Channel: contains compressed captions in Bytes for YouTube videos."""
 
     __tablename__ = "channel"
     id = Column(String, primary_key=True)
@@ -370,6 +424,16 @@ class queryResult(Base, UtilityBase):
         return self.as_dict()
 
 
+# def find_chapters_for_existing_videos(n=1_000) -> pd.DataFrame:
+
+#     q = select(Video).limit(5000)
+#     res = psession.execute(q).scalars().fetchall()
+#     ret = find_chapter_locations([r.as_dict() for r in res])
+#     df = chapter_locations_to_df(ret)
+
+#     return df
+
+
 if __name__ == "__main__":
 
     CLI = argparse.ArgumentParser()
@@ -420,6 +484,5 @@ if __name__ == "__main__":
     else:
         print("get data")
         # data = loop.run_until_complete(get_data2(psql))
-        # raise NotImplementedError
 
     # strMappings = loop.run_until_complete(aget_str_mappings(psql))

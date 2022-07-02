@@ -203,9 +203,9 @@ if __name__ == "__main__":
     # urls = Channel(channel_url)
     vurls = Channel(args.channel_url)
 
-    # slow call to urls.len? 
+    # slow call to urls.len?
     # logger.info(f"this channel has {len(vurls):,} videos")
-    vres = mp_extract_videos(vurls[nskip:nitems], nprocess=ncore)
+    vres = mp_extract_videos(vurls[nskip : (nskip + nitems)], nprocess=ncore)
     cres = mp_extract_channels(vres, nprocess=ncore)
     vdf = pd.DataFrame(vres)
     cdf = pd.DataFrame(cres)
@@ -217,10 +217,13 @@ if __name__ == "__main__":
     # combine video and channel data into one dataset
     df = pd.merge(vdf, cdf, on=["channel_id"])
 
+    assert not df.empty
+
     if args.save:
         # df.to_feather("data/pytube_videos.feather")
         save_feather(df, PYTUBE_VIDEOS_PATH)
 
     # push keywords, channels and videos to db
     if args.push_db:
+        df = dm.extract_chapters(df)
         datad = loop.run_until_complete(dm.push_videos(df, async_session))
