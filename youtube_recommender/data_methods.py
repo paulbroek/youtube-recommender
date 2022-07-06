@@ -17,6 +17,7 @@ from .core.types import (CaptionRec, ChannelId, ChannelRec, ChapterRec,
 from .db.helpers import (chapter_locations_to_df, compress_caption,
                          create_many_items, find_chapter_locations)
 from .db.models import Caption, Channel, Chapter, Keyword, Video, queryResult
+from .db_methods import get_existing_video_ids
 from .settings import YOUTUBE_CHANNEL_PREFIX, YOUTUBE_VIDEO_PREFIX
 
 logger = logging.getLogger(__name__)
@@ -186,6 +187,10 @@ class data_methods:
         vdf["channel"] = vdf["channel_id"].map(records_dict["channel"])
 
         video_recs = cls._make_video_recs(vdf)
+
+        # remove existing video_ids from dataset, before pushing?
+        existing_video_ids = get_existing_video_ids(async_session, vdf.video_id.to_list())
+        # drop those ids from dataframe
 
         records_dict["video"] = await create_many_items(
             async_session, Video, video_recs, nameAttr="id", returnExisting=True

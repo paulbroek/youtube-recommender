@@ -16,13 +16,14 @@ from time import time
 from typing import Any, Dict, List
 
 import pandas as pd
-from pytube import Channel, Playlist, Search, YouTube
+from pytube import Channel, YouTube  # type: ignore[import]
+# from pytube import Playlist, Search
 from rarc_utils.log import setup_logger
 from rarc_utils.sqlalchemy_base import get_async_session
 from youtube_recommender.data_methods import data_methods as dm
 from youtube_recommender.db.models import psql
 from youtube_recommender.settings import PYTUBE_VIDEOS_PATH
-from youtube_recommender.video_finder import save_feather
+from youtube_recommender.video_finder import load_feather, save_feather
 
 async_session = get_async_session(psql)
 
@@ -171,6 +172,12 @@ parser.add_argument(
     help="Max items to keep from channel",
 )
 parser.add_argument(
+    "--load",
+    action="store_true",
+    default=False,
+    help="Only load previous dataset",
+)
+parser.add_argument(
     "-s",
     "--save",
     action="store_true",
@@ -201,29 +208,35 @@ if __name__ == "__main__":
     # channel_url = "https://www.youtube.com/c/DaltonMabery"
     # channel_url = "https://www.youtube.com/channel/UCPZUQqtVDmcjm4NY5FkzqLA"
     # urls = Channel(channel_url)
-    vurls = Channel(args.channel_url)
 
-    # slow call to urls.len?
-    # logger.info(f"this channel has {len(vurls):,} videos")
-    vres = mp_extract_videos(vurls[nskip : (nskip + nitems)], nprocess=ncore)
-    cres = mp_extract_channels(vres, nprocess=ncore)
-    vdf = pd.DataFrame(vres)
-    cdf = pd.DataFrame(cres)
+    if args.load:
+        df = load_feather(PYTUBE_VIDEOS_PATH)
 
-    # todo: get num_subscibers through beautifulsoup or YouTube API
-    cdf["num_subscribers"] = None
-    vdf["custom_score"] = None
+    else:
 
-    # combine video and channel data into one dataset
-    df = pd.merge(vdf, cdf, on=["channel_id"])
+        vurls = Channel(args.channel_url)
 
-    assert not df.empty
+        # slow call to urls.len?
+        # logger.info(f"this channel has {len(vurls):,} videos")
+        vres = mp_extract_videos(vurls[nskip : (nskip + nitems)], nprocess=ncore)
+        cres = mp_extract_channels(vres, nprocess=ncore)
+        vdf = pd.DataFrame(vres)
+        cdf = pd.DataFrame(cres)
 
-    if args.save:
-        # df.to_feather("data/pytube_videos.feather")
-        save_feather(df, PYTUBE_VIDEOS_PATH)
+        # todo: get num_subscibers through beautifulsoup or YouTube API
+        cdf["num_subscribers"] = None
+        vdf["custom_score"] = None
 
-    # push keywords, channels and videos to db
-    if args.push_db:
-        df = dm.extract_chapters(df)
-        datad = loop.run_until_complete(dm.push_videos(df, async_session))
+        # combine video and channel data into one dataset
+        df = pd.merge(vdf, cdf, on=["channel_id"])
+
+        assert not df.empty
+
+        if args.save:
+            # df.to_feather("data/pytube_videos.feather")
+            save_feather(df, PYTUBE_VIDEOS_PATH)
+
+        # push keywords, channels and videos to db
+        if args.push_db:
+            df = dm.extract_chapters(df)
+            datad = loop.run_until_complete(dm.push_videos(df, async_session))
