@@ -63,46 +63,29 @@ Show materialized views using:
 """
 import argparse
 import asyncio
-import configparser
 import logging
 import uuid
 from datetime import datetime
-from pathlib import Path
 
 import timeago  # type: ignore[import]
 from rarc_utils.log import loggingLevelNames, set_log_level, setup_logger
-from rarc_utils.misc import AttrDict, trunc_msg
+from rarc_utils.misc import trunc_msg
 from rarc_utils.sqlalchemy_base import (UtilityBase, async_main, get_async_db,
                                         get_async_session, get_session)
 from sqlalchemy import (Boolean, Column, DateTime, Float, ForeignKey, Integer,
-                        Interval, LargeBinary, String, UniqueConstraint, func,
-                        select)
+                        Interval, LargeBinary, String, UniqueConstraint, func)
+# from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy.schema import Table
-from youtube_recommender import config as config_dir
 
-# __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
+from ..utils.misc import load_config
 
 LOG_FMT = "%(asctime)s - %(module)-16s - %(lineno)-4s - %(funcName)-16s - %(levelname)-7s - %(message)s"  # title
-# logger = logging.getLogger(__name__)
-# print(f"{__location__=}")
 
-# ugly way of retrieving postgres cfg file
-p = Path(config_dir.__file__)
-# p = Path(__location__)
-# p = p / "db"
-cfgFile = p.with_name("postgres.cfg")
-
-parser = configparser.ConfigParser()
-parser.read(cfgFile)
-assert "psql" in parser, f"'psql' not in {cfgFile=}"
-psql = AttrDict(parser["psql"])
-assert psql["db"] == "youtube"  # do not overwrite existing other db
+psql = load_config()
 psession = get_session(psql)()
-
-DATA_DIR = Path("data")
 
 Base = declarative_base()
 
@@ -423,7 +406,6 @@ class queryResult(Base, UtilityBase):
     def json(self) -> dict:
         return self.as_dict()
 
-
 # def find_chapters_for_existing_videos(n=1_000) -> pd.DataFrame:
 
 #     q = select(Video).limit(5000)
@@ -442,7 +424,7 @@ if __name__ == "__main__":
         "--verbosity",
         type=str,
         default="info",
-        help=f"choose debug log level: {', '.join(loggingLevelNames())} ",
+        help=f"choose debug log level: {', '.join(loggingLevelNames())}",
     )
     CLI.add_argument(
         "--create",
