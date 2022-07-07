@@ -15,3 +15,7 @@ test:
 # 	python -m black .## Run ci part
 .PHONY: ci
 	ci: precommit lint test
+
+.PHONY: install
+install: 
+	pip install -U .

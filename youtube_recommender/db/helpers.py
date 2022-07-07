@@ -94,7 +94,6 @@ def chapter_locations_to_df(ret: List[dict]) -> pd.DataFrame:
     # df['s'] = np.where(df['len'] == 7, '0' + df['s'], df['s'])
 
     # todo: dismiss time strings with len >= 9?
-
     df["start"] = df.apply(parse_time, axis=1)
     df["start_seconds"] = df["start"].dt.total_seconds().astype(int)
 
@@ -138,6 +137,43 @@ def get_all(session, model):
     stmt = select(model).filter()
 
     return list(session.execute(stmt).scalars())
+
+
+async def get_keyword_association_rows_by_ids(asession, video_ids: List[VideoId]):
+    """Get existing video ids from db.
+
+    usage:
+        kws = loop.run_until_complete(get_keyword_association_rows_by_ids(async_session, df.video_id.to_list()))
+    """
+    q = select(Video.id).filter(Video.id.in_(video_ids))
+
+    async with asession() as session:
+        video_ids = (await session.execute(q)).scalars().all()
+
+        fmt_ids = "'{0}'".format("', '".join(video_ids))
+        kws = (
+            """SELECT * FROM video_keyword_association WHERE video_id IN ({});""".format(
+                fmt_ids
+            )
+        )
+        # logger.info(f"{kws=}")
+
+        kw_rows = (await session.execute(kws)).fetchall()
+
+    return kw_rows
+
+async def get_video_ids_by_ids(asession, video_ids: List[VideoId]) -> List[VideoId]:
+    """Get existing video ids from db.
+
+    usage:
+        ids = loop.run_until_complete(get_video_ids_by_ids(async_session, df.video_id.to_list()))
+    """
+    q = select(Video.id).filter(Video.id.in_(video_ids))
+
+    async with asession() as session:
+        video_ids = (await session.execute(q)).scalars().all()
+
+    return video_ids
 
 
 async def get_videos_by_ids(asession, video_ids: List[VideoId]):

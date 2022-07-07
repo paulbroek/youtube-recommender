@@ -17,7 +17,6 @@ from .core.types import (CaptionRec, ChannelId, ChannelRec, ChapterRec,
 from .db.helpers import (chapter_locations_to_df, compress_caption,
                          create_many_items, find_chapter_locations)
 from .db.models import Caption, Channel, Chapter, Keyword, Video, queryResult
-from .db_methods import get_existing_video_ids
 from .settings import YOUTUBE_CHANNEL_PREFIX, YOUTUBE_VIDEO_PREFIX
 
 logger = logging.getLogger(__name__)
@@ -177,6 +176,8 @@ class data_methods:
             vdf["keywords"] = vdf["keywords"].map(
                 lambda x: map_list(x, records_dict["keyword"])
             )
+            # and make them unique
+            vdf["keywords"] = vdf["keywords"].map(set).map(list)
 
         channel_recs = cls._make_channel_recs(vdf)
         records_dict["channel"] = await create_many_items(
@@ -189,7 +190,7 @@ class data_methods:
         video_recs = cls._make_video_recs(vdf)
 
         # remove existing video_ids from dataset, before pushing?
-        existing_video_ids = get_existing_video_ids(async_session, vdf.video_id.to_list())
+        # existing_video_ids = get_video_ids_by_ids(async_session, vdf.video_id.to_list())
         # drop those ids from dataframe
 
         records_dict["video"] = await create_many_items(
@@ -402,7 +403,5 @@ class data_methods:
             .drop_duplicates()
             .to_dict("index")
         )
-
-        # todo: test if method works
 
         return recs
