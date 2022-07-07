@@ -63,31 +63,49 @@ Show materialized views using:
 """
 import argparse
 import asyncio
+import configparser
 import logging
 import uuid
 from datetime import datetime
+from pathlib import Path
 
 import timeago  # type: ignore[import]
 from rarc_utils.log import loggingLevelNames, set_log_level, setup_logger
-from rarc_utils.misc import trunc_msg
+from rarc_utils.misc import AttrDict, trunc_msg
 from rarc_utils.sqlalchemy_base import (UtilityBase, async_main, get_async_db,
                                         get_async_session, get_session)
 from sqlalchemy import (Boolean, Column, DateTime, Float, ForeignKey, Integer,
                         Interval, LargeBinary, String, UniqueConstraint, func)
-# from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy.schema import Table
-
-from ..utils.misc import load_config
+from youtube_recommender import config as config_dir
 
 LOG_FMT = "%(asctime)s - %(module)-16s - %(lineno)-4s - %(funcName)-16s - %(levelname)-7s - %(message)s"  # title
 
+Base = declarative_base()
+
+
+def load_config():
+    """Load config.
+
+    ugly way of retrieving postgres cfg file
+    """
+    p = Path(config_dir.__file__)
+    cfgFile = p.with_name("postgres.cfg")
+
+    parser = configparser.ConfigParser()
+    parser.read(cfgFile)
+    assert "psql" in parser, f"'psql' not in {cfgFile=}"
+    psql = AttrDict(parser["psql"])
+    assert psql["db"] == "youtube"  # do not overwrite existing other db
+
+    return psql
+
+
 psql = load_config()
 psession = get_session(psql)()
-
-Base = declarative_base()
 
 # a video can have multiple keywords, a keyword can belong to multiple videos
 video_keyword_association = Table(
@@ -144,6 +162,7 @@ class Video(Base, UtilityBase):
     keywords = relationship(
         "Keyword", uselist=True, secondary=video_keyword_association, lazy="selectin"
     )
+    is_educational = Column(Boolean)
 
     channel_id = Column(String, ForeignKey("channel.id"), nullable=False)
     channel = relationship("Channel", uselist=False, lazy="selectin")
@@ -158,12 +177,13 @@ class Video(Base, UtilityBase):
     __mapper_args__ = {"eager_defaults": True}
 
     def __repr__(self):
-        return "Video(id={}, title={}, views={:,}, minutes={:.1f}, nkeyword={}, description={}, nchapter={})".format(
+        return "Video(id={}, title={}, views={:,}, minutes={:.1f}, nkeyword={}, is_educational={}, description={}, nchapter={})".format(
             self.id,
             trunc_msg(self.title, 40),
             self.views,
             self.length / 60,
             len(self.keywords),
+            self.is_educational,
             trunc_msg(self.description, 40),
             len(self.chapters),
         )
@@ -405,6 +425,7 @@ class queryResult(Base, UtilityBase):
 
     def json(self) -> dict:
         return self.as_dict()
+
 
 # def find_chapters_for_existing_videos(n=1_000) -> pd.DataFrame:
 

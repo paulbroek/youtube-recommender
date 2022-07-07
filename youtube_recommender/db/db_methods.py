@@ -11,7 +11,7 @@ from rarc_utils.log import setup_logger
 from rarc_utils.sqlalchemy_base import (get_async_db, get_async_session,
                                         get_session)
 from sqlalchemy import delete, select
-from youtube_recommender.db.models import Channel, Chapter, Video
+from youtube_recommender.db.models import Channel, Chapter, Video, load_config
 from youtube_recommender.utils.misc import load_config
 
 LOG_FMT = "%(asctime)s - %(module)-16s - %(lineno)-4s - %(funcName)-16s - %(levelname)-7s - %(message)s"
