@@ -6,7 +6,6 @@ used to run independently from main codebase
 
 import asyncio
 import logging
-from typing import List
 
 from rarc_utils.log import setup_logger
 from rarc_utils.sqlalchemy_base import (get_async_db, get_async_session,
@@ -19,20 +18,6 @@ LOG_FMT = "%(asctime)s - %(module)-16s - %(lineno)-4s - %(funcName)-16s - %(leve
 
 psql = load_config()
 psession = get_session(psql)()
-
-
-async def get_existing_video_ids(asession, video_ids: List[str]) -> List[str]:
-    """Get existing video ids from db.
-
-    usage:
-        ids = get_existing_video_ids(async_session, df.video_id.to_list())
-    """
-    q = select(Video.id).join(Channel).where(Video.id.in_(video_ids))
-
-    async with asession() as session:
-        video_ids = (await session.execute(q)).scalars().all()
-
-    return video_ids
 
 
 async def delete_videos_from_channel(asession, channel_id: str):

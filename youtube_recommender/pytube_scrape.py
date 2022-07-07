@@ -21,6 +21,8 @@ from pytube import Channel, YouTube  # type: ignore[import]
 from rarc_utils.log import setup_logger
 from rarc_utils.sqlalchemy_base import get_async_session
 from youtube_recommender.data_methods import data_methods as dm
+from youtube_recommender.db.helpers import (
+    get_keyword_association_rows_by_ids, get_video_ids_by_ids)
 from youtube_recommender.db.models import psql
 from youtube_recommender.settings import PYTUBE_VIDEOS_PATH
 from youtube_recommender.video_finder import load_feather, save_feather
@@ -209,6 +211,7 @@ if __name__ == "__main__":
     # channel_url = "https://www.youtube.com/channel/UCPZUQqtVDmcjm4NY5FkzqLA"
     # urls = Channel(channel_url)
 
+    # todo: load cannot be used to push items, since object relation to db is lost
     if args.load:
         df = load_feather(PYTUBE_VIDEOS_PATH)
 
