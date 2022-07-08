@@ -14,6 +14,7 @@ SELECT
     query_result.updated AS qr_updated,
     video.title,
     video.description,
+    video.is_educational,
     -- video.created,
     date_trunc('seconds', video.updated) AS updated
 FROM
@@ -24,7 +25,7 @@ FROM
 ORDER BY
     video.updated DESC
 LIMIT
-    10000 WITH DATA;
+    20000 WITH DATA;
 
 CREATE MATERIALIZED VIEW vw_last_videos AS
 SELECT
@@ -66,7 +67,7 @@ ORDER BY
 LIMIT
     100 WITH DATA;
 
--- select top channels
+-- view top channels
 DROP MATERIALIZED VIEW top_channels;
 CREATE MATERIALIZED VIEW top_channels AS
 SELECT
@@ -82,3 +83,35 @@ ORDER BY
     video_count DESC
 LIMIT
     15;
+
+-- view top keywords
+DROP MATERIALIZED VIEW top_keywords;
+CREATE MATERIALIZED VIEW top_keywords AS
+SELECT
+    keyword.name AS keyword_name,
+    COUNT(vka.video_id) AS keyword_count
+FROM
+    video_keyword_association vka
+    LEFT JOIN keyword ON keyword.id = vka.keyword_id
+    -- INNER JOIN video ON video.id = vka.video_id
+    -- INNER JOIN channel ON channel.id = video.channel_id
+GROUP BY 
+    keyword.id
+ORDER BY
+    keyword_count DESC
+LIMIT
+    10000 WITH DATA;
+
+-- view channels by educational
+-- can use COALESCE(video.is_educational, 'f')
+-- but now it's more clear that videos have not been classified yet. 
+DROP MATERIALIZED VIEW channels_over_educational;
+CREATE MATERIALIZED VIEW channels_over_educational AS
+SELECT channel.id, channel.name, count(*) as nvideo,
+       avg( video.is_educational::int ) as pct_educational
+FROM channel
+    INNER JOIN video ON video.channel_id = channel.id
+GROUP BY channel.id
+LIMIT 50;
+
+-- view channels by categories
