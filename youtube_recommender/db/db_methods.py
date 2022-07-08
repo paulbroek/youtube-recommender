@@ -6,13 +6,14 @@ used to run independently from main codebase
 
 import asyncio
 import logging
+from typing import List
 
 from rarc_utils.log import setup_logger
 from rarc_utils.sqlalchemy_base import (get_async_db, get_async_session,
                                         get_session)
 from sqlalchemy import delete, select
+from youtube_recommender.core.types import ChannelId
 from youtube_recommender.db.models import Channel, Chapter, Video, load_config
-from youtube_recommender.utils.misc import load_config
 
 LOG_FMT = "%(asctime)s - %(module)-16s - %(lineno)-4s - %(funcName)-16s - %(levelname)-7s - %(message)s"
 
@@ -62,6 +63,34 @@ async def delete_videos_from_channel(asession, channel_id: str):
         )
 
 
+async def set_educational_by_channel_id(asession, channel_ids: List[ChannelId]):
+    """Set all videos from a list of channel_ids to is_educational = t.
+
+    Get channel_ids of top channels:
+        # SELECT array_to_string(array_agg(id), ',') FROM top_channels LIMIT 4
+        SELECT array_agg(format('''%s''', id)) FROM top_channels LIMIT 4;
+        but check the channels first!: SELECT * FROM top_channesl LIMIT 4
+
+    usage:
+        channel_ids = ['UCkw4JCwteGrDHIsyIIKo4tQ','UCs6nmQViDpUw0nuIx9c_WvA','UCsvqVGtbbyHaMoevxPAq9Fg','UC8butISFwT-Wl7EV0hUK0BQ']
+        loop.run_until_complete(set_educational_by_channel_id(async_session, channel_ids))
+    """
+    fmt_ids = "'{0}'".format("', '".join(channel_ids))
+    q = """ 
+    UPDATE video
+    SET is_educational = 't'
+    FROM channel
+    WHERE channel.id IN ({}) AND channel.id = video.channel_id;
+    """.format(
+        fmt_ids
+    )
+
+    logger.info(f"q: \n\n{q}")
+
+    async with asession() as session:
+        await session.execute(q)
+
+
 if __name__ == "__main__":
     logger = setup_logger(
         cmdLevel=logging.INFO, saveFile=0, savePandas=0, color=1, fmt=LOG_FMT
@@ -72,7 +101,3 @@ if __name__ == "__main__":
     async_db = get_async_db(psql)()
 
     loop = asyncio.new_event_loop()
-
-    # todo: remove lines
-    channel_id = "UCsvqVGtbbyHaMoevxPAq9Fg"
-    res = loop.run_until_complete(delete_videos_from_channel(async_session, channel_id))

@@ -221,7 +221,14 @@ if __name__ == "__main__":
 
         # slow call to urls.len?
         # logger.info(f"this channel has {len(vurls):,} videos")
-        vres = mp_extract_videos(vurls[nskip : (nskip + nitems)], nprocess=ncore)
+        last_item = (nskip + nitems)
+        if nskip > len(vurls):
+            raise IndexError(f"{nskip=:,} should be smaller than {len(vurls)=:,}")
+
+        last_item = min(last_item, len(vurls))
+            
+        sel_vurls = vurls[nskip : last_item]
+        vres = mp_extract_videos(sel_vurls, nprocess=ncore)
         cres = mp_extract_channels(vres, nprocess=ncore)
         vdf = pd.DataFrame(vres)
         cdf = pd.DataFrame(cres)

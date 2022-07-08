@@ -151,16 +151,15 @@ async def get_keyword_association_rows_by_ids(asession, video_ids: List[VideoId]
         video_ids = (await session.execute(q)).scalars().all()
 
         fmt_ids = "'{0}'".format("', '".join(video_ids))
-        kws = (
-            """SELECT * FROM video_keyword_association WHERE video_id IN ({});""".format(
-                fmt_ids
-            )
+        kws = """SELECT * FROM video_keyword_association WHERE video_id IN ({});""".format(
+            fmt_ids
         )
         # logger.info(f"{kws=}")
 
         kw_rows = (await session.execute(kws)).fetchall()
 
     return kw_rows
+
 
 async def get_video_ids_by_ids(asession, video_ids: List[VideoId]) -> List[VideoId]:
     """Get existing video ids from db.
