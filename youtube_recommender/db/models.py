@@ -245,7 +245,10 @@ class Chapter(Base, UtilityBase):
 
 
 class Channel(Base, UtilityBase):
-    """Channel: contains compressed captions in Bytes for YouTube videos."""
+    """Channel: contains compressed captions in Bytes for YouTube videos.
+
+    channels also represent users.
+    """
 
     __tablename__ = "channel"
     id = Column(String, primary_key=True)
@@ -263,6 +266,47 @@ class Channel(Base, UtilityBase):
     def __repr__(self):
         return "Channel(id={}, name={}, nvideo={}, num_subscribers={})".format(
             self.id, self.name, self.nvideo, self.num_subscribers
+        )
+
+    def as_dict(self) -> dict:
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+    def json(self) -> dict:
+        return self.as_dict()
+
+
+class Comment(Base, UtilityBase):
+    """Comment: YouTube comments."""
+
+    __tablename__ = "comment"
+    id = Column(String, primary_key=True)
+    text = Column(String, nullable=False, unique=False)
+    votes = Column(Integer, nullable=False)
+
+    author = Column(String, nullable=False, unique=False)
+
+    # channel represents a user
+    channel_id = Column(String, ForeignKey("channel.id"), nullable=False)
+    channel = relationship("Channel", uselist=False, lazy="selectin")
+
+    video_id = Column(String, ForeignKey("video.id"), nullable=False)
+    video = relationship("Video", uselist=False, lazy="selectin")
+
+    time_parsed = Column(Float)
+    created = Column(DateTime, server_default=func.now())  # current_timestamp()
+    updated = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    # add this so that it can be accessed
+    __mapper_args__ = {"eager_defaults": True}
+
+    def __repr__(self):
+        return "Comment(id={}, text={}, author={}, votes={:,}, channel_name={:.1f}, video_id={})".format(
+            self.id,
+            trunc_msg(self.text, 40),
+            self.author,
+            self.votes,
+            self.channel.name,
+            self.video_id,
         )
 
     def as_dict(self) -> dict:
