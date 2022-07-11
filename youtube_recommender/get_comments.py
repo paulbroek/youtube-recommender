@@ -24,6 +24,7 @@ from multiprocessing import Pool
 from typing import Any, Dict, Iterator, List
 
 import pandas as pd
+from rarc_utils.decorators import items_per_sec
 from rarc_utils.sqlalchemy_base import get_async_session
 from youtube_comment_downloader.downloader import \
     YoutubeCommentDownloader  # type: ignore[import]
@@ -106,7 +107,7 @@ def receiver(generator: Iterator[Dict[str, Any]]) -> Iterator[Dict[str, Any]]:
 
         yield item
 
-
+@items_per_sec
 def receive_in_parallel(nprocess: int, vids: List[str]) -> List[Dict[str, Any]]:
     with Pool(processes=nprocess) as pool:
         res = pool.map(get_comments_list, vids)
