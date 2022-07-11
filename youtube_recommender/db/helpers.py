@@ -13,7 +13,7 @@ from rarc_utils.sqlalchemy_base import create_many
 from sqlalchemy import and_
 from sqlalchemy.future import select  # type: ignore[import]
 
-from ..core.types import VideoId, VideoRec
+from ..core.types import ChannelId, VideoId, VideoRec
 from ..settings import HOUR_LIMIT, PSQL_HOURS_AGO
 from .models import Caption, Video, queryResult
 
@@ -140,7 +140,7 @@ def get_all(session, model):
 
 
 async def get_keyword_association_rows_by_ids(asession, video_ids: List[VideoId]):
-    """Get existing video ids from db.
+    """Get existing video ids.
 
     usage:
         kws = loop.run_until_complete(get_keyword_association_rows_by_ids(async_session, df.video_id.to_list()))
@@ -162,7 +162,7 @@ async def get_keyword_association_rows_by_ids(asession, video_ids: List[VideoId]
 
 
 async def get_video_ids_by_ids(asession, video_ids: List[VideoId]) -> List[VideoId]:
-    """Get existing video ids from db.
+    """Get existing video ids.
 
     usage:
         ids = loop.run_until_complete(get_video_ids_by_ids(async_session, df.video_id.to_list()))
@@ -176,9 +176,20 @@ async def get_video_ids_by_ids(asession, video_ids: List[VideoId]) -> List[Video
 
 
 async def get_videos_by_ids(asession, video_ids: List[VideoId]):
-    """Get Videos by video_ids from db."""
+    """Get Videos by video_ids."""
     async with asession() as session:
         query = select(Video).where(Video.id.in_(video_ids))
+        res = await session.execute(query)
+
+        instances = res.scalars().fetchall()
+
+    return instances
+
+async def get_video_ids_by_channel_ids(asession, channel_ids: List[ChannelId]):
+    """Get vidoe_ids by channel_ids."""
+    query = select(Video.id).where(Video.channel_id.in_(channel_ids))
+
+    async with asession() as session:
         res = await session.execute(query)
 
         instances = res.scalars().fetchall()
@@ -213,7 +224,7 @@ async def get_videos_by_query(
 async def get_captions_by_vids(
     asession, video_ids: List[VideoId], maxHoursAgo: int = PSQL_HOURS_AGO
 ):
-    """Get Captions by video_ids from db.
+    """Get Captions by video_ids.
 
     maxHoursAgo:    only include captions that are less than `maxHoursAgo`
     """
@@ -234,7 +245,7 @@ async def get_captions_by_vids(
 
 
 def get_last_query_results(session, query: str, maxHoursAgo: int = PSQL_HOURS_AGO):
-    """Get last query results from db.
+    """Get last query results.
 
     maxHoursAgo:    only include captions that are less than `maxHoursAgo`
     """

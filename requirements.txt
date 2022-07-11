@@ -10,3 +10,4 @@ bertopic
 pre-commit
 pyarrow
 pytube
+youtube_comment_downloader
