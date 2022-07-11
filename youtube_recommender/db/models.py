@@ -285,7 +285,7 @@ class Comment(Base, UtilityBase):
 
     author = Column(String, nullable=False, unique=False)
 
-    # channel represents a user
+    # channel also represents a user
     channel_id = Column(String, ForeignKey("channel.id"), nullable=False)
     channel = relationship("Channel", uselist=False, lazy="selectin")
 

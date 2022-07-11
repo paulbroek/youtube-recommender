@@ -233,7 +233,7 @@ if __name__ == "__main__":
         vdf = pd.DataFrame(vres)
         cdf = pd.DataFrame(cres)
 
-        # todo: get num_subscibers through beautifulsoup or YouTube API
+        # todo: get num_subscribers through beautifulsoup or YouTube API
         cdf["num_subscribers"] = None
         vdf["custom_score"] = None
 
@@ -243,7 +243,6 @@ if __name__ == "__main__":
         assert not df.empty
 
         if args.save:
-            # df.to_feather("data/pytube_videos.feather")
             save_feather(df, PYTUBE_VIDEOS_PATH)
 
         # push keywords, channels and videos to db
