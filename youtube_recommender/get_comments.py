@@ -24,7 +24,7 @@ Example usage:
         # turn column into space seperated string
         sed 1d ~/other_repos/postgres_output/channel_ids.csv | tr "\n" " " | xclip
 
-        ipy get_comments.py -i -- --nproc 10 --max 20 --channel_ids $(xclip -o)
+        ipy get_comments.py -i -- --nproc 10 --channel_ids $(xclip -o) --max 0 -p
 """
 
 import argparse
@@ -84,6 +84,12 @@ parser.add_argument(
     help="max videos to get comments for",
 )
 parser.add_argument(
+    "--skip",
+    type=int,
+    default=0,
+    help="videos to skip",
+)
+parser.add_argument(
     "-p",
     "--push_db",
     action="store_true",
@@ -110,9 +116,13 @@ if args.channel_ids:
 else:
     assert isinstance(video_ids[0], str), "please pass at least a valid vidoe_id"
 
+if args.skip > 0:
+    video_ids = video_ids[args.skip:]
+
 if args.max > 0:
     video_ids = video_ids[: args.max]
-    logger.info(f"selected {args.max:,} videos")
+    
+logger.info(f"selected {len(video_ids):,} videos")
 
 print(f"number of videos to get comments for: {len(video_ids):,}")
 
