@@ -11,8 +11,20 @@ install downloader first:
 Example usage:
 
     # use nproc == 1 to only use generators, and nproc > 1 to use multiprocessing pool
-    ipy get_comments.py -i -- --channel_id UCOjD18EJYcsBog4IozkF_7w --max 20 --nproc 6
-    ipy get_comments.py -i -- --channel_id UCOjD18EJYcsBog4IozkF_7w --max 20 --nproc 1
+    ipy get_comments.py -i -- --channel_ids UCOjD18EJYcsBog4IozkF_7w --max 20 --nproc 6
+    ipy get_comments.py -i -- --channel_ids UCOjD18EJYcsBog4IozkF_7w --max 20 --nproc 1
+
+    # another example: get top 10 channel ids:
+    # SELECT string_agg(id, ' ') FROM top_channels LIMIT 10;
+
+    ipy get_comments.py -i -- --nproc 10 --channel_ids UCkw4JCwteGrDHIsyIIKo4tQ UCOjD18EJYcsBog4IozkF_7w UCs6nmQViDpUw0nuIx9c_WvA UCsvqVGtbbyHaMoevxPAq9Fg UC8butISFwT-Wl7EV0hUK0BQ UC4xKdmAXFh4ACyhpiQ_3qBw
+
+    in one line:
+        docker exec -it postgres-master bash -c 'psql -d youtube -U postgres -c "SELECT id FROM top_channels LIMIT 10;" --quiet --csv > /output/channel_ids.csv'
+        # turn column into space seperated string
+        sed 1d ~/other_repos/postgres_output/channel_ids.csv | tr "\n" " " | xclip
+
+        ipy get_comments.py -i -- --nproc 10 --max 20 --channel_ids $(xclip -o)
 """
 
 import argparse
@@ -25,7 +37,6 @@ from multiprocessing import Pool
 from typing import Any, Dict, Iterator, List
 
 import pandas as pd
-import pytz
 from rarc_utils.decorators import items_per_sec
 from rarc_utils.log import setup_logger
 from rarc_utils.sqlalchemy_base import get_async_session
@@ -53,17 +64,21 @@ parser.add_argument(
     help="Max number of processes to use for multiprocessing",
 )
 parser.add_argument(
-    "--channel_id",
-    type=str,
+    "--channel_ids",
+    default=[],
+    nargs="*",
     help="channel_id to download comments for",
 )
 parser.add_argument(
-    "--video_id",
+    "--video_ids",
+    default=[],
+    nargs="*",
     help="video_id to download comments for, if channel_id was not passed",
 )
 parser.add_argument(
     "--max",
     type=int,
+    default=0,
     help="max videos to get comments for",
 )
 parser.add_argument(
@@ -73,24 +88,29 @@ parser.add_argument(
     default=False,
     help="push (new) comments to PostgreSQL`",
 )
+parser.add_argument(
+    "--dryrun",
+    action="store_true",
+    default=False,
+    help="only import modules",
+)
 
 args = parser.parse_args()
 
 sort = True
 language = "en"
 
-if args.channel_id:
-    channel_ids = [args.channel_id]
+if args.channel_ids:
     video_ids = loop.run_until_complete(
-        get_video_ids_by_channel_ids(async_session, channel_ids)
+        get_video_ids_by_channel_ids(async_session, args.channel_ids)
     )
     # reset session?
     async_session = get_async_session(psql)
 
 else:
-    video_ids = [args.video_id]
+    assert isinstance(video_ids[0], str), "please pass at least a valid vidoe_id"
 
-if args.max:
+if args.max > 0:
     video_ids = video_ids[: args.max]
 
 print(f"number of videos to get comments for: {len(video_ids):,}")
@@ -146,6 +166,9 @@ generators = (get_comments_wrapper(youtube_id) for youtube_id in video_ids)
 # )
 
 big_generator = chain(*generators)
+
+if args.dryrun:
+    sys.exit()
 
 if args.nproc == 1:
     items = list(receiver(big_generator))
