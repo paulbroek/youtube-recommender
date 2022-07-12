@@ -17,6 +17,7 @@ Example usage:
 
 import argparse
 import asyncio
+import logging
 import sys
 from functools import partial
 from itertools import chain
@@ -24,12 +25,20 @@ from multiprocessing import Pool
 from typing import Any, Dict, Iterator, List
 
 import pandas as pd
+import pytz
 from rarc_utils.decorators import items_per_sec
+from rarc_utils.log import setup_logger
 from rarc_utils.sqlalchemy_base import get_async_session
 from youtube_comment_downloader.downloader import \
     YoutubeCommentDownloader  # type: ignore[import]
+from youtube_recommender.data_methods import data_methods as dm
 from youtube_recommender.db.helpers import get_video_ids_by_channel_ids
 from youtube_recommender.db.models import psql
+
+log_fmt = "%(asctime)s - %(module)-16s - %(lineno)-4s - %(funcName)-20s - %(levelname)-7s - %(message)s"  # name
+logger = setup_logger(
+    cmdLevel=logging.INFO, saveFile=0, savePandas=1, color=1, fmt=log_fmt
+)
 
 async_session = get_async_session(psql)
 
@@ -57,6 +66,13 @@ parser.add_argument(
     type=int,
     help="max videos to get comments for",
 )
+parser.add_argument(
+    "-p",
+    "--push_db",
+    action="store_true",
+    default=False,
+    help="push (new) comments to PostgreSQL`",
+)
 
 args = parser.parse_args()
 
@@ -68,6 +84,8 @@ if args.channel_id:
     video_ids = loop.run_until_complete(
         get_video_ids_by_channel_ids(async_session, channel_ids)
     )
+    # reset session?
+    async_session = get_async_session(psql)
 
 else:
     video_ids = [args.video_id]
@@ -107,6 +125,7 @@ def receiver(generator: Iterator[Dict[str, Any]]) -> Iterator[Dict[str, Any]]:
 
         yield item
 
+
 @items_per_sec
 def receive_in_parallel(nprocess: int, vids: List[str]) -> List[Dict[str, Any]]:
     with Pool(processes=nprocess) as pool:
@@ -136,3 +155,12 @@ else:
 # items = list(generator)
 # items = list(big_generator)
 df = pd.DataFrame(items)
+df["votes"] = df["votes"].astype(int)
+df["time_parsed_float"] = df["time_parsed"]
+df["time_parsed"] = pd.to_datetime(df.time_parsed_float * 1_000, unit="ms").astype(
+    "datetime64[us]"
+)
+
+# push new comments to db
+if args.push_db:
+    res = loop.run_until_complete(dm.push_comments(df, async_session))

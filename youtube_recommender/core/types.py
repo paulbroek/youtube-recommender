@@ -5,6 +5,7 @@ from typing import Any, Dict, NewType, Union  # , Type
 VideoId = NewType("VideoId", str)
 ChannelId = NewType("ChannelId", str)
 CaptionId = NewType("CaptionId", str)
+CommentId = NewType("CommentId", str)
 
 Video = NewType("Video", dict)
 Channel = NewType("Channel", dict)
@@ -19,3 +20,4 @@ VideoRec = NewType("VideoRec", Record)
 ChannelRec = NewType("ChannelRec", Record)
 CaptionRec = NewType("CaptionRec", Record)
 ChapterRec = NewType("ChapterRec", Record)
+CommentRec = NewType("CommentRec", Record)
