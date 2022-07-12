@@ -37,6 +37,7 @@ from multiprocessing import Pool
 from typing import Any, Dict, Iterator, List
 
 import jsonlines
+import numpy as np
 import pandas as pd
 from rarc_utils.decorators import items_per_sec
 from rarc_utils.log import setup_logger
@@ -123,11 +124,11 @@ else:
     assert isinstance(video_ids[0], str), "please pass at least a valid vidoe_id"
 
 if args.skip > 0:
-    video_ids = video_ids[args.skip:]
+    video_ids = video_ids[args.skip :]
 
 if args.max > 0:
     video_ids = video_ids[: args.max]
-    
+
 logger.info(f"selected {len(video_ids):,} videos")
 
 print(f"number of videos to get comments for: {len(video_ids):,}")
@@ -136,6 +137,33 @@ print(f"number of videos to get comments for: {len(video_ids):,}")
 get_comments_by_video_id = partial(
     downloader.get_comments, sort_by=sort, language=language
 )
+
+
+def parse_votes(df):
+    """Parse votes of comments.
+
+    For likes > 1_000, it displays as:
+        1.3K
+        2.6K
+    """
+    assert "votes" in df
+    if str(df.votes.dtype) != "object":
+        return df
+
+    df["votes_isdigit"] = df.votes.map(lambda x: x.isdigit())
+    if not df.votes_isdigit.all():
+
+        # ends_with_k = df.votes.str.endswith('K')
+        # df.loc[np.where(ends_with_k), "votes"] = ends_with_k, df[ends_with_k].votes.str.replace('K','').astype(float) * 1_000
+        df["votes"] = df.votes.apply(
+            lambda x: float(x.replace("K", "")) * 1_000 if x.endswith("K") else x
+        )
+
+    # df["votes_isdigit"] = df.votes.map(lambda x: x.isdigit())
+    # assert df.votes_isdigit.all()
+    df["votes"] = df.votes.astype(int)
+
+    return df
 
 
 def get_comments_wrapper(video_id: str) -> Iterator[Dict[str, Any]]:
@@ -224,7 +252,7 @@ else:
 # items = list(generator)
 # items = list(big_generator)
 df = pd.DataFrame(items)
-df["votes"] = df["votes"].astype(int)
+df = parse_votes(df)
 df["time_parsed_float"] = df["time_parsed"]
 df["time_parsed"] = pd.to_datetime(df.time_parsed_float * 1_000, unit="ms").astype(
     "datetime64[us]"
