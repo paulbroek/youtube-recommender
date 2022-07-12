@@ -20,7 +20,9 @@ CONFIG_FILE = "config.yaml"
 ######################
 
 # DATA_DIR = Path("youtube_recommender/data")
-DATA_DIR = Path("/home/paul/repos/youtube-recommender/youtube_recommender/data")
+REPO_DIR = Path("/home/paul/repos/youtube-recommender/youtube_recommender")
+DATA_DIR = REPO_DIR / "data"
+EXPORT_DIR = REPO_DIR / "export"
 
 VIDEOS_FILE = "top_videos.feather"
 VIDEOS_PATH = DATA_DIR / VIDEOS_FILE
@@ -30,6 +32,8 @@ CAPTIONS_PATH = DATA_DIR / CAPTIONS_FILE
 
 PYTUBE_VIDEOS_FILE = "pytube_videos.feather"
 PYTUBE_VIDEOS_PATH = DATA_DIR / PYTUBE_VIDEOS_FILE
+
+COMMENTS_FILE = EXPORT_DIR / "comments.jl"
 
 #################
 ##### SpaCy #####

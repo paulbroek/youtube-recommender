@@ -36,6 +36,7 @@ from itertools import chain
 from multiprocessing import Pool
 from typing import Any, Dict, Iterator, List
 
+import jsonlines
 import pandas as pd
 from rarc_utils.decorators import items_per_sec
 from rarc_utils.log import setup_logger
@@ -45,6 +46,7 @@ from youtube_comment_downloader.downloader import \
 from youtube_recommender.data_methods import data_methods as dm
 from youtube_recommender.db.helpers import get_video_ids_by_channel_ids
 from youtube_recommender.db.models import psql
+from youtube_recommender.settings import COMMENTS_FILE
 
 log_fmt = "%(asctime)s - %(module)-16s - %(lineno)-4s - %(funcName)-20s - %(levelname)-7s - %(message)s"  # name
 logger = setup_logger(
@@ -129,6 +131,7 @@ def get_comments_wrapper(video_id: str) -> Iterator[Dict[str, Any]]:
 
 def get_comments_list(video_id: str) -> List[Dict[str, Any]]:
     """Return comments for a list of video_ids."""
+    # pbar.update(1)
     return list(get_comments_wrapper(video_id))
 
 
@@ -147,10 +150,37 @@ def receiver(generator: Iterator[Dict[str, Any]]) -> Iterator[Dict[str, Any]]:
 
 @items_per_sec
 def receive_in_parallel(nprocess: int, vids: List[str]) -> List[Dict[str, Any]]:
-    with Pool(processes=nprocess) as pool:
-        res = pool.map(get_comments_list, vids)
+    """Receive lists of comments in parallel.
 
-    return sum(res, [])
+    Side effect: writes to export/comments.jl file
+    """
+    # clean file first
+    with open(COMMENTS_FILE, "w", encoding="utf"):
+        pass
+
+    pool = Pool(processes=nprocess)
+
+    lres = []
+    total_comments = 0
+    for i, x in enumerate(pool.imap_unordered(get_comments_list, vids)):
+        total_comments += len(x)
+        sys.stdout.write(
+            "Processed %d video(s). Total comments: %d\r" % (i, total_comments)
+        )
+        sys.stdout.flush()
+        # write intermediary results to jsonlines file
+        with jsonlines.open(COMMENTS_FILE, mode="a") as writer:
+            for item in x:
+                writer.write(item)
+
+        lres.append(x)
+
+    # else:
+    #     with Pool(processes=nprocess) as pool:
+    #         # res = pool.map(get_comments_list, vids)
+    #         res = pool.imap(get_comments_list, vids)
+
+    return sum(lres, [])
 
 
 # chain generators
