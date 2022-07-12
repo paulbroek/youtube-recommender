@@ -27,7 +27,16 @@ Example usage:
         ipy get_comments.py -i -- --nproc 10 --channel_ids $(xclip -o) --max 0 -p
 
     # load any dataset from disk:
-    ipy get_comments.py -i -- --load
+    ipy get_comments.py -i -- --load_jl
+
+    # load dataset and save to feather
+    ipy get_comments.py -i -- --load_jl --save_feather
+
+    # load from feather
+    ipy get_comments.py -i -- --load_feather
+
+    # load from feather and push to database
+    ipy get_comments.py -i -- --load_feather --push_db
 """
 
 import argparse
@@ -204,48 +213,52 @@ parser.add_argument(
 if __name__ == "__main__":
     args = parser.parse_args()
 
+    LOADED_DF = False
+
     if args.load_jl:
         df = im.load_jsonlines(COMMENTS_JL_FILE)
         df = df.pipe(cm.comments_pipeline)
-        sys.exit()
+        LOADED_DF = True
 
     elif args.load_feather:
         df = im.load_feather(COMMENTS_FEATHER_FILE, what="comment")
-        sys.exit()
+        LOADED_DF = True
 
-    if args.channel_ids:
-        video_ids = loop.run_until_complete(
-            get_video_ids_by_channel_ids(async_session, args.channel_ids)
-        )
+    if not LOADED_DF:
 
-    else:
-        assert isinstance(video_ids[0], str), "please pass at least one valid video_id"
+        if args.channel_ids:
+            video_ids = loop.run_until_complete(
+                get_video_ids_by_channel_ids(async_session, args.channel_ids)
+            )
 
-    if args.skip > 0:
-        video_ids = video_ids[args.skip :]
+        else:
+            assert isinstance(video_ids[0], str), "please pass at least one valid video_id"
 
-    if args.max > 0:
-        video_ids = video_ids[: args.max]
+        if args.skip > 0:
+            video_ids = video_ids[args.skip :]
 
-    logger.info(f"selected {len(video_ids):,} videos")
+        if args.max > 0:
+            video_ids = video_ids[: args.max]
 
-    print(f"number of videos to get comments for: {len(video_ids):,}")
+        logger.info(f"selected {len(video_ids):,} videos")
 
-    generators = (get_comments_wrapper(youtube_id) for youtube_id in video_ids)
-    big_generator = chain(*generators)
+        print(f"number of videos to get comments for: {len(video_ids):,}")
 
-    if args.dryrun:
-        sys.exit()
+        generators = (get_comments_wrapper(youtube_id) for youtube_id in video_ids)
+        big_generator = chain(*generators)
 
-    if args.nproc == 1:
-        items = list(receiver(big_generator))
-    else:
-        items = receive_in_parallel(args.nproc, video_ids)
+        if args.dryrun:
+            sys.exit()
 
-    df = pd.DataFrame(items).pipe(cm.comments_pipeline)
+        if args.nproc == 1:
+            items = list(receiver(big_generator))
+        else:
+            items = receive_in_parallel(args.nproc, video_ids)
+
+        df = pd.DataFrame(items).pipe(cm.comments_pipeline)
 
     if args.save_feather:
-        im.save_feather(df, COMMENTS_FEATHER_FILE)
+        im.save_feather(df, COMMENTS_FEATHER_FILE, "comment")
 
     # push new comments to db
     if args.push_db:
