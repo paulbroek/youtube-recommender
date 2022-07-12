@@ -37,13 +37,13 @@ from multiprocessing import Pool
 from typing import Any, Dict, Iterator, List
 
 import jsonlines
-import numpy as np
 import pandas as pd
 from rarc_utils.decorators import items_per_sec
 from rarc_utils.log import setup_logger
 from rarc_utils.sqlalchemy_base import get_async_session
 from youtube_comment_downloader.downloader import \
     YoutubeCommentDownloader  # type: ignore[import]
+from youtube_recommender.comments_methods import comments_methods as cm
 from youtube_recommender.data_methods import data_methods as dm
 from youtube_recommender.db.helpers import get_video_ids_by_channel_ids
 from youtube_recommender.db.models import psql
@@ -59,111 +59,14 @@ async_session = get_async_session(psql)
 loop = asyncio.get_event_loop()
 downloader = YoutubeCommentDownloader()
 
-parser = argparse.ArgumentParser(description="Define get_coments parameters")
-parser.add_argument(
-    "--nproc",
-    default=1,
-    type=int,
-    help="Max number of processes to use for multiprocessing",
-)
-parser.add_argument(
-    "--channel_ids",
-    default=[],
-    nargs="*",
-    help="channel_id to download comments for",
-)
-parser.add_argument(
-    "--video_ids",
-    default=[],
-    nargs="*",
-    help="video_id to download comments for, if channel_id was not passed",
-)
-parser.add_argument(
-    "--max",
-    type=int,
-    default=0,
-    help="max videos to get comments for",
-)
-parser.add_argument(
-    "--skip",
-    type=int,
-    default=0,
-    help="videos to skip",
-)
-parser.add_argument(
-    "--reuse_file",
-    action="store_true",
-    default=False,
-    help="reuse export/comments.jl file",
-)
-parser.add_argument(
-    "-p",
-    "--push_db",
-    action="store_true",
-    default=False,
-    help="push (new) comments to PostgreSQL`",
-)
-parser.add_argument(
-    "--dryrun",
-    action="store_true",
-    default=False,
-    help="only import modules",
-)
-
-args = parser.parse_args()
-
 sort = True
 language = "en"
 
-if args.channel_ids:
-    video_ids = loop.run_until_complete(
-        get_video_ids_by_channel_ids(async_session, args.channel_ids)
-    )
-
-else:
-    assert isinstance(video_ids[0], str), "please pass at least a valid vidoe_id"
-
-if args.skip > 0:
-    video_ids = video_ids[args.skip :]
-
-if args.max > 0:
-    video_ids = video_ids[: args.max]
-
-logger.info(f"selected {len(video_ids):,} videos")
-
-print(f"number of videos to get comments for: {len(video_ids):,}")
 
 # fixate sort_by and language parameters
 get_comments_by_video_id = partial(
     downloader.get_comments, sort_by=sort, language=language
 )
-
-
-def parse_votes(df):
-    """Parse votes of comments.
-
-    For likes > 1_000, it displays as:
-        1.3K
-        2.6K
-    """
-    assert "votes" in df
-    if str(df.votes.dtype) != "object":
-        return df
-
-    df["votes_isdigit"] = df.votes.map(lambda x: x.isdigit())
-    if not df.votes_isdigit.all():
-
-        # ends_with_k = df.votes.str.endswith('K')
-        # df.loc[np.where(ends_with_k), "votes"] = ends_with_k, df[ends_with_k].votes.str.replace('K','').astype(float) * 1_000
-        df["votes"] = df.votes.apply(
-            lambda x: float(x.replace("K", "")) * 1_000 if x.endswith("K") else x
-        )
-
-    # df["votes_isdigit"] = df.votes.map(lambda x: x.isdigit())
-    # assert df.votes_isdigit.all()
-    df["votes"] = df.votes.astype(int)
-
-    return df
 
 
 def get_comments_wrapper(video_id: str) -> Iterator[Dict[str, Any]]:
@@ -228,36 +131,117 @@ def receive_in_parallel(nprocess: int, vids: List[str]) -> List[Dict[str, Any]]:
     return sum(lres, [])
 
 
-# chain generators
-# generators = (
-#     get_comments_by_video_id(youtube_id) for youtube_id in video_ids
-# )
-generators = (get_comments_wrapper(youtube_id) for youtube_id in video_ids)
-# generator = (
-#     downloader.get_comments(youtube_id, sort, language)
-#     # if youtube_id
-#     # else downloader.get_comments_from_url(youtube_url, sort, language)
-# )
-
-big_generator = chain(*generators)
-
-if args.dryrun:
-    sys.exit()
-
-if args.nproc == 1:
-    items = list(receiver(big_generator))
-else:
-    items = receive_in_parallel(args.nproc, video_ids)
-
-# items = list(generator)
-# items = list(big_generator)
-df = pd.DataFrame(items)
-df = parse_votes(df)
-df["time_parsed_float"] = df["time_parsed"]
-df["time_parsed"] = pd.to_datetime(df.time_parsed_float * 1_000, unit="ms").astype(
-    "datetime64[us]"
+parser = argparse.ArgumentParser(description="Define get_coments parameters")
+parser.add_argument(
+    "--nproc",
+    default=1,
+    type=int,
+    help="Max number of processes to use for multiprocessing",
+)
+parser.add_argument(
+    "--channel_ids",
+    default=[],
+    nargs="*",
+    help="channel_id to download comments for",
+)
+parser.add_argument(
+    "--video_ids",
+    default=[],
+    nargs="*",
+    help="video_id to download comments for, if channel_id was not passed",
+)
+parser.add_argument(
+    "--max",
+    type=int,
+    default=0,
+    help="max videos to get comments for",
+)
+parser.add_argument(
+    "--skip",
+    type=int,
+    default=0,
+    help="videos to skip",
+)
+parser.add_argument(
+    "--reuse_file",
+    action="store_true",
+    default=False,
+    help="reuse export/comments.jl file",
+)
+parser.add_argument(
+    "-p",
+    "--push_db",
+    action="store_true",
+    default=False,
+    help="push (new) comments to PostgreSQL`",
+)
+parser.add_argument(
+    "--load",
+    action="store_true",
+    default=False,
+    help="load .jl dataset from disk",
+)
+parser.add_argument(
+    "--dryrun",
+    action="store_true",
+    default=False,
+    help="only import modules",
 )
 
-# push new comments to db
-if args.push_db:
-    res = loop.run_until_complete(dm.push_comments(df, async_session))
+if __name__ == "__main__":
+    args = parser.parse_args()
+
+    if args.load:
+        items = []
+        with jsonlines.open(COMMENTS_FILE) as reader:
+            for obj in reader:
+                items.append(obj)
+        df = pd.DataFrame(items).pipe(cm.comments_pipeline)
+        sys.exit()
+
+    if args.channel_ids:
+        video_ids = loop.run_until_complete(
+            get_video_ids_by_channel_ids(async_session, args.channel_ids)
+        )
+
+    else:
+        assert isinstance(video_ids[0], str), "please pass at least a valid vidoe_id"
+
+    if args.skip > 0:
+        video_ids = video_ids[args.skip :]
+
+    if args.max > 0:
+        video_ids = video_ids[: args.max]
+
+    logger.info(f"selected {len(video_ids):,} videos")
+
+    print(f"number of videos to get comments for: {len(video_ids):,}")
+
+    # chain generators
+    # generators = (
+    #     get_comments_by_video_id(youtube_id) for youtube_id in video_ids
+    # )
+    generators = (get_comments_wrapper(youtube_id) for youtube_id in video_ids)
+    # generator = (
+    #     downloader.get_comments(youtube_id, sort, language)
+    #     # if youtube_id
+    #     # else downloader.get_comments_from_url(youtube_url, sort, language)
+    # )
+
+    big_generator = chain(*generators)
+
+    if args.dryrun:
+        sys.exit()
+
+    if args.nproc == 1:
+        items = list(receiver(big_generator))
+    else:
+        items = receive_in_parallel(args.nproc, video_ids)
+
+    # items = list(generator)
+    # items = list(big_generator)
+    df = pd.DataFrame(items).pipe(cm.comments_pipeline)
+
+    # push new comments to db
+    if args.push_db:
+        res = loop.run_until_complete(dm.push_comments(df, async_session))
