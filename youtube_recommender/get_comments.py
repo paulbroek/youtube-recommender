@@ -90,6 +90,12 @@ parser.add_argument(
     help="videos to skip",
 )
 parser.add_argument(
+    "--reuse_file",
+    action="store_true",
+    default=False,
+    help="reuse export/comments.jl file",
+)
+parser.add_argument(
     "-p",
     "--push_db",
     action="store_true",
@@ -165,8 +171,9 @@ def receive_in_parallel(nprocess: int, vids: List[str]) -> List[Dict[str, Any]]:
     Side effect: writes to export/comments.jl file
     """
     # clean file first
-    with open(COMMENTS_FILE, "w", encoding="utf"):
-        pass
+    if not args.reuse_file:
+        with open(COMMENTS_FILE, "w", encoding="utf"):
+            pass
 
     pool = Pool(processes=nprocess)
 
