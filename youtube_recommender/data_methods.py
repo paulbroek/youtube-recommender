@@ -373,7 +373,7 @@ class data_methods:
             )[list(columns)]
             .assign(index=df["channel_id"])
             .set_index("index")
-            .drop_duplicates()
+            .drop_duplicates("id")
             .to_dict("index")
         )
 
