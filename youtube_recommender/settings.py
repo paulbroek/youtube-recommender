@@ -33,7 +33,8 @@ CAPTIONS_PATH = DATA_DIR / CAPTIONS_FILE
 PYTUBE_VIDEOS_FILE = "pytube_videos.feather"
 PYTUBE_VIDEOS_PATH = DATA_DIR / PYTUBE_VIDEOS_FILE
 
-COMMENTS_FILE = EXPORT_DIR / "comments.jl"
+COMMENTS_JL_FILE = EXPORT_DIR / "comments.jl"
+COMMENTS_FEATHER_FILE = EXPORT_DIR / "comments.feather"
 
 #################
 ##### SpaCy #####

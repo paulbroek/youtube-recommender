@@ -50,7 +50,9 @@ from youtube_recommender.comments_methods import comments_methods as cm
 from youtube_recommender.data_methods import data_methods as dm
 from youtube_recommender.db.helpers import get_video_ids_by_channel_ids
 from youtube_recommender.db.models import psql
-from youtube_recommender.settings import COMMENTS_FILE
+from youtube_recommender.io_methods import io_methods as im
+from youtube_recommender.settings import (COMMENTS_FEATHER_FILE,
+                                          COMMENTS_JL_FILE)
 
 log_fmt = "%(asctime)s - %(module)-16s - %(lineno)-4s - %(funcName)-20s - %(levelname)-7s - %(message)s"  # name
 logger = setup_logger(
@@ -105,8 +107,7 @@ def receive_in_parallel(nprocess: int, vids: List[str]) -> List[Dict[str, Any]]:
     """
     # clean file first
     if not args.reuse_file:
-        with open(COMMENTS_FILE, "w", encoding="utf"):
-            pass
+        im.reset_jsonlines(COMMENTS_JL_FILE)
 
     pool = Pool(processes=nprocess)
 
@@ -120,9 +121,7 @@ def receive_in_parallel(nprocess: int, vids: List[str]) -> List[Dict[str, Any]]:
         )
         sys.stdout.flush()
         # write intermediary results to jsonlines file
-        with jsonlines.open(COMMENTS_FILE, mode="a") as writer:
-            for item in x:
-                writer.write(item)
+        im.append_jsonlines(COMMENTS_JL_FILE, x)
 
         lres.append(x)
 
@@ -179,10 +178,22 @@ parser.add_argument(
     help="push (new) comments to PostgreSQL`",
 )
 parser.add_argument(
-    "--load",
+    "--load_jl",
     action="store_true",
     default=False,
     help="load .jl dataset from disk",
+)
+parser.add_argument(
+    "--load_feather",
+    action="store_true",
+    default=False,
+    help="load .feather dataset from disk",
+)
+parser.add_argument(
+    "--save_feather",
+    action="store_true",
+    default=False,
+    help="save .feather dataset to disk",
 )
 parser.add_argument(
     "--dryrun",
@@ -194,12 +205,13 @@ parser.add_argument(
 if __name__ == "__main__":
     args = parser.parse_args()
 
-    if args.load:
-        items = []
-        with jsonlines.open(COMMENTS_FILE) as reader:
-            for obj in reader:
-                items.append(obj)
-        df = pd.DataFrame(items).pipe(cm.comments_pipeline)
+    if args.load_jl:
+        df = im.load_jsonlines(COMMENTS_JL_FILE)
+        df = df.pipe(cm.comments_pipeline)
+        sys.exit()
+
+    elif args.load_feather:
+        df = im.load_feather(COMMENTS_FEATHER_FILE)
         sys.exit()
 
     if args.channel_ids:
@@ -232,6 +244,9 @@ if __name__ == "__main__":
         items = receive_in_parallel(args.nproc, video_ids)
 
     df = pd.DataFrame(items).pipe(cm.comments_pipeline)
+
+    if args.save_feather:
+        im.save_feather(df, COMMENTS_FEATHER_FILE)
 
     # push new comments to db
     if args.push_db:
