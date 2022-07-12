@@ -39,7 +39,6 @@ from itertools import chain
 from multiprocessing import Pool
 from typing import Any, Dict, Iterator, List
 
-import jsonlines
 import pandas as pd
 from rarc_utils.decorators import items_per_sec
 from rarc_utils.log import setup_logger
@@ -211,7 +210,7 @@ if __name__ == "__main__":
         sys.exit()
 
     elif args.load_feather:
-        df = im.load_feather(COMMENTS_FEATHER_FILE)
+        df = im.load_feather(COMMENTS_FEATHER_FILE, what="comment")
         sys.exit()
 
     if args.channel_ids:
