@@ -204,7 +204,7 @@ class data_methods:
 
     @classmethod
     async def push_comments(
-        cls, df: pd.DataFrame, async_session
+        cls, df: pd.DataFrame, async_session, autobulk=True
     ) -> Dict[str, Dict[str, TableTypes]]:
         """Push comments to db.
 
@@ -219,7 +219,7 @@ class data_methods:
         df = df.rename(columns={"author": "channel_name", "channel": "channel_id"})
         channel_recs = cls._make_channel_recs(df, columns=("id", "name"))
         records_dict["channel"] = await create_many_items(
-            async_session, Channel, channel_recs, nameAttr="id", returnExisting=True
+            async_session, Channel, channel_recs, nameAttr="id", returnExisting=True, autobulk=autobulk
         )
         # map the new channels into vdf
         df["channel"] = df["channel_id"].map(records_dict["channel"])
@@ -242,7 +242,7 @@ class data_methods:
         # does not work. maybe first create comments individually?
 
         records_dict["comment"] = await create_many_items(
-            async_session, Comment, comment_recs, nameAttr="id", returnExisting=True
+            async_session, Comment, comment_recs, nameAttr="id", returnExisting=True, autobulk=autobulk
         )
 
         # todo: fix the case where video author is same as comment author. attached to different instance. 

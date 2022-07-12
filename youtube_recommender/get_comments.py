@@ -232,7 +232,9 @@ if __name__ == "__main__":
             )
 
         else:
-            assert isinstance(video_ids[0], str), "please pass at least one valid video_id"
+            assert isinstance(
+                video_ids[0], str
+            ), "please pass at least one valid video_id"
 
         if args.skip > 0:
             video_ids = video_ids[args.skip :]
@@ -262,4 +264,6 @@ if __name__ == "__main__":
 
     # push new comments to db
     if args.push_db:
-        res = loop.run_until_complete(dm.push_comments(df, async_session))
+        res = loop.run_until_complete(
+            dm.push_comments(df, async_session, autobulk=True)
+        )

@@ -31,9 +31,16 @@ class comments_methods:
 
     @classmethod
     def comments_pipeline(cls, df):
+        """Parse votes, time_parsed and remove empty name authors."""
+        df = df.copy()
         df = cls.parse_votes(df)
         df["time_parsed_float"] = df["time_parsed"]
         df["time_parsed"] = pd.to_datetime(
             df.time_parsed_float * 1_000, unit="ms"
         ).astype("datetime64[us]")
+        # drop authors with empty or NULL names!
+        df["author"] = df.author.str.replace("\u0000", "")
+        df["author_len"] = df["author"].map(len)
+        df = df[df.author_len > 0].reset_index()
+
         return df

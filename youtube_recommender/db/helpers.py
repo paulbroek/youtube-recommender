@@ -115,12 +115,17 @@ def chapter_locations_to_df(ret: List[dict]) -> pd.DataFrame:
 
 
 async def create_many_items(
-    asession, model, itemDicts, nameAttr="name", returnExisting=False
+    asession, model, itemDicts, nameAttr="name", returnExisting=False, autobulk=False
 ):
     """Create many SQLAlchemy model items in db."""
     async with asession() as session:
         items = await create_many(
-            session, model, itemDicts, nameAttr=nameAttr, returnExisting=returnExisting
+            session,
+            model,
+            itemDicts,
+            nameAttr=nameAttr,
+            returnExisting=returnExisting,
+            autobulk=autobulk,
         )
 
     return items
@@ -184,6 +189,7 @@ async def get_videos_by_ids(asession, video_ids: List[VideoId]):
         instances = res.scalars().fetchall()
 
     return instances
+
 
 async def get_video_ids_by_channel_ids(asession, channel_ids: List[ChannelId]):
     """Get vidoe_ids by channel_ids."""

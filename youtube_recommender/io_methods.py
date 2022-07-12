@@ -21,6 +21,13 @@ class io_methods:
             pass
 
     @staticmethod
+    def append_jsonlines(path: Path, items: List[Dict[str, Any]]) -> None:
+        """Write intermediary results to jsonlines file."""
+        with jsonlines.open(path, mode="a") as writer:
+            for item in items:
+                writer.write(item)
+
+    @staticmethod
     def load_jsonlines(path: Path) -> pd.DataFrame:
         """Load jsonlines file and parse to dataframe."""
         items: List[Dict[str, Any]] = []
@@ -29,26 +36,6 @@ class io_methods:
                 items.append(obj)
 
         df = pd.DataFrame(items)
-
-        return df
-
-    @staticmethod
-    def append_jsonlines(path: Path, items: List[Dict[str, Any]]) -> None:
-        """Write intermediary results to jsonlines file."""
-        with jsonlines.open(path, mode="a") as writer:
-            for item in items:
-                writer.write(item)
-
-    @staticmethod
-    def load_feather(df_path: Path, what: Optional[str]) -> pd.DataFrame:
-        """Load any dataframe from feather."""
-        # check if file exists, or warn user to run main.py first
-        assert os.path.exists(df_path), f"{df_path.as_posix()} does not exist"
-        assert what is not None
-        df: pd.DataFrame = pd.read_feather(df_path)
-
-        WHATS = what + "s" if len(df) != 1 else what
-        logger.info(f"loaded {len(df):,} {WHATS} rows from feather")
 
         return df
 
@@ -64,3 +51,16 @@ class io_methods:
         df.to_feather(df_path)
         WHATS = what + "s" if len(df) != 1 else what
         logger.info(f"saved {len(df):,} {WHATS} to {df_path.as_posix()}")
+
+    @staticmethod
+    def load_feather(df_path: Path, what: Optional[str]) -> pd.DataFrame:
+        """Load any dataframe from feather."""
+        # check if file exists, or warn user to run main.py first
+        assert os.path.exists(df_path), f"{df_path.as_posix()} does not exist"
+        assert what is not None
+        df: pd.DataFrame = pd.read_feather(df_path)
+
+        WHATS = what + "s" if len(df) != 1 else what
+        logger.info(f"loaded {len(df):,} {WHATS} rows from feather")
+
+        return df
