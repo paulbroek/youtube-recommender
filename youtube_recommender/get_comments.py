@@ -1,4 +1,4 @@
-"""get_comments.py.
+r"""get_comments.py.
 
 Get all comments for a given YouTube video / channel
 
@@ -25,6 +25,9 @@ Example usage:
         sed 1d ~/other_repos/postgres_output/channel_ids.csv | tr "\n" " " | xclip
 
         ipy get_comments.py -i -- --nproc 10 --channel_ids $(xclip -o) --max 0 -p
+
+    # load any dataset from disk:
+    ipy get_comments.py -i -- --load
 """
 
 import argparse
@@ -78,7 +81,6 @@ def get_comments_wrapper(video_id: str) -> Iterator[Dict[str, Any]]:
 
 def get_comments_list(video_id: str) -> List[Dict[str, Any]]:
     """Return comments for a list of video_ids."""
-    # pbar.update(1)
     return list(get_comments_wrapper(video_id))
 
 
@@ -110,6 +112,7 @@ def receive_in_parallel(nprocess: int, vids: List[str]) -> List[Dict[str, Any]]:
 
     lres = []
     total_comments = 0
+    # can this be rewritten using with ... ?
     for i, x in enumerate(pool.imap_unordered(get_comments_list, vids)):
         total_comments += len(x)
         sys.stdout.write(
@@ -205,7 +208,7 @@ if __name__ == "__main__":
         )
 
     else:
-        assert isinstance(video_ids[0], str), "please pass at least a valid vidoe_id"
+        assert isinstance(video_ids[0], str), "please pass at least one valid video_id"
 
     if args.skip > 0:
         video_ids = video_ids[args.skip :]
@@ -217,17 +220,7 @@ if __name__ == "__main__":
 
     print(f"number of videos to get comments for: {len(video_ids):,}")
 
-    # chain generators
-    # generators = (
-    #     get_comments_by_video_id(youtube_id) for youtube_id in video_ids
-    # )
     generators = (get_comments_wrapper(youtube_id) for youtube_id in video_ids)
-    # generator = (
-    #     downloader.get_comments(youtube_id, sort, language)
-    #     # if youtube_id
-    #     # else downloader.get_comments_from_url(youtube_url, sort, language)
-    # )
-
     big_generator = chain(*generators)
 
     if args.dryrun:
@@ -238,8 +231,6 @@ if __name__ == "__main__":
     else:
         items = receive_in_parallel(args.nproc, video_ids)
 
-    # items = list(generator)
-    # items = list(big_generator)
     df = pd.DataFrame(items).pipe(cm.comments_pipeline)
 
     # push new comments to db
