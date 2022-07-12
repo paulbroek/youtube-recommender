@@ -96,7 +96,7 @@ if __name__ == "__main__":
         cmdLevel=logging.INFO, saveFile=0, savePandas=0, color=1, fmt=LOG_FMT
     )
 
-    psession = get_session(psql)()
+    # psession = get_session(psql)()
     async_session = get_async_session(psql)
     async_db = get_async_db(psql)()
 
