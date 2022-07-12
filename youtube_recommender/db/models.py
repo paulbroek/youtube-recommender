@@ -162,6 +162,7 @@ class Video(Base, UtilityBase):
     keywords = relationship(
         "Keyword", uselist=True, secondary=video_keyword_association, lazy="selectin"
     )
+    comments = relationship("Comment", uselist=True, back_populates="video", lazy="selectin")
     is_educational = Column(Boolean)
 
     channel_id = Column(String, ForeignKey("channel.id"), nullable=False)
@@ -177,12 +178,13 @@ class Video(Base, UtilityBase):
     __mapper_args__ = {"eager_defaults": True}
 
     def __repr__(self):
-        return "Video(id={}, title={}, views={:,}, minutes={:.1f}, nkeyword={}, is_educational={}, description={}, nchapter={})".format(
+        return "Video(id={}, title={}, views={:,}, minutes={:.1f}, nkeyword={}, ncomment={}, is_educational={}, description={}, nchapter={})".format(
             self.id,
             trunc_msg(self.title, 40),
             self.views,
             self.length / 60,
             len(self.keywords),
+            len(self.comments),
             self.is_educational,
             trunc_msg(self.description, 40),
             len(self.chapters),
@@ -283,8 +285,6 @@ class Comment(Base, UtilityBase):
     text = Column(String, nullable=False, unique=False)
     votes = Column(Integer, nullable=False)
 
-    author = Column(String, nullable=False, unique=False)
-
     # channel also represents a user
     channel_id = Column(String, ForeignKey("channel.id"), nullable=False)
     channel = relationship("Channel", uselist=False, lazy="selectin")
@@ -292,7 +292,7 @@ class Comment(Base, UtilityBase):
     video_id = Column(String, ForeignKey("video.id"), nullable=False)
     video = relationship("Video", uselist=False, lazy="selectin")
 
-    time_parsed = Column(Float)
+    time_parsed = Column(DateTime)
     created = Column(DateTime, server_default=func.now())  # current_timestamp()
     updated = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
@@ -300,10 +300,9 @@ class Comment(Base, UtilityBase):
     __mapper_args__ = {"eager_defaults": True}
 
     def __repr__(self):
-        return "Comment(id={}, text={}, author={}, votes={:,}, channel_name={:.1f}, video_id={})".format(
+        return "Comment(id={}, text={}, votes={:,}, channel_name={}, video_id={})".format(
             self.id,
             trunc_msg(self.text, 40),
-            self.author,
             self.votes,
             self.channel.name,
             self.video_id,
