@@ -104,14 +104,13 @@ if args.channel_ids:
     video_ids = loop.run_until_complete(
         get_video_ids_by_channel_ids(async_session, args.channel_ids)
     )
-    # reset session?
-    async_session = get_async_session(psql)
 
 else:
     assert isinstance(video_ids[0], str), "please pass at least a valid vidoe_id"
 
 if args.max > 0:
     video_ids = video_ids[: args.max]
+    logger.info(f"selected {args.max:,} videos")
 
 print(f"number of videos to get comments for: {len(video_ids):,}")
 
