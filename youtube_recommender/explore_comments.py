@@ -8,9 +8,11 @@ Explore the comments dataset using NLP, uses libraries spaCy and SpacyTextBlob
     # load from DB
     ipy explore_comments.py -i -- --load_db --video_ids vLnPwxZdW4Y SPTfmiYiuok --dryrun
     ipy explore_comments.py -i -- --load_db --video_ids vLnPwxZdW4Y SPTfmiYiuok
+    ipy explore_comments.py -i -- --load_db --video_ids vLnPwxZdW4Y SPTfmiYiuok --save_pickle
 
 Datasets explained:
     comments.feather    holds parsed rows. rows that can be parsed to SQLAlchemy objects
+    comments.pickle     holds rows with (comment_id, Doc), should be joined with SQL / feather dataset to reconstruct dataset before saving
 """
 
 import argparse
@@ -29,7 +31,7 @@ from youtube_recommender.db.helpers import get_comments_by_video_ids
 from youtube_recommender.db.models import psql
 from youtube_recommender.io_methods import io_methods as im
 from youtube_recommender.settings import (COMMENTS_FEATHER_FILE,
-                                          COMMENTS_NLP_FEATHER_FILE)
+                                          COMMENTS_PICKLE_FILE)
 
 log_fmt = "%(asctime)s - %(module)-16s - %(lineno)-4s - %(funcName)-20s - %(levelname)-7s - %(message)s"  # name
 logger = setup_logger(
@@ -39,13 +41,16 @@ logger = setup_logger(
 async_session = get_async_session(psql)
 
 loop = asyncio.get_event_loop()
+NLP_COMMENT = "nlp_comment"
+
 
 @items_per_sec
 def comments_by_video_ids(video_ids: List[str]):
-        
+
     return loop.run_until_complete(
         get_comments_by_video_ids(async_session, args.video_ids)
     )
+
 
 
 parser = argparse.ArgumentParser(description="Define get_coments parameters")
@@ -80,10 +85,16 @@ parser.add_argument(
     help="load .feather dataset from disk",
 )
 parser.add_argument(
-    "--save_feather",
+    "--load_pickle",
     action="store_true",
     default=False,
-    help="save .feather dataset to disk",
+    help="load NLP dataset from .pickle file",
+)
+parser.add_argument(
+    "--save_pickle",
+    action="store_true",
+    default=False,
+    help="save NLP dataset to .pickle file",
 )
 parser.add_argument(
     "--dryrun",
@@ -96,14 +107,22 @@ parser.add_argument(
 if __name__ == "__main__":
     args = parser.parse_args()
 
+    if args.load_pickle:
+        ndf = im.load_pickle(COMMENTS_PICKLE_FILE, NLP_COMMENT)
+
+        # todo: merge with sql dataset
+
+        sys.exit()
+
     LOADED_DF = False
     if args.load_db:
         assert args.video_ids, f"please pass video_ids"
         items = comments_by_video_ids(args.video_ids)
 
         df = pd.DataFrame(items)
-        df["hash_id"] = df.id.map(hash)
-        df = df.drop(["id", "updated", "created", "channel_id"], axis=1)
+        # df["hash_id"] = df.id.map(hash)
+        # df = df.drop(["id", "updated", "created", "channel_id"], axis=1)
+        df = df.drop(["updated", "created", "channel_id"], axis=1)
         LOADED_DF = True
 
     elif args.load_feather:
@@ -118,7 +137,7 @@ if __name__ == "__main__":
             "index",
             "time",
         ]
-        df = df.drop(columns=dropCols)
+        df = df.drop(columns=dropCols).rename(columns={"cid": "id"})
         LOADED_DF = True
 
     assert LOADED_DF, f"please select a load method"
@@ -132,10 +151,12 @@ if __name__ == "__main__":
     nlp.add_pipe("spacytextblob")
 
     # slow, so use a subset of rows
-    ndf = df.head(10_000).copy()
+    ndf = df
+    # ndf = df.head(10_000).copy()
     # cannot serialize textblob objects..
-    # ndf["doc"] = list(nlp.pipe(ndf["text"], n_process=10))
-    ndf["doc"] = list(nlp_without_textblob.pipe(ndf["text"], n_process=10))
+    ndf["doc"] = list(nlp.pipe(ndf["text"]))
+    # ndf["doc"] = list(nlp_without_textblob.pipe(ndf["text"], n_process=10))
 
-    if args.save_feather:
-        im.save_feather(df, COMMENTS_NLP_FEATHER_FILE, "nlp_comment")
+    # only save Id and Doc to pickle, so they can be joined later for quick loading
+    if args.save_pickle:
+        im.save_pickle(ndf[["id", "doc"]], COMMENTS_PICKLE_FILE, NLP_COMMENT)

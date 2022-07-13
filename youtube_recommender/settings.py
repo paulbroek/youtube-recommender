@@ -35,7 +35,7 @@ PYTUBE_VIDEOS_PATH = DATA_DIR / PYTUBE_VIDEOS_FILE
 
 COMMENTS_JL_FILE = EXPORT_DIR / "comments.jl"
 COMMENTS_FEATHER_FILE = EXPORT_DIR / "comments.feather"
-COMMENTS_NLP_FEATHER_FILE = EXPORT_DIR / "comments_nlp.feather"
+COMMENTS_PICKLE_FILE = EXPORT_DIR / "comments.pickle"
 
 #################
 ##### SpaCy #####
