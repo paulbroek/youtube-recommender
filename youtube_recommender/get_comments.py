@@ -37,6 +37,10 @@ Example usage:
 
     # load from feather and push to database
     ipy get_comments.py -i -- --load_feather --push_db
+
+Datasets explained:
+    comments.jl         holds raw data from YouTube
+    comments.feather    holds parsed rows. rows that can be parsed to SQLAlchemy objects
 """
 
 import argparse
@@ -265,5 +269,5 @@ if __name__ == "__main__":
     # push new comments to db
     if args.push_db:
         res = loop.run_until_complete(
-            dm.push_comments(df, async_session, autobulk=True)
+            dm.push_comments(df, async_session, autobulk=True, returnExisting=False)
         )

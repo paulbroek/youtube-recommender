@@ -177,7 +177,7 @@ class data_methods:
             vdf["keywords"] = vdf["keywords"].map(
                 lambda x: map_list(x, records_dict["keyword"])
             )
-            # and make them unique
+            # make them unique
             vdf["keywords"] = vdf["keywords"].map(set).map(list)
 
         channel_recs = cls._make_channel_recs(vdf)
@@ -185,14 +185,10 @@ class data_methods:
             async_session, Channel, channel_recs, nameAttr="id", returnExisting=True
         )
 
-        # map the new channels into vdf
+        # map the new channels onto vdf
         vdf["channel"] = vdf["channel_id"].map(records_dict["channel"])
 
         video_recs = cls._make_video_recs(vdf)
-
-        # remove existing video_ids from dataset, before pushing?
-        # existing_video_ids = get_video_ids_by_ids(async_session, vdf.video_id.to_list())
-        # drop those ids from dataframe
 
         records_dict["video"] = await create_many_items(
             async_session, Video, video_recs, nameAttr="id", returnExisting=True
@@ -204,7 +200,7 @@ class data_methods:
 
     @classmethod
     async def push_comments(
-        cls, df: pd.DataFrame, async_session, autobulk=True
+        cls, df: pd.DataFrame, async_session, autobulk=True, returnExisting=False
     ) -> Dict[str, Dict[str, TableTypes]]:
         """Push comments to db.
 
@@ -219,41 +215,36 @@ class data_methods:
         df = df.rename(columns={"author": "channel_name", "channel": "channel_id"})
         channel_recs = cls._make_channel_recs(df, columns=("id", "name"))
         records_dict["channel"] = await create_many_items(
-            async_session, Channel, channel_recs, nameAttr="id", returnExisting=True, autobulk=autobulk
+            async_session,
+            Channel,
+            channel_recs,
+            nameAttr="id",
+            returnExisting=True,
+            autobulk=autobulk,
         )
         # map the new channels into vdf
         df["channel"] = df["channel_id"].map(records_dict["channel"])
 
-        # video_ids = df.video_id.unique()
+        # drop rows without a channel
+        nrow_before = len(df)
+        df = df.dropna(subset=["channel"])
+        ndropped = nrow_before - len(df) 
+        if ndropped:
+            logger.warning(f"dropped {ndropped:,} rows, missing channel/video")
 
-        # get videos
-        # videos = await get_videos_by_ids(async_session, video_ids)
-        # records_dict["video"] = {v.id: v for v in videos}
-        # print(f"{videos[0]=}")
+        # get/create comments
+        comment_recs = cls._make_comment_recs(df)
+        # print(f"{list(comment_recs.values())[:5]=}")
 
-        # # map videos into vdf
-        # df["video"] = df["video_id"].map(records_dict["video"])
-
-        comment_recs = cls._make_comment_recs(df, by_video_id=False)
-        # comment_recs = cls._make_comment_recs(df, by_video_id=True)
-        # print(f"{list(comment_recs.values())[0]=}")
-
-        # best way? update comments per video?
-        # does not work. maybe first create comments individually?
-
+        # can only push max 32K items
         records_dict["comment"] = await create_many_items(
-            async_session, Comment, comment_recs, nameAttr="id", returnExisting=True, autobulk=autobulk
+            async_session,
+            Comment,
+            comment_recs,
+            nameAttr="id",
+            returnExisting=returnExisting,
+            autobulk=autobulk,
         )
-
-        # todo: fix the case where video author is same as comment author. attached to different instance. 
-
-        # async with async_session() as session:
-        #     for video in videos:
-        #         video.comments = comment_recs[video.id]
-
-        #         await session.commit()
-
-        #     print(f"{videos[0]=}")
 
         logger.info("finished")
 
@@ -274,7 +265,7 @@ class data_methods:
 
         video_records = records_dict["video"]
 
-        # save captions to postgres, or what other database: Redis, CassandraDB, DynamoDB?
+        # save captions to postgres, or: Redis, CassandraDB, DynamoDB?
 
         # map the videos into captions df
         df["video"] = df["video_id"].map(video_records)
@@ -334,8 +325,6 @@ class data_methods:
                     \ntraceback: \n"
                 )
                 print(traceback.format_exc())
-
-        # session.close()  # does not closing prevent triggers from triggering?
 
         query_results = plural(npushed, "queryResult")
         logger.info(f"pushed {npushed} {query_results} to db")
@@ -444,7 +433,10 @@ class data_methods:
 
     @staticmethod
     def _make_chapter_recs(df: pd.DataFrame) -> Dict[VideoId, ChapterRec]:
-        """Make Chapter records from dataframe, for SQLAlchemy object creation."""
+        """Make Chapter records from dataframe, for SQLAlchemy object creation.
+
+        both video_id and sub_id as index
+        """
         recs = (
             df.rename(columns={"s": "raw_str"})[
                 [
@@ -456,9 +448,7 @@ class data_methods:
                     "end",
                 ]
             ]
-            .assign(
-                index=pd.MultiIndex.from_frame(df[["video_id", "sub_id"]])
-            )  # use both video_id and sub_id as index
+            .assign(index=pd.MultiIndex.from_frame(df[["video_id", "sub_id"]]))
             .set_index("index")
             .drop_duplicates()
             .to_dict("index")
@@ -467,9 +457,7 @@ class data_methods:
         return recs
 
     @staticmethod
-    def _make_comment_recs(
-        df: pd.DataFrame, by_video_id=True
-    ) -> Dict[CommentId, CommentRec]:
+    def _make_comment_recs(df: pd.DataFrame) -> Dict[CommentId, CommentRec]:
         """Make Comment records from dataframe."""
         recs = (
             df.rename(columns={"cid": "id"})[
@@ -484,19 +472,9 @@ class data_methods:
                     "video_id",
                 ]
             ]
+            .drop_duplicates("id")
             .set_index("id", drop=False)
-            .drop_duplicates()
             .to_dict("index")
         )
-
-        if by_video_id:
-            tdf = df.copy()
-            tdf["rec"] = tdf["cid"].map(recs)
-            tdf["comment"] = tdf["rec"].map(lambda x: Comment(**x))
-            exp = tdf.groupby("video_id")["comment"].apply(list)
-
-            recs_by_vid = exp.to_dict()
-
-            return recs_by_vid
 
         return recs
