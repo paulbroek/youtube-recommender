@@ -40,7 +40,7 @@ SELECT
         WHEN LENGTH (title) > 60 THEN concat(trim(left(title, 60)), '...')
         ELSE title
     END AS trunc_title,
-        CASE
+    CASE
         WHEN LENGTH (lv.description) > 60 THEN concat(trim(left(lv.description, 60)), '...')
         ELSE lv.description
     END AS trunc_description,
@@ -66,6 +66,30 @@ ORDER BY
     qr.updated DESC
 LIMIT
     100 WITH DATA;
+
+-- view videos with most comments
+DROP MATERIALIZED VIEW top_videos_with_comments;
+CREATE MATERIALIZED VIEW top_videos_with_comments AS
+SELECT
+    video.id AS video_id,
+    CASE
+        WHEN LENGTH (video.title) > 60 THEN concat(trim(left(video.title, 60)), '...')
+        ELSE video.title
+    END AS trunc_video_title,
+    count(comment.id) as ncomment,
+    channel.id AS channel_id,
+    channel.name AS channel_name
+FROM
+    video
+    INNER JOIN channel ON video.channel_id = channel.id
+    INNER JOIN comment ON video.id = comment.video_id
+GROUP BY
+    video.id,
+    channel.id
+ORDER BY
+    ncomment DESC
+LIMIT 
+    500 WITH DATA;
 
 -- view top channels
 DROP MATERIALIZED VIEW top_channels;

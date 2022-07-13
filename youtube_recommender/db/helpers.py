@@ -5,7 +5,7 @@ import re
 import zlib
 from collections import defaultdict
 from datetime import datetime, timedelta
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -15,7 +15,7 @@ from sqlalchemy.future import select  # type: ignore[import]
 
 from ..core.types import ChannelId, VideoId, VideoRec
 from ..settings import HOUR_LIMIT, PSQL_HOURS_AGO
-from .models import Caption, Video, queryResult
+from .models import Caption, Comment, Video, queryResult
 
 logger = logging.getLogger(__name__)
 
@@ -223,6 +223,39 @@ async def get_videos_by_query(
         res = await session.execute(query_)
 
         instances = res.mappings().fetchall()
+
+    return instances
+
+
+async def get_comments_by_popularity():
+    raise NotImplementedError
+
+
+async def get_comments_by_video_ids(
+    asession, video_ids: List[str]
+) -> List[Dict[str, Any]]:
+    """Get Comments by video_ids."""
+    # q = select(Comment).join(Video).filter(Video.id.in_(video_ids))
+    ids_str = "', '".join(video_ids)
+    q = """ 
+        SELECT 
+            video_channel.name AS vid_channel_name, 
+            video.title AS video_title, 
+            comment.*,
+            comment_channel.name AS com_channel_name
+        FROM video
+        LEFT JOIN channel AS video_channel ON video.channel_id = video_channel.id
+        LEFT JOIN comment ON video.id = comment.video_id
+        LEFT JOIN channel AS comment_channel ON comment.channel_id = comment_channel.id
+        WHERE video.id IN ('{}')
+    """.format(
+        ids_str
+    )
+
+    async with asession() as session:
+        res = await session.execute(q)
+
+        instances: List[Dict[str, Any]] = res.mappings().fetchall()
 
     return instances
 
