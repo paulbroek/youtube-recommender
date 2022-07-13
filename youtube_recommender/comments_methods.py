@@ -40,6 +40,8 @@ class comments_methods:
         ).astype("datetime64[us]")
         # drop authors with empty or NULL names!
         df["author"] = df.author.str.replace("\u0000", "")
+        # also replace null char for all comments
+        df["text"] = df.text.str.replace("\u0000", "")
         df["author_len"] = df["author"].map(len)
         df = df[df.author_len > 0].reset_index()
 
