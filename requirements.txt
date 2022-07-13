@@ -12,3 +12,4 @@ pyarrow
 pytube
 youtube_comment_downloader
 spacytextblob
+cqlengine
