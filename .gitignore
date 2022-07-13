@@ -14,6 +14,7 @@ youtube_recommender/db/alembic/versions
 # top_videos.feather
 *.feather
 *.jl
+*.pickle
 
 # C extensions
 *.so
