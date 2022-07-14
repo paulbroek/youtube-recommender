@@ -464,12 +464,32 @@ class data_methods:
                 [
                     "id",
                     "text",
-                    "text",
                     "channel",
                     "channel_id",
                     "votes",
                     "time_parsed",
                     "video_id",
+                ]
+            ]
+            .drop_duplicates("id")
+            .set_index("id", drop=False)
+            .to_dict("index")
+        )
+
+        return recs
+
+    @staticmethod
+    def _make_comment_recs_scylla(df: pd.DataFrame) -> Dict[CommentId, CommentRec]:
+        """Make Comment records from dataframe for ScyllaDB."""
+        recs = (
+            df.rename(columns={"channel": "channel_id"})[
+                [
+                    "id",
+                    "text",
+                    "votes",
+                    "channel_id",
+                    "video_id",
+                    "time_parsed",
                 ]
             ]
             .drop_duplicates("id")
