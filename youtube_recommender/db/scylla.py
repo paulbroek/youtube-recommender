@@ -69,10 +69,12 @@ def push_comments_scylla(items: List[dict], batchsize=2_000, model=Comment):
 
     Usage:
         from youtube_recommender.data_methods import data_methods as dm
+        from youtube_recommender.db.scylla import push_comments_scylla
+        df = df.rename(columns = {"cid": "id"})
         df["textlen"] = df.text.map(len)
         df = df[df.textlen > 0].copy()
         recs = dm._make_comment_recs_scylla(df)
-        push_comments_scylla(recs.values(), batchsize=2_000)
+        push_comments_scylla(list(recs.values()), batchsize=1_000)
     """
     b = BatchQuery()
     nbatch = int(len(items) / batchsize)
@@ -85,6 +87,25 @@ def push_comments_scylla(items: List[dict], batchsize=2_000, model=Comment):
                 item["created_at"] = datetime.now()
                 model.batch(b).create(**item)
 
+@items_per_sec
+def get_comments_scylla(n=None) -> List[dict]:
+    """Get comments from ScyllaDB.
+
+    Usage:
+        from youtube_recommender.data_methods import data_methods as dm
+        from youtube_recommender.db.scylla import push_comments_scylla
+        df = df.rename(columns = {"cid": "id"})
+        df["textlen"] = df.text.map(len)
+        df = df[df.textlen > 0].copy()
+        recs = dm._make_comment_recs_scylla(df)
+        push_comments_scylla(list(recs.values()), batchsize=1_000)
+    """
+    query = Comment.objects()
+
+    if n is not None:
+        query = query.limit(n)
+
+    return list([dict(o) for o in query])
 
 parser = argparse.ArgumentParser(description="Define get_coments parameters")
 parser.add_argument(
