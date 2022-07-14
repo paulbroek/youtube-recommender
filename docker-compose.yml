@@ -16,3 +16,13 @@ services:
     image: scylladb/scylla
     container_name: some-scylla3
     command: --seeds=some-scylla
+
+  some-scylla4:
+    image: scylladb/scylla
+    container_name: some-scylla4
+    command: --seeds=some-scylla
+
+  some-scylla5:
+    image: scylladb/scylla
+    container_name: some-scylla5
+    command: --seeds=some-scylla
