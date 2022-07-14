@@ -104,7 +104,7 @@ def get_comments_scylla(n=None) -> List[dict]:
     if n is not None:
         query = query.limit(n)
 
-    return list([dict(o) for o in query])
+    return [dict(o) for o in query]
 
 parser = argparse.ArgumentParser(description="Define get_coments parameters")
 parser.add_argument(
