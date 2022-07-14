@@ -30,10 +30,15 @@ from cassandra.cqlengine.models import Model  # type: ignore[import]
 from cassandra.cqlengine.query import BatchQuery  # type: ignore[import]
 from dotenv import load_dotenv
 from rarc_utils.decorators import items_per_sec
+from rarc_utils.log import setup_logger
 from tqdm import tqdm  # type: ignore[import]
 
 load_dotenv()
-logger = logging.getLogger(__name__)
+
+log_fmt = "%(asctime)s - %(module)-16s - %(lineno)-4s - %(funcName)-20s - %(levelname)-7s - %(message)s"  # name
+logger = setup_logger(
+    cmdLevel=logging.INFO, saveFile=0, savePandas=1, color=1, fmt=log_fmt
+)
 
 SCYLLA_KEYSPACE = os.environ.get("SCYLLA_KEYSPACE")
 SCYLLA_HOST = os.environ.get("SCYLLA_HOST")
@@ -92,13 +97,7 @@ def get_comments_scylla(n=None) -> List[dict]:
     """Get comments from ScyllaDB.
 
     Usage:
-        from youtube_recommender.data_methods import data_methods as dm
-        from youtube_recommender.db.scylla import push_comments_scylla
-        df = df.rename(columns = {"cid": "id"})
-        df["textlen"] = df.text.map(len)
-        df = df[df.textlen > 0].copy()
-        recs = dm._make_comment_recs_scylla(df)
-        push_comments_scylla(list(recs.values()), batchsize=1_000)
+        items = get_comments_scylla(10_000)
     """
     query = Comment.objects()
 
