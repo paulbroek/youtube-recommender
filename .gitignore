@@ -15,6 +15,7 @@ youtube_recommender/db/alembic/versions
 *.feather
 *.jl
 *.pickle
+scylla.yaml
 
 # C extensions
 *.so
