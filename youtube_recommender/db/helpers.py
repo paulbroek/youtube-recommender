@@ -227,7 +227,9 @@ async def get_videos_by_query(
     return instances
 
 
-async def get_channels_by_video_ids(asession, video_ids: List[str]) -> List[Channel]:
+async def get_channels_by_video_ids(
+    asession, video_ids: List[str]
+) -> Dict[ChannelId, Channel]:
     """Get Channels by video_ids.
 
     Used to get all user accounts that replied to a list of videos
@@ -236,9 +238,9 @@ async def get_channels_by_video_ids(asession, video_ids: List[str]) -> List[Chan
 
     async with asession() as session:
         res = await session.execute(q)
-        items: List[Channel] = res.fetchall()
+        channels: List[Channel] = res.fetchall()
 
-    return items
+    return {c.id: c for c in channels}
 
 
 async def get_comments_by_popularity():
