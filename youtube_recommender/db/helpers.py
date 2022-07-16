@@ -15,7 +15,7 @@ from sqlalchemy.future import select  # type: ignore[import]
 
 from ..core.types import ChannelId, VideoId, VideoRec
 from ..settings import HOUR_LIMIT, PSQL_HOURS_AGO
-from .models import Caption, Comment, Video, queryResult
+from .models import Caption, Channel, Comment, Video, queryResult
 
 logger = logging.getLogger(__name__)
 
@@ -225,6 +225,20 @@ async def get_videos_by_query(
         instances = res.mappings().fetchall()
 
     return instances
+
+
+async def get_channels_by_video_ids(asession, video_ids: List[str]) -> List[Channel]:
+    """Get Channels by video_ids.
+
+    Used to get all user accounts that replied to a list of videos
+    """
+    q = select(Channel).join(Comment).join(Video).where(Comment.video_id.in_(video_ids))
+
+    async with asession() as session:
+        res = session.execute(q)
+        items: List[Channel] = res.fetchall()
+
+    return items
 
 
 async def get_comments_by_popularity():
