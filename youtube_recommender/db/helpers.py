@@ -235,7 +235,7 @@ async def get_channels_by_video_ids(asession, video_ids: List[str]) -> List[Chan
     q = select(Channel).join(Comment).join(Video).where(Comment.video_id.in_(video_ids))
 
     async with asession() as session:
-        res = session.execute(q)
+        res = await session.execute(q)
         items: List[Channel] = res.fetchall()
 
     return items
