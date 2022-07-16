@@ -11,6 +11,7 @@ example usage:
 import argparse
 import asyncio
 import logging
+import sys
 from multiprocessing import Pool
 from time import time
 from typing import Any, Dict, List
@@ -21,8 +22,8 @@ from pytube import Channel, YouTube  # type: ignore[import]
 from rarc_utils.log import setup_logger
 from rarc_utils.sqlalchemy_base import get_async_session
 from youtube_recommender.data_methods import data_methods as dm
-from youtube_recommender.db.helpers import (
-    get_keyword_association_rows_by_ids, get_video_ids_by_ids)
+# from youtube_recommender.db.helpers import (
+#     get_keyword_association_rows_by_ids, get_video_ids_by_ids)
 from youtube_recommender.db.models import psql
 from youtube_recommender.settings import PYTUBE_VIDEOS_PATH
 from youtube_recommender.video_finder import load_feather, save_feather
@@ -193,9 +194,18 @@ parser.add_argument(
     default=False,
     help="push queryResult and Video rows to PostgreSQL`",
 )
+parser.add_argument(
+    "--dryrun",
+    action="store_true",
+    default=False,
+    help="only import modules",
+)
 
 if __name__ == "__main__":
     args = parser.parse_args()
+    if args.dryrun:
+        sys.exit()
+
     assert isinstance(args.channel_url, str), "pass url as string"
 
     nskip = int(args.skip)
@@ -216,18 +226,17 @@ if __name__ == "__main__":
         df = load_feather(PYTUBE_VIDEOS_PATH)
 
     else:
-
         vurls = Channel(args.channel_url)
 
         # slow call to urls.len?
         # logger.info(f"this channel has {len(vurls):,} videos")
-        last_item = (nskip + nitems)
+        last_item = nskip + nitems
         if nskip > len(vurls):
             raise IndexError(f"{nskip=:,} should be smaller than {len(vurls)=:,}")
 
         last_item = min(last_item, len(vurls))
-            
-        sel_vurls = vurls[nskip : last_item]
+
+        sel_vurls = vurls[nskip:last_item]
         vres = mp_extract_videos(sel_vurls, nprocess=ncore)
         cres = mp_extract_channels(vres, nprocess=ncore)
         vdf = pd.DataFrame(vres)
