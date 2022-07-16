@@ -45,8 +45,9 @@ NLP_COMMENT = "nlp_comment"
 
 
 @items_per_sec
-def comments_by_video_ids(video_ids: List[str]):
-
+def comments_by_vids(video_ids: List[str]):
+    """Get comments by video_ids wrapper."""
+    logger.info(f"get rows from DB..")
     return loop.run_until_complete(
         get_comments_by_video_ids(async_session, args.video_ids)
     )
@@ -117,7 +118,7 @@ if __name__ == "__main__":
     LOADED_DF = False
     if args.load_db:
         assert args.video_ids, f"please pass video_ids"
-        items = comments_by_video_ids(args.video_ids)
+        items = comments_by_vids(args.video_ids)
 
         df = pd.DataFrame(items)
         # df["hash_id"] = df.id.map(hash)
