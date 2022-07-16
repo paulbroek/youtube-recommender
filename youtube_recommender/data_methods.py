@@ -15,7 +15,8 @@ from yapic import json  # type: ignore[import]
 from .core.types import (CaptionRec, ChannelId, ChannelRec, ChapterRec,
                          CommentId, CommentRec, TableTypes, VideoId, VideoRec)
 from .db.helpers import (chapter_locations_to_df, compress_caption,
-                         create_many_items, find_chapter_locations)
+                         create_many_items, find_chapter_locations,
+                         get_channels_by_video_ids)
 from .db.models import (Caption, Channel, Chapter, Comment, Keyword, Video,
                         queryResult)
 from .settings import YOUTUBE_CHANNEL_PREFIX, YOUTUBE_VIDEO_PREFIX
@@ -214,14 +215,19 @@ class data_methods:
         # get/create channels
         df = df.rename(columns={"author": "channel_name", "channel": "channel_id"})
         channel_recs = cls._make_channel_recs(df, columns=("id", "name"))
-        records_dict["channel"] = await create_many_items(
+        _ = await create_many_items(
             async_session,
             Channel,
             channel_recs,
             nameAttr="id",
-            returnExisting=True,
+            returnExisting=returnExisting,
             autobulk=autobulk,
         )
+        # fetch channels by video_ids, indirectly
+        # because isin cannot be used for more than 32K items
+        video_ids = df.video_id.unique().tolist()
+        records_dict["channel"] = await get_channels_by_video_ids(async_session, video_ids)
+
         # map the new channels into vdf
         df["channel"] = df["channel_id"].map(records_dict["channel"])
 
