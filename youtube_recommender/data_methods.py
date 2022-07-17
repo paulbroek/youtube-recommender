@@ -14,9 +14,9 @@ from yapic import json  # type: ignore[import]
 
 from .core.types import (CaptionRec, ChannelId, ChannelRec, ChapterRec,
                          CommentId, CommentRec, TableTypes, VideoId, VideoRec)
-from .db.helpers import (chapter_locations_to_df, compress_caption,
-                         create_many_items, find_chapter_locations,
-                         get_channels_by_video_ids)
+from .db.helpers import (add_many_items, chapter_locations_to_df,
+                         compress_caption, create_many_items,
+                         find_chapter_locations, get_channels_by_video_ids)
 from .db.models import (Caption, Channel, Chapter, Comment, Keyword, Video,
                         queryResult)
 from .settings import YOUTUBE_CHANNEL_PREFIX, YOUTUBE_VIDEO_PREFIX
@@ -206,8 +206,8 @@ class data_methods:
         """Push comments to db.
 
         Assumes comments come from get_comments.py
-        First map channels to dataset,
-        get video_id, and update comments by video
+        First maps channels to dataset,
+        get video_id, and update comments by video_id
         """
         df = df.copy()
         records_dict = {}
@@ -215,18 +215,17 @@ class data_methods:
         # get/create channels
         df = df.rename(columns={"author": "channel_name", "channel": "channel_id"})
         channel_recs = cls._make_channel_recs(df, columns=("id", "name"))
-        _ = await create_many_items(
+        records_dict["channel"] = await create_many_items(
             async_session,
             Channel,
             channel_recs,
             nameAttr="id",
-            returnExisting=returnExisting,
+            # returnExisting=returnExisting,
+            mergeExisting=True,
             autobulk=autobulk,
+            commit=False,
         )
-        # fetch channels by video_ids, indirectly
-        # because isin cannot be used for more than 32K items
-        video_ids = df.video_id.unique().tolist()
-        records_dict["channel"] = await get_channels_by_video_ids(async_session, video_ids)
+        # todo: still better is to save comments in nosql store, and save with upsert method. no back and forth calls needed
 
         # map the new channels into vdf
         df["channel"] = df["channel_id"].map(records_dict["channel"])
@@ -234,7 +233,7 @@ class data_methods:
         # drop rows without a channel
         nrow_before = len(df)
         df = df.dropna(subset=["channel"])
-        ndropped = nrow_before - len(df) 
+        ndropped = nrow_before - len(df)
         if ndropped:
             logger.warning(f"dropped {ndropped:,} rows, missing channel/video")
 
@@ -250,6 +249,7 @@ class data_methods:
             nameAttr="id",
             returnExisting=returnExisting,
             autobulk=autobulk,
+            commit=True,
         )
 
         logger.info("finished")

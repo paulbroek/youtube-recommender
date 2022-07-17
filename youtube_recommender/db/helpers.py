@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
-from rarc_utils.sqlalchemy_base import create_many
+from rarc_utils.sqlalchemy_base import add_many, create_many
 from sqlalchemy import and_
 from sqlalchemy.future import select  # type: ignore[import]
 
@@ -114,19 +114,18 @@ def chapter_locations_to_df(ret: List[dict]) -> pd.DataFrame:
     return df
 
 
-async def create_many_items(
-    asession, model, itemDicts, nameAttr="name", returnExisting=False, autobulk=False
-):
+async def create_many_items(asession, *args, **kwargs):
     """Create many SQLAlchemy model items in db."""
+    # asession = args[0]
     async with asession() as session:
-        items = await create_many(
-            session,
-            model,
-            itemDicts,
-            nameAttr=nameAttr,
-            returnExisting=returnExisting,
-            autobulk=autobulk,
-        )
+        items = await create_many(session, *args, **kwargs)
+
+    return items
+
+
+async def add_many_items(asession, model, itemDicts, nameAttr="name"):
+    async with asession() as session:
+        items = await add_many(session, model, itemDicts, nameAttr=nameAttr)
 
     return items
 
@@ -239,6 +238,11 @@ async def get_channels_by_video_ids(
     async with asession() as session:
         res = await session.execute(q)
         channels: List[Channel] = res.fetchall()
+
+    if len(channels) == 0:
+        logger.warning(
+            f"no channels received, are you trying to get channels from comments before pushing the comments?"
+        )
 
     return {c.id: c for c in channels}
 
