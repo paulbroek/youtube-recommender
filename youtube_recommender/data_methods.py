@@ -345,6 +345,10 @@ class data_methods:
         if "keywords" not in df.columns:
             return {}
 
+        # when loading from feather, lists get cast to array, revert that first
+        if not isinstance(df.keywords[0], list):
+            df["keywords"] = df["keywords"].map(list)
+
         l: List[List[str]] = df.keywords.to_list()
         ll: List[str] = sum(l, [])
         ll = list(set(ll))
