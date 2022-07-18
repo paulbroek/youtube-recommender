@@ -72,13 +72,16 @@ DROP MATERIALIZED VIEW top_videos_with_comments;
 CREATE MATERIALIZED VIEW top_videos_with_comments AS
 SELECT
     video.id AS video_id,
+    channel.id AS channel_id,
+    channel.name AS channel_name,
     CASE
         WHEN LENGTH (video.title) > 60 THEN concat(trim(left(video.title, 60)), '...')
         ELSE video.title
     END AS trunc_video_title,
-    count(comment.id) as ncomment,
-    channel.id AS channel_id,
-    channel.name AS channel_name
+    count(comment.id) AS ncomment,
+    LPAD(TO_CHAR(video.views, 'fm999G999G999'), 12) AS views,
+    TO_CHAR((video.length || ' second')::interval, 'HH24:MI:SS') AS duration,
+    count(chapter.id) AS nchapter
 FROM
     video
     INNER JOIN channel ON video.channel_id = channel.id
@@ -89,7 +92,7 @@ GROUP BY
 ORDER BY
     ncomment DESC
 LIMIT 
-    500 WITH DATA;
+    10000 WITH DATA;
 
 -- view top channels
 DROP MATERIALIZED VIEW top_channels;

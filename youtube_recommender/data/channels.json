@@ -23,11 +23,28 @@
         "name": "SimplilearnOfficial"
     },
     {
-        "name": "PyDataTV"
+        "name": "PyDataTV",
+        "id": "UCOjD18EJYcsBog4IozkF_7w",
+        "video_count": 2641
     },
     {
         "name": "TraversyMedia",
         "id": "UC29ju8bIPH5as8OGnQzwJyA",
         "video_count": "925"
+    },
+    {
+        "name": "Two Minute Papers",
+        "id": "UCbfYPyITQ-7l4upoX8nvctg",
+        "video_count": 701
+    },
+    {
+        "name": "Machine Learning with Phil",
+        "id": "UC58v9cLitc8VaCjrcKyAbrw",
+        "video_count": 133
+    },
+    {
+        "name": "Jeremy Howard",
+        "id": "UCX7Y2qWriXpqocG97SFW2OQ",
+        "video_count": 120
     }
 ]
