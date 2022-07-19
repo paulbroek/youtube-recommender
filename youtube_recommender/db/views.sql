@@ -67,6 +67,24 @@ ORDER BY
 LIMIT
     100 WITH DATA;
 
+-- view videos with nchapter
+DROP MATERIALIZED VIEW vw_videos_with_chapters;
+CREATE MATERIALIZED VIEW vw_videos_with_chapters AS
+SELECT
+    video.id AS video_id,
+    COUNT(chapter.video_id) AS nchapter
+FROM
+    chapter
+    INNER JOIN video ON video.id = chapter.video_id
+GROUP BY
+    video.id
+ORDER BY
+    nchapter DESC
+LIMIT 
+    10000 WITH DATA;
+
+
+-- todo: rewrite without having to groupby so many ids
 -- view videos with most comments
 DROP MATERIALIZED VIEW top_videos_with_comments;
 CREATE MATERIALIZED VIEW top_videos_with_comments AS
@@ -78,17 +96,24 @@ SELECT
         WHEN LENGTH (video.title) > 60 THEN concat(trim(left(video.title, 60)), '...')
         ELSE video.title
     END AS trunc_video_title,
-    count(comment.id) AS ncomment,
+    COUNT(comment.id) AS ncomment,
+    LPAD(TO_CHAR(COUNT(comment.id), 'fm999G999G999'), 12) AS ncomment_fmt,
     LPAD(TO_CHAR(video.views, 'fm999G999G999'), 12) AS views,
     TO_CHAR((video.length || ' second')::interval, 'HH24:MI:SS') AS duration,
-    count(chapter.id) AS nchapter
+    video.nchapter
 FROM
-    video
-    INNER JOIN channel ON video.channel_id = channel.id
-    INNER JOIN comment ON video.id = comment.video_id
+    (
+        SELECT video.*, COUNT(chapter.video_id) AS nchapter from chapter INNER JOIN video ON video.id = chapter.video_id GROUP BY video.id
+    ) video
+        INNER JOIN channel ON video.channel_id = channel.id
+        INNER JOIN comment ON video.id = comment.video_id
 GROUP BY
     video.id,
-    channel.id
+    video.title,
+    video.views,
+    video.length,
+    channel.id,
+    video.nchapter
 ORDER BY
     ncomment DESC
 LIMIT 

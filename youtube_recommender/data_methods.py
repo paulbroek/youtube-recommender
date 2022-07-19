@@ -402,7 +402,7 @@ class data_methods:
                     "channel_id",
                     "channel",
                     "keywords",
-                    "chapters",
+                    # "chapters",
                 ]
             ]
             .assign(index=df["video_id"])
@@ -444,6 +444,9 @@ class data_methods:
             ]
         ].copy()
 
+        assert not cdf["video_id"].isnull().sum()
+        cdf["id"] = cdf["video_id"] + "-" + cdf["sub_id"].astype(str)
+
         cdf["chapter"] = cdf.drop("video_id", axis=1).apply(
             lambda x: Chapter(**x), axis=1
         )
@@ -456,10 +459,10 @@ class data_methods:
 
         both video_id and sub_id as index
         """
-        df["id"] = df["video_id"] + '-' + df["sub_id"].astype(str)
         recs = (
             df.rename(columns={"s": "raw_str"})[
                 [
+                    "id",
                     "sub_id",
                     "name",
                     "video_id",
@@ -476,7 +479,6 @@ class data_methods:
         )
 
         return recs
-
 
     # @staticmethod
     # def _make_chapter_recs_from_vdf(df: pd.DataFrame) -> Dict[VideoId, ChapterRec]:
