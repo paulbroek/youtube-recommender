@@ -66,7 +66,7 @@ import asyncio
 import configparser
 import logging
 import uuid
-from datetime import datetime
+from datetime import datetime, time
 from pathlib import Path
 
 import timeago  # type: ignore[import]
@@ -201,7 +201,9 @@ class Chapter(Base, UtilityBase):
     """Chapter: relates to Video, contains a string that describes a part of the video, set by user."""
 
     __tablename__ = "chapter"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    # use a composite Id: videoId + sub_id, so that you can easily query by asdf923j3j-2, the second chatper of a video
+    # id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(String, primary_key=True)
     sub_id = Column(Integer, nullable=False, unique=False)
 
     # unique or not? are authors allowed to make mistakes in this?
@@ -233,7 +235,8 @@ class Chapter(Base, UtilityBase):
             self.name,
             self.start,
             self.end,
-            self.length(),
+            # self.length(),
+            0.00
         )
 
     def length(self):
@@ -243,7 +246,25 @@ class Chapter(Base, UtilityBase):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
     def json(self) -> dict:
-        return self.as_dict()
+        d = self.as_dict()
+        for key in ("start", "end"):
+            d[key] = d[key].isoformat()
+
+        for key in ("created", "updated"):
+            d.pop(key, None)
+
+        return d
+
+    @staticmethod
+    def from_json(jsonDict: dict):
+        """Create model instance from json."""
+        for key in ("start", "end"):
+            jsonDict[key] = time.fromisoformat(jsonDict[key])
+        for key in ("created", "updated"):
+            if key in jsonDict:
+                jsonDict[key] = datetime.fromisoformat(jsonDict[key])
+
+        return Chapter(**jsonDict)
 
 
 class Channel(Base, UtilityBase):

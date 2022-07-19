@@ -5,7 +5,7 @@ import traceback
 import uuid
 from collections import defaultdict
 from operator import itemgetter
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 import langid  # type: ignore[import]
 import pandas as pd
@@ -14,9 +14,9 @@ from yapic import json  # type: ignore[import]
 
 from .core.types import (CaptionRec, ChannelId, ChannelRec, ChapterRec,
                          CommentId, CommentRec, TableTypes, VideoId, VideoRec)
-from .db.helpers import (add_many_items, chapter_locations_to_df,
-                         compress_caption, create_many_items,
-                         find_chapter_locations, get_channels_by_video_ids)
+from .db.helpers import (chapter_locations_to_df, compress_caption,
+                         create_many_items, find_chapter_locations,
+                         get_channels_by_video_ids)
 from .db.models import (Caption, Channel, Chapter, Comment, Keyword, Video,
                         queryResult)
 from .settings import YOUTUBE_CHANNEL_PREFIX, YOUTUBE_VIDEO_PREFIX
@@ -121,7 +121,7 @@ class data_methods:
         return df
 
     @classmethod
-    def extract_chapters(cls, vdf: pd.DataFrame) -> pd.DataFrame:
+    def extract_chapters(cls, vdf: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """Extract Chapter metadata from Video.description."""
         logger.info(f"extracting chapters from video description")
         chapter_res: List[dict] = find_chapter_locations(
@@ -150,11 +150,11 @@ class data_methods:
 
         logger.info(f"chapters found: {vdf['nchapter'].sum():,}")
 
-        return vdf
+        return vdf, cdf
 
     @classmethod
     async def push_videos(
-        cls, vdf: pd.DataFrame, async_session
+        cls, vdf: pd.DataFrame, async_session, push_chapters=True
     ) -> Dict[str, Dict[str, TableTypes]]:
         """Push videos to db.
 
@@ -194,6 +194,15 @@ class data_methods:
         records_dict["video"] = await create_many_items(
             async_session, Video, video_recs, nameAttr="id", returnExisting=True
         )
+
+        # or use separate method for push_chapters?
+        if push_chapters:
+            # finally create chapters
+            vdf, cdf = cls.extract_chapters(vdf)
+            chapter_recs = cls._make_chapter_recs(cdf)
+            records_dict["chapter"] = await create_many_items(
+                async_session, Chapter, chapter_recs, nameAttr="id", returnExisting=True
+            )
 
         logger.info("finished")
 
@@ -341,7 +350,7 @@ class data_methods:
 
     @staticmethod
     def _make_keyword_recs(df: pd.DataFrame) -> Dict[str, dict]:
-        """Make Keyword records from dataframe, for SQLAlchemy object creation."""
+        """Make Keyword records from dataframe."""
         if "keywords" not in df.columns:
             return {}
 
@@ -361,7 +370,7 @@ class data_methods:
     def _make_channel_recs(
         df: pd.DataFrame, columns=("id", "name", "num_subscribers")
     ) -> Dict[ChannelId, ChannelRec]:
-        """Make Channel records from dataframe, for SQLAlchemy object creation."""
+        """Make Channel records from dataframe."""
         recs = (
             df.rename(
                 columns={
@@ -379,7 +388,7 @@ class data_methods:
 
     @staticmethod
     def _make_video_recs(df: pd.DataFrame) -> Dict[VideoId, VideoRec]:
-        """Make Video records from dataframe, for SQLAlchemy object creation."""
+        """Make Video records from dataframe."""
         recs = (
             df.rename(columns={"video_id": "id",})[
                 [
@@ -406,7 +415,7 @@ class data_methods:
 
     @staticmethod
     def _make_caption_recs(df: pd.DataFrame) -> Dict[VideoId, CaptionRec]:
-        """Make Caption records from dataframe, for SQLAlchemy object creation."""
+        """Make Caption records from dataframe."""
         recs = (
             df.rename(
                 columns={
@@ -443,10 +452,11 @@ class data_methods:
 
     @staticmethod
     def _make_chapter_recs(df: pd.DataFrame) -> Dict[VideoId, ChapterRec]:
-        """Make Chapter records from dataframe, for SQLAlchemy object creation.
+        """Make Chapter records from dataframe.
 
         both video_id and sub_id as index
         """
+        df["id"] = df["video_id"] + '-' + df["sub_id"].astype(str)
         recs = (
             df.rename(columns={"s": "raw_str"})[
                 [
@@ -458,7 +468,8 @@ class data_methods:
                     "end",
                 ]
             ]
-            .assign(index=pd.MultiIndex.from_frame(df[["video_id", "sub_id"]]))
+            # .assign(index=pd.MultiIndex.from_frame(df[["video_id", "sub_id"]]))
+            .assign(index=df["id"])
             .set_index("index")
             .drop_duplicates()
             .to_dict("index")
@@ -466,7 +477,46 @@ class data_methods:
 
         return recs
 
-    @staticmethod
+
+    # @staticmethod
+    # def _make_chapter_recs_from_vdf(df: pd.DataFrame) -> Dict[VideoId, ChapterRec]:
+    #     """Make Chapter records from video dataframe.
+
+    #     both video_id and sub_id as index
+    #     """
+
+    #     df = df.copy()
+    #     if not isinstance(df.chapter[0], list):
+    #         df["chapter"] = df["chapter"].map(list)
+
+    #     l: List[List[str]] = df.chapters.to_list()
+    #     ll: List[str] = sum(l, [])
+    #     ll = list(set(ll))
+
+    #     cdf = pd.DataFrame([item.as_dict() for item in ll])
+
+    #     recs = {k: {"name": k} for k in ll}
+
+    #     recs = (
+    #         df.rename(columns={"s": "raw_str"})[
+    #             [
+    #                 "sub_id",
+    #                 "name",
+    #                 "video_id",
+    #                 "raw_str",
+    #                 "start",
+    #                 "end",
+    #             ]
+    #         ]
+    #         .assign(index=pd.MultiIndex.from_frame(df[["video_id", "sub_id"]]))
+    #         .set_index("index")
+    #         .drop_duplicates()
+    #         .to_dict("index")
+    #     )
+
+    #     return recs
+
+    # @staticmethod
     def _make_comment_recs(df: pd.DataFrame) -> Dict[CommentId, CommentRec]:
         """Make Comment records from dataframe."""
         recs = (
