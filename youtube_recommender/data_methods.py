@@ -232,7 +232,7 @@ class data_methods:
             # returnExisting=returnExisting,
             mergeExisting=True,
             autobulk=autobulk,
-            commit=False,
+            commit=True,
         )
         # todo: still better is to save comments in nosql store, and save with upsert method. no back and forth calls needed
 
