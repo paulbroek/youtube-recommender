@@ -256,5 +256,5 @@ if __name__ == "__main__":
 
         # push keywords, channels and videos to db
         if args.push_db:
-            df = dm.extract_chapters(df)
+            df, cdf = dm.extract_chapters(df)
             datad = loop.run_until_complete(dm.push_videos(df, async_session))

@@ -14,6 +14,8 @@ from rarc_utils.sqlalchemy_base import (get_async_db, get_async_session,
 from sqlalchemy import delete, select
 from youtube_recommender.core.types import ChannelId
 from youtube_recommender.db.models import Channel, Chapter, Video, load_config
+from youtube_recommender.io_methods import io_methods as im
+from youtube_recommender.settings import CHAPTERS_JL_FILE
 
 LOG_FMT = "%(asctime)s - %(module)-16s - %(lineno)-4s - %(funcName)-16s - %(levelname)-7s - %(message)s"
 
@@ -89,6 +91,33 @@ async def set_educational_by_channel_id(asession, channel_ids: List[ChannelId]):
 
     async with asession() as session:
         await session.execute(q)
+
+
+def migrate_chapter_ids_to_composite(session) -> None:
+    """Migrate old chapter ids (UUID) to composites.
+
+    Composite: {video_id}-{sub_id}
+    """
+    q = select(Chapter)
+    chapters = session.execute(q).scalars().all()
+    for c in chapters:
+        c.id = f"{c.video_id}-{c.sub_id}"
+
+    cc = [c.json() for c in chapters]
+    # session.commit()
+    return cc
+
+
+def create_chapters_from_json(session, file=CHAPTERS_JL_FILE) -> None:
+
+    df = im.load_jsonlines(file).drop_duplicates(subset="id")
+    assert not df.empty
+    res = df.to_dict("records")
+
+    # raise Exception
+    chapters = [Chapter.from_json(r) for r in res]
+    session.add_all(chapters)
+    session.commit()
 
 
 if __name__ == "__main__":
