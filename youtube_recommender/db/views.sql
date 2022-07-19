@@ -84,6 +84,52 @@ LIMIT
     10000 WITH DATA;
 
 
+-- view comments with truncated text
+DROP MATERIALIZED VIEW vw_comments;
+CREATE MATERIALIZED VIEW vw_comments AS
+SELECT
+    left(comment.id, 14) AS trunc_id,
+    CASE
+        WHEN LENGTH (text) > 100 THEN concat(trim(left(text, 100)), '...')
+        ELSE text
+    END AS trunc_text,
+    LENGTH(text) as length,
+    comment.votes AS votes,
+    channel.name AS user_name,
+    CASE
+        WHEN LENGTH (video.title) > 50 THEN concat(trim(left(video.title, 50)), '...')
+        ELSE video.title
+    END AS trunc_video_title
+FROM
+    comment
+    INNER JOIN video ON video.id = comment.video_id
+    INNER JOIN channel ON channel.id = comment.channel_id
+ORDER BY
+    votes DESC
+LIMIT 
+    100000 WITH DATA;
+
+
+-- view users with most votes
+DROP MATERIALIZED VIEW vw_users_with_most_votes;
+CREATE MATERIALIZED VIEW vw_users_with_most_votes AS
+SELECT
+    channel.name AS user_name,
+    -- LENGTH(text) as length,
+    COUNT(comment.id) AS ncomment,
+    SUM(comment.votes) AS total_votes
+FROM
+    comment
+    INNER JOIN video ON video.id = comment.video_id
+    INNER JOIN channel ON channel.id = comment.channel_id
+GROUP BY
+    channel.id
+ORDER BY
+    total_votes DESC
+LIMIT 
+    100000 WITH DATA;
+
+
 -- todo: rewrite without having to groupby so many ids
 -- view videos with most comments
 DROP MATERIALIZED VIEW top_videos_with_comments;
@@ -134,7 +180,29 @@ GROUP BY
 ORDER BY
     video_count DESC
 LIMIT
-    15;
+    100;
+
+-- to also see channels without comments: they need comment scraping
+DROP MATERIALIZED VIEW top_channels_with_comments;
+CREATE MATERIALIZED VIEW top_channels_with_comments AS
+SELECT DISTINCT
+    channel.name AS channel_name,
+    channel.id AS channel_id,
+    COUNT(DISTINCT video.id) AS video_count,
+    COUNT(comment.id) AS comment_count
+FROM
+    video
+    INNER JOIN channel ON video.channel_id = channel.id
+    LEFT JOIN comment ON video.id = comment.video_id
+GROUP BY
+    GROUPING SETS (
+        (channel.id, channel.name),
+        (comment.id)
+    )
+ORDER BY
+    video_count DESC
+LIMIT
+    100;
 
 -- view top keywords
 DROP MATERIALIZED VIEW top_keywords;
