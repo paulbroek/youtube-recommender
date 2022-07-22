@@ -199,8 +199,8 @@ class data_methods:
         if push_chapters:
             # finally create chapters
             vdf, cdf = cls.extract_chapters(vdf)
-            chapter_recs = cls._make_chapter_recs(cdf)
-            if len(chapter_recs) > 0:
+            if not cdf.empty:
+                chapter_recs = cls._make_chapter_recs(cdf)
                 records_dict["chapter"] = await create_many_items(
                     async_session, Chapter, chapter_recs, nameAttr="id", returnExisting=True
                 )
