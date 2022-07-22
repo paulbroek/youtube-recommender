@@ -254,7 +254,7 @@ if __name__ == "__main__":
         if args.save:
             save_feather(df, PYTUBE_VIDEOS_PATH)
 
-        # push keywords, channels and videos to db
-        if args.push_db:
-            df, cdf = dm.extract_chapters(df)
-            datad = loop.run_until_complete(dm.push_videos(df, async_session))
+    # push keywords, channels and videos to db
+    if args.push_db:
+        df, cdf = dm.extract_chapters(df)
+        datad = loop.run_until_complete(dm.push_videos(df, async_session))
