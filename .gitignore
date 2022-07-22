@@ -20,6 +20,10 @@ scylla.yaml
 # C extensions
 *.so
 
+# vim sessions
+*.vim
+*.swp
+
 # Distribution / packaging
 .Python
 build/
