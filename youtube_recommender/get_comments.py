@@ -236,8 +236,9 @@ if __name__ == "__main__":
             )
 
         else:
+            video_ids = args.video_ids
             assert isinstance(
-                args.video_ids[0], str
+                video_ids[0], str
             ), "please pass at least one valid video_id"
 
         if args.skip > 0:
