@@ -27,6 +27,47 @@ ORDER BY
 LIMIT
     20000 WITH DATA;
 
+-- moving away from queryResult version of youtube-recommender
+-- CREATE MATERIALIZED VIEW vw_last_videos AS
+-- SELECT
+    -- lv.video_id,
+    -- lv.channel_id,
+    -- lv.channel_name,
+    -- lv.num_subscribers,
+    -- lv.qr_id,
+    -- lv.query,
+    -- lv.qr_updated,
+    -- CASE
+        -- WHEN LENGTH (title) > 60 THEN concat(trim(left(title, 60)), '...')
+        -- ELSE title
+    -- END AS trunc_title,
+    -- CASE
+        -- WHEN LENGTH (lv.description) > 60 THEN concat(trim(left(lv.description, 60)), '...')
+        -- ELSE lv.description
+    -- END AS trunc_description,
+    -- NOW() - lv.updated AS updated_ago
+-- FROM
+    -- last_videos lv WITH DATA;
+
+DROP MATERIALIZED VIEW last_query_results;
+CREATE MATERIALIZED VIEW last_query_results AS
+SELECT
+    qr.id AS query_id,
+    qr.query,
+    COUNT(video.id) AS nvid,
+    date_trunc('seconds', qr.updated) AS updated,
+    NOW() - qr.updated AS updated_ago
+FROM
+    query_video_association qva
+    LEFT JOIN video ON qva.video_id = video.id
+    LEFT JOIN query_result AS qr ON qva.query_result_id = qr.id
+GROUP BY
+    qr.id
+ORDER BY
+    qr.updated DESC
+LIMIT
+    100 WITH DATA;
+
 CREATE MATERIALIZED VIEW vw_last_videos AS
 SELECT
     lv.video_id,
@@ -48,24 +89,6 @@ SELECT
 FROM
     last_videos lv WITH DATA;
 
-DROP MATERIALIZED VIEW last_query_results;
-CREATE MATERIALIZED VIEW last_query_results AS
-SELECT
-    qr.id AS query_id,
-    qr.query,
-    COUNT(video.id) AS nvid,
-    date_trunc('seconds', qr.updated) AS updated,
-    NOW() - qr.updated AS updated_ago
-FROM
-    query_video_association qva
-    LEFT JOIN video ON qva.video_id = video.id
-    LEFT JOIN query_result AS qr ON qva.query_result_id = qr.id
-GROUP BY
-    qr.id
-ORDER BY
-    qr.updated DESC
-LIMIT
-    100 WITH DATA;
 
 -- view videos with nchapter
 DROP MATERIALIZED VIEW vw_videos_with_chapters;
