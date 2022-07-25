@@ -16,6 +16,7 @@ youtube_recommender/db/alembic/versions
 *.jl
 *.pickle
 scylla.yaml
+*.model
 
 # C extensions
 *.so
