@@ -41,6 +41,19 @@ Example usage:
 Datasets explained:
     comments.jl         holds raw data from YouTube
     comments.feather    holds parsed rows. rows that can be parsed to SQLAlchemy objects
+
+How to get comments for specific channel_ids:
+    - run a specific query that returns the channel ids of channels without comments, example:
+
+    (run first: refresh materialized view top_channels_with_comments; )
+    docker exec -it postgres-master \                                                              
+        psql -d youtube -U postgres -c "select channel_id from top_channels_with_comments where comment_count = 0 and channel_id IS NOT NUll" --quiet --csv > ~/other_repos/postgres_output/channel_ids.csv
+
+    then save channel_ids in xclip:
+        sed 1d ~/other_repos/postgres_output/channel_ids.csv | tr "\r" " " | xclip
+
+    and finally run get_comments.py:
+        ipy get_comments.py -i -- --nproc 12 --max 0 --channel_ids $(xclip -o) -p --save_feather
 """
 
 import argparse
@@ -129,18 +142,13 @@ def receive_in_parallel(nprocess: int, vids: List[str]) -> List[Dict[str, Any]]:
     for i, x in enumerate(pool.imap_unordered(get_comments_list, vids)):
         total_comments += len(x)
         sys.stdout.write(
-            "Processed %d video(s). Total comments: %d\r" % (i, total_comments)
+            f"Processed {i:,} video(s). Total comments: {total_comments:,}\r"
         )
         sys.stdout.flush()
         # write intermediary results to jsonlines file
         im.append_jsonlines(COMMENTS_JL_FILE, x)
 
         lres.append(x)
-
-    # else:
-    #     with Pool(processes=nprocess) as pool:
-    #         # res = pool.map(get_comments_list, vids)
-    #         res = pool.imap(get_comments_list, vids)
 
     return sum(lres, [])
 
