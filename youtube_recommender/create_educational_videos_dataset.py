@@ -4,15 +4,15 @@ get videos with is_educational = 't' from db, and extract video descriptions
 save to feather file
 """
 
-
 import argparse
 import logging
 
 import pandas as pd
 from rarc_utils.log import setup_logger
 from rarc_utils.sqlalchemy_base import get_session
-from sqlalchemy.future import select  # type: ignore[import]
-from youtube_recommender.db.models import Video, psql
+# from sqlalchemy.future import select  # type: ignore[import]
+# from youtube_recommender.db.models import Channel, Video, psql
+from youtube_recommender.db.models import psql
 from youtube_recommender.io_methods import io_methods as im
 from youtube_recommender.settings import EDUCATIONAL_VIDEOS_PATH
 
@@ -35,10 +35,25 @@ parser.add_argument(
 if __name__ == "__main__":
     args = parser.parse_args()
 
-    stmt = select(Video).where(Video.is_educational)
+    # stmt = select(Video).join(Channel).where(Video.is_educational).limit(10)
+    stmt = """
+        SELECT
+            video.*,
+            channel.name AS channel_name,
+            channel.num_subscribers
+        FROM
+            video
+            INNER JOIN channel ON channel.id = video.channel_id
+        WHERE video.is_educational = 't'
+        ORDER BY
+            video.updated DESC
+        LIMIT
+            50000
+    """
 
-    videos = s.execute(stmt).scalars().fetchall()
-    df = pd.DataFrame([v.as_dict() for v in videos])
+    videos = s.execute(stmt).mappings().fetchall()
+    # df = pd.DataFrame([v.as_dict() for v in videos])
+    df = pd.DataFrame(videos)
 
     # save to feather
     if args.save_feather:
