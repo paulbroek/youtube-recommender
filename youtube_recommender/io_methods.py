@@ -61,8 +61,9 @@ class io_methods:
         assert what is not None
         df: pd.DataFrame = pd.read_feather(df_path)
 
-        WHATS = what + "s" if len(df) != 1 else what
-        logger.info(f"loaded {len(df):,} {WHATS} rows from feather")
+        # WHATS = what + "s" if len(df) != 1 else what
+        ROWS = "rows" if len(df) != 1 else "row"
+        logger.info(f"loaded {len(df):,} {what} {ROWS} from feather")
 
         return df
 

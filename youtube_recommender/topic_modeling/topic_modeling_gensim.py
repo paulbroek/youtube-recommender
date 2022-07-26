@@ -1,23 +1,21 @@
-""" 
-extract topic models using spacy
+"""topic_modeling_gensim.py, extract topic models using spacy.
 
 help: 
     https://medium.com/@soorajsubrahmannian/extracting-hidden-topics-in-a-corpus-55b2214fc17d
 
 run:
     cd ~/repos/youtube-recommender
-    ipy youtube-recommender/topic_modelling_gensim.py
+    ipy youtube-recommender/topic_modeling_gensim.py
 """
 
 from functools import partial
+
 import pandas as pd
-
 import spacy
-from gensim import models as gs_models
 from gensim import corpora as gs_corpora
-
+from gensim import models as gs_models
+from settings import CAPTIONS_PATH, SPACY_MODEL
 from utils.nlp import clean_up
-from settings import SPACY_MODEL, CAPTIONS_PATH
 
 # load spacy model and dataset
 nlp = spacy.load(SPACY_MODEL)
