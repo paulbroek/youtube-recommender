@@ -29,6 +29,8 @@ VIDEOS_PATH = DATA_DIR / VIDEOS_FILE
 
 EDUCATIONAL_VIDEOS_FILE = "educational_videos.feather"
 EDUCATIONAL_VIDEOS_PATH = DATA_DIR / EDUCATIONAL_VIDEOS_FILE
+MODEL_PATH = EXPORT_DIR / "/educational_video_descriptions.model"
+TOPICS_PATH = EXPORT_DIR / "educational_video_descriptions.feather"
 
 CAPTIONS_FILE = "captions.feather"
 CAPTIONS_PATH = DATA_DIR / CAPTIONS_FILE
