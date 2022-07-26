@@ -32,14 +32,14 @@ Todo:
 
 import argparse
 import logging
-from pathlib import Path
 
 import pandas as pd
 # from sklearn.datasets import fetch_20newsgroups
 from bertopic import BERTopic  # type: ignore[import]
 from rarc_utils.log import setup_logger
 from youtube_recommender.io_methods import io_methods as im
-from youtube_recommender.settings import EDUCATIONAL_VIDEOS_PATH
+from youtube_recommender.settings import (EDUCATIONAL_VIDEOS_PATH, MODEL_PATH,
+                                          TOPICS_PATH)
 from youtube_recommender.topic_modeling.methods import (
     similar_topics_to_search_term, topic_presence_by_channel)
 
@@ -49,10 +49,6 @@ log_fmt = "%(asctime)s - %(module)-16s - %(lineno)-4s - %(funcName)-20s - %(leve
 logger = setup_logger(
     cmdLevel=logging.INFO, saveFile=0, savePandas=1, color=1, fmt=log_fmt
 )
-
-MODEL_PATH = "export/educational_video_descriptions.model"
-TOPICS_PATH = Path("export/educational_video_descriptions.feather")
-
 
 parser = argparse.ArgumentParser(
     description="topic_modeling_bertopic optional parameters"
