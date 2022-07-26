@@ -1,4 +1,4 @@
-"""topic_modeling_bertopic.py.
+"""bertopic_model.py.
 
 Based on:
     https://www.holisticseo.digital/python-seo/topic-modeling/
@@ -6,12 +6,12 @@ Based on:
 
 Run:
     conda activate py39
-    cd ~/repos/youtube-recommender/youtube-recommender
+    cd ~/repos/youtube-recommender/youtube-recommender/topic_modeling
     # train model and save to feather
-    ipy topic_modeling_bertopic.py -i -- -s
+    ipy bertopic_model.py -i -- -s
 
     # load existing model, topics and probabilities
-    ipy topic_modeling_bertopic.py -i -- -l
+    ipy bertopic_model.py -i -- -l
 
 Caution: 
     - Bertopic doesn't work when number of documents is too low, see:
@@ -51,7 +51,7 @@ logger = setup_logger(
 )
 
 parser = argparse.ArgumentParser(
-    description="topic_modeling_bertopic optional parameters"
+    description="topic_modeling/bertopic_model optional parameters"
 )
 parser.add_argument(
     "-l",

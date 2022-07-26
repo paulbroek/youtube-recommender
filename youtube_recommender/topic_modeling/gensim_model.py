@@ -1,11 +1,11 @@
-"""topic_modeling_gensim.py, extract topic models using spacy.
+"""gensim_model.py, extract topic models using spacy.
 
 help: 
     https://medium.com/@soorajsubrahmannian/extracting-hidden-topics-in-a-corpus-55b2214fc17d
 
 run:
-    cd ~/repos/youtube-recommender
-    ipy youtube-recommender/topic_modeling_gensim.py
+    cd ~/repos/youtube-recommender/youtube-recommender/topic_modeling
+    ipy gensim_model.py
 """
 
 from functools import partial
