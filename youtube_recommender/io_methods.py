@@ -3,7 +3,7 @@
 import logging
 import os
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import jsonlines
 import pandas as pd
@@ -93,3 +93,17 @@ class io_methods:
         logger.info(f"loaded {len(df):,} {WHATS} rows from pickle")
 
         return df
+
+    @classmethod
+    def save_topics(cls, topics: List[int], probs: List[float], df_path: Path) -> None:
+        """Save topic ids and probabilities to feather."""
+        df = pd.DataFrame(dict(topic=topics, prob=probs))
+        # df.index.name = 'doc'
+        cls.save_feather(df, df_path, what="topic")
+
+    @classmethod
+    def load_topics(cls, df_path: Path) -> Tuple[List[int], List[float]]:
+        """Load topic ids and probabilities from feather."""
+        df = cls.load_feather(df_path, what="topic")
+
+        return df.topic.to_list(), df.prob.to_list()
