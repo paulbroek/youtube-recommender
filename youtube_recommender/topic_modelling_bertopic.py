@@ -28,11 +28,11 @@ Todo:
 
 import argparse
 import logging
+from pathlib import Path
 
 import pandas as pd
 # from sklearn.datasets import fetch_20newsgroups
 from bertopic import BERTopic  # type: ignore[import]
-from path import Path
 from rarc_utils.log import setup_logger
 from youtube_recommender.io_methods import io_methods as im
 from youtube_recommender.settings import EDUCATIONAL_VIDEOS_PATH
