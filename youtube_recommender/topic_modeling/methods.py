@@ -7,7 +7,7 @@ from bertopic import BERTopic
 logger = logging.getLogger(__name__)
 
 
-def similar_topics_to_search_term(
+def similar_topics_to_word(
     model: BERTopic, info: pd.DataFrame, search_term: str, top_n=5
 ) -> pd.DataFrame:
     """Find and sort by similar topics to a certain word.
@@ -24,18 +24,23 @@ def similar_topics_to_search_term(
     return df
 
 
-def topic_presence_by_channel(model: BERTopic, info: pd.DataFrame, doc_to_channel: Dict[str, Any]) -> pd.DataFrame:
+def topic_presence_by(
+    model: BERTopic,
+    info: pd.DataFrame,
+    doc_to: Dict[str, Any],
+    by="channel",
+) -> pd.DataFrame:
     """Find which channels cover a topic mostly.
 
     Usage:
-        df = topic_presence_by_channel(topic_model, info, doc_to_channel=doc_to_channel_name)
+        df = topic_presence_by(topic_model, info, doc_to=doc_to_channel_name, by="channel")
     """
     df = info.copy()
     df["representative_docs"] = df.Topic.map(model.get_representative_docs)
     df["nrepresentative_docs"] = df["representative_docs"].map(len)
     # returns always 3 docs. not enough?
-    df["representative_channels"] = df["representative_docs"].map(
-        lambda x: [doc_to_channel.get(y, None) for y in x]
+    df[f"representative_{by}s"] = df["representative_docs"].map(
+        lambda x: [doc_to.get(y, None) for y in x]
     )
     # doc_to_channel_id
 
