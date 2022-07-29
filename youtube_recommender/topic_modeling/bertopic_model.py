@@ -40,8 +40,8 @@ from rarc_utils.log import setup_logger
 from youtube_recommender.io_methods import io_methods as im
 from youtube_recommender.settings import (EDUCATIONAL_VIDEOS_PATH, MODEL_PATH,
                                           TOPICS_PATH)
-from youtube_recommender.topic_modeling.methods import (
-    similar_topics_to_search_term, topic_presence_by_channel)
+from youtube_recommender.topic_modeling.methods import (similar_topics_to_word,
+                                                        topic_presence_by)
 
 # CAPTIONS_PATH
 
@@ -96,10 +96,11 @@ if __name__ == "__main__":
         f"this model uses {len(info):,} topics, derived from {len(docs):,} documents"
     )
 
-    most_similar = similar_topics_to_search_term(topic_model, info, "cloud", top_n=5)
+    most_similar = similar_topics_to_word(topic_model, info, "cloud", top_n=5)
 
     # extract the channel names that cover certain topics most
-    df = topic_presence_by_channel(topic_model, info, doc_to_channel_name) # doc_to_channel_id
+    df = topic_presence_by(topic_model, info, doc_to_channel_name, by="channel")
+    # doc_to_channel_id
 
     # todo: use dataset hash to determine if data changed, add a different model id to the file path
     if args.save_model and not args.load_model:
