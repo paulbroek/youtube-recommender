@@ -162,7 +162,9 @@ class Video(Base, UtilityBase):
     keywords = relationship(
         "Keyword", uselist=True, secondary=video_keyword_association, lazy="selectin"
     )
-    comments = relationship("Comment", uselist=True, back_populates="video", lazy="selectin")
+    comments = relationship(
+        "Comment", uselist=True, back_populates="video", lazy="selectin"
+    )
     is_educational = Column(Boolean)
 
     channel_id = Column(String, ForeignKey("channel.id"), nullable=False)
@@ -236,7 +238,7 @@ class Chapter(Base, UtilityBase):
             self.start,
             self.end,
             # self.length(),
-            0.00
+            0.00,
         )
 
     def length(self):
@@ -282,14 +284,26 @@ class Channel(Base, UtilityBase):
     nvideo = Column(Integer, nullable=True, unique=False)
     created = Column(DateTime, server_default=func.now())  # current_timestamp()
     updated = Column(DateTime, server_default=func.now(), onupdate=func.now())
+    last_scrape = Column(DateTime)
 
     # add this so that it can be accessed
     __mapper_args__ = {"eager_defaults": True}
 
     def __repr__(self):
-        return "Channel(id={}, name={}, nvideo={}, num_subscribers={})".format(
-            self.id, self.name, self.nvideo, self.num_subscribers
+        return "Channel(id={}, name={}, nvideo={}, num_subscribers={}, last_scrape={})".format(
+            self.id,
+            self.name,
+            self.nvideo,
+            self.num_subscribers,
+            self.last_scrape_ago(),
         )
+
+    def last_scrape_ago(self) -> str:
+        res: str = ""
+        if self.last_scrape is not None:
+            res = timeago.format(self.last_scrape, datetime.utcnow())
+
+        return res
 
     def as_dict(self) -> dict:
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
@@ -321,12 +335,14 @@ class Comment(Base, UtilityBase):
     __mapper_args__ = {"eager_defaults": True}
 
     def __repr__(self):
-        return "Comment(id={}, text={}, votes={:,}, channel_name={}, video_id={})".format(
-            self.id,
-            trunc_msg(self.text, 40),
-            self.votes,
-            self.channel.name,
-            self.video_id,
+        return (
+            "Comment(id={}, text={}, votes={:,}, channel_name={}, video_id={})".format(
+                self.id,
+                trunc_msg(self.text, 40),
+                self.votes,
+                self.channel.name,
+                self.video_id,
+            )
         )
 
     def as_dict(self) -> dict:

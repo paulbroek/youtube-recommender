@@ -17,13 +17,15 @@ from time import time
 from typing import Any, Dict, List
 
 import pandas as pd
-from pytube import Channel, YouTube  # type: ignore[import]
+from pytube import Channel as pytube_channel  # type: ignore[import]
+from pytube import YouTube  # type: ignore[import]
 # from pytube import Playlist, Search
 from rarc_utils.log import setup_logger
 from rarc_utils.sqlalchemy_base import get_async_session
 from youtube_recommender.data_methods import data_methods as dm
 # from youtube_recommender.db.helpers import (
 #     get_keyword_association_rows_by_ids, get_video_ids_by_ids)
+from youtube_recommender.db.helpers import get_video_ids_by_channel_ids
 from youtube_recommender.db.models import psql
 from youtube_recommender.settings import PYTUBE_VIDEOS_PATH
 from youtube_recommender.video_finder import load_feather, save_feather
@@ -77,7 +79,7 @@ def extract_channel_fields(
     """Extract selected fields from Channel object."""
     assert isinstance(url, str)
 
-    chan = Channel(url)
+    chan = pytube_channel(url)
     res = {}
     # slow?
     for field in fields:
@@ -175,6 +177,12 @@ parser.add_argument(
     help="Max items to keep from channel",
 )
 parser.add_argument(
+    "--only_new",
+    action="store_true",
+    default=False,
+    help="only scrape video ids that are not seen in db",
+)
+parser.add_argument(
     "--load",
     action="store_true",
     default=False,
@@ -216,17 +224,12 @@ if __name__ == "__main__":
     # yt = YouTube(url, use_oauth=True, allow_oauth_cache=True)
     # yt = YouTube(url)
 
-    # get list of videos by Channel
-    # channel_url = "https://www.youtube.com/c/DaltonMabery"
-    # channel_url = "https://www.youtube.com/channel/UCPZUQqtVDmcjm4NY5FkzqLA"
-    # urls = Channel(channel_url)
-
     # todo: load cannot be used to push items, since object relation to db is lost
     if args.load:
         df = load_feather(PYTUBE_VIDEOS_PATH)
 
     else:
-        vurls = Channel(args.channel_url)
+        vurls = pytube_channel(args.channel_url)
 
         # slow call to urls.len?
         # logger.info(f"this channel has {len(vurls):,} videos")
@@ -235,8 +238,24 @@ if __name__ == "__main__":
             raise IndexError(f"{nskip=:,} should be smaller than {len(vurls)=:,}")
 
         last_item = min(last_item, len(vurls))
-
         sel_vurls = vurls[nskip:last_item]
+
+        # filter vurls based on video_ids in db
+        if args.only_new:
+            existing_video_ids = loop.run_until_complete(
+                get_video_ids_by_channel_ids(async_session, [vurls.channel_id])
+            )
+            vurl_df = pd.DataFrame(dict(url=vurls))
+            vurl_df["video_id"] = vurl_df.url.str.split("\?v=").map(lambda x: x[-1])
+            new_vurls = vurl_df[~vurl_df.video_id.isin(existing_video_ids)]
+
+            if new_vurls.empty:
+                logger.warning(f"nothing to do for channel={args.channel_url}")
+                sys.exit()
+
+            else:
+                sel_vurls = new_vurls.url.to_list()
+
         vres = mp_extract_videos(sel_vurls, nprocess=ncore)
         cres = mp_extract_channels(vres, nprocess=ncore)
         vdf = pd.DataFrame(vres)
