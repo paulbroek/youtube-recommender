@@ -246,7 +246,7 @@ if __name__ == "__main__":
                 get_video_ids_by_channel_ids(async_session, [vurls.channel_id])
             )
             vurl_df = pd.DataFrame(dict(url=vurls))
-            vurl_df["video_id"] = vurl_df.url.str.split("\?v=").map(lambda x: x[-1])
+            vurl_df["video_id"] = vurl_df.url.str.split(r"\?v=").map(lambda x: x[-1])
             new_vurls = vurl_df[~vurl_df.video_id.isin(existing_video_ids)]
 
             if new_vurls.empty:

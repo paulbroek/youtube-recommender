@@ -63,17 +63,16 @@ Show materialized views using:
 """
 import argparse
 import asyncio
-import configparser
 import logging
 import uuid
 from datetime import datetime, time
-from pathlib import Path
 
 import timeago  # type: ignore[import]
 from rarc_utils.log import loggingLevelNames, set_log_level, setup_logger
-from rarc_utils.misc import AttrDict, trunc_msg
+from rarc_utils.misc import trunc_msg
 from rarc_utils.sqlalchemy_base import (UtilityBase, async_main, get_async_db,
-                                        get_async_session, get_session)
+                                        get_async_session, get_session,
+                                        load_config)
 from sqlalchemy import (Boolean, Column, DateTime, Float, ForeignKey, Integer,
                         Interval, LargeBinary, String, UniqueConstraint, func)
 from sqlalchemy.dialects.postgresql import UUID
@@ -87,24 +86,7 @@ LOG_FMT = "%(asctime)s - %(module)-16s - %(lineno)-4s - %(funcName)-16s - %(leve
 Base = declarative_base()
 
 
-def load_config():
-    """Load config.
-
-    ugly way of retrieving postgres cfg file
-    """
-    p = Path(config_dir.__file__)
-    cfgFile = p.with_name("postgres.cfg")
-
-    parser = configparser.ConfigParser()
-    parser.read(cfgFile)
-    assert "psql" in parser, f"'psql' not in {cfgFile=}"
-    psql = AttrDict(parser["psql"])
-    assert psql["db"] == "youtube"  # do not overwrite existing other db
-
-    return psql
-
-
-psql = load_config()
+psql = load_config(db_name="youtube", cfg_file="postgres.cfg", config_dir=config_dir)
 psession = get_session(psql)()
 
 # a video can have multiple keywords, a keyword can belong to multiple videos
