@@ -499,30 +499,30 @@ class queryResult(Base, UtilityBase):
 #     return df
 
 
-if __name__ == "__main__":
+CLI = argparse.ArgumentParser()
+CLI.add_argument(
+    "-v",
+    "--verbosity",
+    type=str,
+    default="info",
+    help=f"choose debug log level: {', '.join(loggingLevelNames())}",
+)
+CLI.add_argument(
+    "--create",
+    type=int,
+    default=0,
+    help="create new models (1), or use existing ones (0)",
+)
+CLI.add_argument(
+    "-f",
+    "--force",
+    action="store_true",
+    default=False,
+    help="don't ask for model creation confirmation. \
+        caution: deletes all existing models",
+)
 
-    CLI = argparse.ArgumentParser()
-    CLI.add_argument(
-        "-v",
-        "--verbosity",
-        type=str,
-        default="info",
-        help=f"choose debug log level: {', '.join(loggingLevelNames())}",
-    )
-    CLI.add_argument(
-        "--create",
-        type=int,
-        default=0,
-        help="create new models (1), or use existing ones (0)",
-    )
-    CLI.add_argument(
-        "-f",
-        "--force",
-        action="store_true",
-        default=False,
-        help="don't ask for model creation confirmation. \
-            caution: deletes all existing models",
-    )
+if __name__ == "__main__":
 
     args = CLI.parse_args()
 
