@@ -13,14 +13,14 @@ FROM
 LIMIT
     3;
 -- select most frequent used keywords
-select
+SELECT
     keyword_id,
     keyword.name,
     count(keyword_id)
-from
+FROM
     video_keyword_association vka
     INNER JOIN keyword ON vka.keyword_id = keyword.id
-group by
+GROUP BY 
     keyword_id,
     keyword.name
 ORDER BY

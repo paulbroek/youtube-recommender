@@ -1,17 +1,10 @@
 r"""Youtube-recommender SQLAlchemy models.
 
-creating a data model for any type of messages / tasks, ordering them by priority, sending reminders to a variety of sources, ...
-
-based on:
-    https://docs.sqlalchemy.org/en/14/orm/extensions/asyncio.html
-
-create database 'youtube' in psql (command line tool for postgres):
-    (go inside psql) docker exec -it trade-postgres bash -c 'psql -U postgres -W'   ENTER PASSWORD, see file: trade/docker-compose-trade.yml
-
+create database `youtube` in psql / pgcli:
     CREATE DATABASE "youtube";
 
 now connect using:
-    docker exec -it trade-postgres bash -c 'psql youtube -U postgres'
+    docker exec -it postgres-master bash -c 'psql youtube -U postgres'
 
 create some tables using (from ./rarc/rarc directory):
     ipy -m youtube_recommender.db.models -- --create 0
