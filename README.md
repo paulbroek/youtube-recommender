@@ -16,10 +16,10 @@ Extends on [this](https://github.com/chris-lovejoy/YouTube-video-finder) repo, b
 - [x] Make package installable
 - [x] Also cache load captions in `topicer/__main__.py`
 - [x] Reconstruct videos tables from cache results
-- [ ] Save favourite channels to channels.json, for easy reconstruction of db
-- [ ] Containerize the application
+- [x] Save favourite channels to channels.json, for easy reconstruction of db
+- [x] Containerize the application
 - [ ] Run tests in GitHub Actions
-- [ ] Create fastAPI api to retrieve this data
+- [x] Create fastAPI api to retrieve this data
 - [ ] Create job to collect search results for popular/personal search terms, in order not to exceed API quota (10_000 units/day, [extend quota here](https://support.google.com/youtube/contact/yt_api_form))
 - [x] Export personal watch history from YouTube
 - [x] Extract personal watch history from YouTube export file, is all metadata accessible?

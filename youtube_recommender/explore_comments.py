@@ -53,7 +53,6 @@ def comments_by_vids(video_ids: List[str]):
     )
 
 
-
 parser = argparse.ArgumentParser(description="Define get_coments parameters")
 parser.add_argument(
     "--video_ids",

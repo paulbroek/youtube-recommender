@@ -152,6 +152,33 @@ ORDER BY
 LIMIT 
     100000 WITH DATA;
 
+-- view top views, can be used for videos that didn't scrape comments yet
+DROP MATERIALIZED VIEW top_videos;
+CREATE MATERIALIZED VIEW top_videos AS
+SELECT
+    video.id AS video_id,
+    channel.id AS channel_id,
+    channel.name AS channel_name,
+    video.title,
+    video.views,
+    video.length,
+    video.nchapter
+FROM
+    (
+        SELECT video.*, COUNT(chapter.video_id) AS nchapter from chapter INNER JOIN video ON video.id = chapter.video_id GROUP BY video.id
+    ) video
+        INNER JOIN channel ON video.channel_id = channel.id
+GROUP BY
+    video.id,
+    video.title,
+    video.views,
+    video.length,
+    channel.id,
+    video.nchapter
+ORDER BY
+    views DESC
+LIMIT 
+    90000 WITH DATA;
 
 -- todo: rewrite without having to groupby so many ids
 -- view videos with most comments
@@ -186,7 +213,7 @@ GROUP BY
 ORDER BY
     ncomment DESC
 LIMIT 
-    10000 WITH DATA;
+    90000 WITH DATA;
 
 -- view top channels
 DROP MATERIALIZED VIEW top_channels;
@@ -212,6 +239,7 @@ SELECT DISTINCT
     channel.name AS channel_name,
     channel.id AS channel_id,
     COUNT(DISTINCT video.id) AS video_count,
+    SUM(video.views) AS total_views,
     COUNT(comment.id) AS comment_count
     -- summing here creates duplicate sums
     -- SUM(video.views) AS total_views,
@@ -228,7 +256,7 @@ GROUP BY
 ORDER BY
     video_count DESC
 LIMIT
-    100;
+    200;
 
 -- view top keywords
 DROP MATERIALIZED VIEW top_keywords;

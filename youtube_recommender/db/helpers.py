@@ -179,6 +179,20 @@ async def get_video_ids_by_ids(asession, video_ids: List[VideoId]) -> List[Video
     return video_ids
 
 
+async def get_top_videos_by_channel_ids(
+    asession, channel_ids: List[ChannelId]
+) -> pd.DataFrame:
+    """Get top videos by channel ids."""
+    async with asession() as session:
+        fmt_ids = "'{0}'".format("', '".join(channel_ids))
+        query = """SELECT * FROM top_videos WHERE channel_id IN ({});""".format(fmt_ids)
+        res = await session.execute(query)
+
+        instances = res.fetchall()
+
+    return pd.DataFrame(instances)
+
+
 async def get_videos_by_ids(asession, video_ids: List[VideoId]):
     """Get Videos by video_ids."""
     async with asession() as session:
@@ -247,7 +261,24 @@ async def get_channels_by_video_ids(
     return {c.id: c for c in channels}
 
 
+async def get_top_channels_with_comments(asession, dropna=False) -> pd.DataFrame:
+    """Get top channels from materialized view."""
+    query = """SELECT * FROM top_channels_with_comments;"""
+
+    async with asession() as session:
+        res = await session.execute(query)
+
+        rows: List[dict] = res.fetchall()
+
+    df = pd.DataFrame(rows)
+    if dropna:
+        df = df.dropna()
+
+    return df
+
+
 async def get_comments_by_popularity():
+    """Get comments by popularity."""
     raise NotImplementedError
 
 

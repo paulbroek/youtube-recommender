@@ -15,8 +15,7 @@ from yapic import json  # type: ignore[import]
 from .core.types import (CaptionRec, ChannelId, ChannelRec, ChapterRec,
                          CommentId, CommentRec, TableTypes, VideoId, VideoRec)
 from .db.helpers import (chapter_locations_to_df, compress_caption,
-                         create_many_items, find_chapter_locations,
-                         get_channels_by_video_ids)
+                         create_many_items, find_chapter_locations)
 from .db.models import (Caption, Channel, Chapter, Comment, Keyword, Video,
                         queryResult)
 from .settings import YOUTUBE_CHANNEL_PREFIX, YOUTUBE_VIDEO_PREFIX
