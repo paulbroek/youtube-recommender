@@ -26,3 +26,8 @@ services:
     image: scylladb/scylla
     container_name: some-scylla5
     command: --seeds=some-scylla
+
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"

@@ -1,13 +1,20 @@
 """channel_lists.py.
 
 Example visualization using Streamlit
+
+Uses redis aiocache, so don't forget to run:
+
+    cd ~/repos/youtube-recommender
+    docker-compose up -d redis
 """
 import asyncio
 import logging
 
+import numpy as np
 import pandas as pd
 import requests
 import streamlit as st
+from rarc_utils.misc import timeago_series
 # from rarc_utils.log import setup_logger
 from rarc_utils.sqlalchemy_base import get_async_session, get_session
 from youtube_recommender import config as config_dir
@@ -46,6 +53,10 @@ def some_method():
 async def main():
 
     df = await get_top_channels_with_comments(async_session, dropna=True)
+    df["last_updated"] = pd.to_datetime(df.last_updated)
+    df["last_updated_ago"] = pd.to_datetime(df.last_updated)
+
+    df[["last_updated_ago"]] = df[["last_updated"]].apply(timeago_series, axis=0)
 
     title = st.text_input("Movie title", "Life of Brian")
     st.write("The current movie title is", title)
@@ -74,13 +85,24 @@ async def main():
     ## Top videos by channel
     """
 
-    option = st.selectbox("Select channel name:", df.channel_name.to_list())
+    # display channel_name (total_views)
+    # channel_name_to_views = {"Traversy Media": 200}
+    channel_views = dict(zip(df.channel_name, df.video_count))
+    channel_updated_ago = dict(zip(df.channel_name, df.last_updated_ago))
+    option = st.selectbox(
+        "Select channel name:",
+        df.channel_name.to_list(),
+        format_func=lambda x: f"{x} ({channel_views[x]}, {channel_updated_ago[x]})",
+    )
 
     channel_id = extract_channel_id(df, option)
     st.write("You selected:", option, ", channel_id: ", channel_id)
-    dfc = await get_top_videos_by_channel_ids(async_session, channel_ids=[channel_id])
+    rows = await get_top_videos_by_channel_ids(async_session, channel_ids=[channel_id])
+    # dfc = pd.DataFrame(rows)
+    dfc = rows
+    dfc["minute_len"] = np.round(dfc["length"] / 60, 1)
     if not dfc.empty:
-        st.dataframe(dfc.drop(["channel_id"], axis=1))
+        st.dataframe(dfc.drop(["channel_id"], axis=1), width=1200)
     else:
         st.write("empty dataframe")
 

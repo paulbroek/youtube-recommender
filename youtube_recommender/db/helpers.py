@@ -9,6 +9,9 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
+from aiocache import Cache, cached  # type: ignore[import]
+from aiocache.serializers import JsonSerializer  # type: ignore[import]
+from aiocache.serializers import PickleSerializer
 from rarc_utils.sqlalchemy_base import add_many, create_many
 from sqlalchemy import and_
 from sqlalchemy.future import select  # type: ignore[import]
@@ -23,6 +26,8 @@ time_pattern = re.compile(r"(\d+:\d+:\d+)(.+)")
 # a group with time pattern and (hopefully) the name of the chapter, might leave orphaned ']'  or ')' bracket
 # removing this remainder bracket, use a replace pattern for now
 replace_pat = re.compile(r"^[\]|\)-]+")
+
+# cache = Cache(Cache.REDIS, serializer=JsonSerializer())
 
 
 def parse_time(row, levels=("seconds", "minutes", "hours")) -> Optional[timedelta]:
@@ -179,19 +184,27 @@ async def get_video_ids_by_ids(asession, video_ids: List[VideoId]) -> List[Video
     return video_ids
 
 
+# @cached(ttl=None, cache=cache)
 async def get_top_videos_by_channel_ids(
     asession, channel_ids: List[ChannelId]
 ) -> pd.DataFrame:
+# ) -> List[dict]:
     """Get top videos by channel ids."""
-    async with asession() as session:
-        fmt_ids = "'{0}'".format("', '".join(channel_ids))
-        query = """SELECT * FROM top_videos WHERE channel_id IN ({});""".format(fmt_ids)
-        res = await session.execute(query)
 
-        instances = res.fetchall()
+    @cached(ttl=None, cache=Cache.REDIS, serializer=PickleSerializer())
+    async def inner(channel_ids=channel_ids):
+        async with asession() as session:
+            fmt_ids = "'{0}'".format("', '".join(channel_ids))
+            query = """SELECT * FROM top_videos WHERE channel_id IN ({});""".format(fmt_ids)
+            res = await session.execute(query)
 
-    return pd.DataFrame(instances)
+            rows: List[dict] = res.fetchall()
+            logger.info(f"fetched {len(rows):,} rows from db")
 
+        # return rows
+        return pd.DataFrame(rows)
+
+    return await inner(channel_ids)
 
 async def get_videos_by_ids(asession, video_ids: List[VideoId]):
     """Get Videos by video_ids."""

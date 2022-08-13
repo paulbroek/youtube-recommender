@@ -165,7 +165,7 @@ SELECT
     video.nchapter
 FROM
     (
-        SELECT video.*, COUNT(chapter.video_id) AS nchapter from chapter INNER JOIN video ON video.id = chapter.video_id GROUP BY video.id
+        SELECT video.*, COUNT(chapter.video_id) AS nchapter from chapter FULL OUTER JOIN video ON video.id = chapter.video_id GROUP BY video.id
     ) video
         INNER JOIN channel ON video.channel_id = channel.id
 GROUP BY
@@ -199,7 +199,7 @@ SELECT
     video.nchapter
 FROM
     (
-        SELECT video.*, COUNT(chapter.video_id) AS nchapter from chapter INNER JOIN video ON video.id = chapter.video_id GROUP BY video.id
+        SELECT video.*, COUNT(chapter.video_id) AS nchapter from chapter FULL OUTER JOIN video ON video.id = chapter.video_id GROUP BY video.id
     ) video
         INNER JOIN channel ON video.channel_id = channel.id
         INNER JOIN comment ON video.id = comment.video_id
@@ -240,7 +240,8 @@ SELECT DISTINCT
     channel.id AS channel_id,
     COUNT(DISTINCT video.id) AS video_count,
     SUM(video.views) AS total_views,
-    COUNT(comment.id) AS comment_count
+    COUNT(comment.id) AS comment_count,
+    MAX(video.updated) AS last_updated
     -- summing here creates duplicate sums
     -- SUM(video.views) AS total_views,
     -- LPAD(TO_CHAR(SUM(video.views), 'fm999G999G999G999'), 15) AS total_views_fmt

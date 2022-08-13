@@ -13,3 +13,5 @@ pytube
 youtube_comment_downloader
 spacytextblob
 cqlengine
+aiocache
+aioredis==1.3.1
