@@ -190,7 +190,7 @@ async def get_top_videos_by_channel_ids(
 ) -> pd.DataFrame:
 # ) -> List[dict]:
     """Get top videos by channel ids."""
-
+    # todo: I use inner method to only cache `channel_ids`, is there a work around for this?
     @cached(ttl=None, cache=Cache.REDIS, serializer=PickleSerializer())
     async def inner(channel_ids=channel_ids):
         async with asession() as session:
