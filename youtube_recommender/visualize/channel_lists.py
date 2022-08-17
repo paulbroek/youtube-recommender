@@ -92,7 +92,7 @@ async def main():
     option = st.selectbox(
         "Select channel name:",
         df.channel_name.to_list(),
-        format_func=lambda x: f"{x} ({channel_views[x]}, {channel_updated_ago[x]})",
+        format_func=lambda x: f"{x} ({channel_views[x]} videos, updated {channel_updated_ago[x]})",
     )
 
     channel_id = extract_channel_id(df, option)

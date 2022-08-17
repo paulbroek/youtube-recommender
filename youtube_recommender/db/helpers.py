@@ -10,8 +10,7 @@ from typing import Any, Dict, List, Optional
 import numpy as np
 import pandas as pd
 from aiocache import Cache, cached  # type: ignore[import]
-from aiocache.serializers import JsonSerializer  # type: ignore[import]
-from aiocache.serializers import PickleSerializer
+from aiocache.serializers import PickleSerializer  # type: ignore[import]
 from rarc_utils.sqlalchemy_base import add_many, create_many
 from sqlalchemy import and_
 from sqlalchemy.future import select  # type: ignore[import]

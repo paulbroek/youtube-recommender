@@ -28,6 +28,7 @@ services:
     command: --seeds=some-scylla
 
   redis:
+    restart: unless-stopped
     image: redis
     ports:
       - "6379:6379"
