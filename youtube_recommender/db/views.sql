@@ -162,7 +162,8 @@ SELECT
     video.title,
     video.views,
     video.length,
-    video.nchapter
+    video.nchapter,
+    LENGTH(video.description) AS dlen
 FROM
     (
         SELECT video.*, COUNT(chapter.video_id) AS nchapter from chapter FULL OUTER JOIN video ON video.id = chapter.video_id GROUP BY video.id
@@ -174,7 +175,8 @@ GROUP BY
     video.views,
     video.length,
     channel.id,
-    video.nchapter
+    video.nchapter,
+    video.description
 ORDER BY
     views DESC
 LIMIT 

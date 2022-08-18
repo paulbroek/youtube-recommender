@@ -106,6 +106,9 @@ async def main():
     else:
         st.write("empty dataframe")
 
+    # todo: show topics per channel
+    # or select a custom list of videos, and extract topics, to see the performance of the model in action
+
 
 if __name__ == "__main__":
     loop = asyncio.new_event_loop()
