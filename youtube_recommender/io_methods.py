@@ -41,6 +41,14 @@ class io_methods:
         return df
 
     @staticmethod
+    def load_json(path: Path) -> pd.DataFrame:
+        """Load json file and parse to dataframe."""
+        df: pd.DataFrame = pd.read_json(path)
+        logger.info(f"read {len(df):,} lines")
+
+        return df    
+
+    @staticmethod
     def save_feather(
         df: pd.DataFrame, df_path: Path, what: Optional[str] = None
     ) -> None:

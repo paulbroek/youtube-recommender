@@ -17,6 +17,8 @@ youtube_recommender/db/alembic/versions
 *.pickle
 scylla.yaml
 *.model
+youtube_recommender/data/search-history.json
+youtube_recommender/data/watch-history.json
 
 # C extensions
 *.so
