@@ -6,6 +6,9 @@ Uses redis aiocache, so don't forget to run:
 
     cd ~/repos/youtube-recommender
     docker-compose up -d redis
+
+Run:
+    streamlit run channel_lists.py
 """
 import asyncio
 import logging
