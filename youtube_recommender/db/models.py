@@ -10,6 +10,10 @@ create some tables using (from ./rarc/rarc directory):
     ipy -m youtube_recommender.db.models -- --create 0
     ipy -m youtube_recommender.db.models -- --create 1 -f  (create without asking for confirmation to delete existing models, use with caution)
 
+    # use a different configuration file, for instance when auto scraping videos and channel, I use:
+    # make sure to copy all cfg files to package dir: cp ~/repos/youtube-recommender/youtube_recommender/config/postgres.cfg* /home/paul/anaconda3/envs/py39/lib/python3.9/site-packages/youtube_recommender/config/
+    ipy -m youtube_recommender.db.models -- --create 1 --cfg_file postgres.cfg.auto
+
 list data:
     ipython --no-confirm-exit ~/repos/youtube/youtube/models.py -i -- --create 0
 
@@ -77,10 +81,6 @@ from youtube_recommender import config as config_dir
 LOG_FMT = "%(asctime)s - %(module)-16s - %(lineno)-4s - %(funcName)-16s - %(levelname)-7s - %(message)s"  # title
 
 Base = declarative_base()
-
-
-psql = load_config(db_name="youtube", cfg_file="postgres.cfg", config_dir=config_dir)
-psession = get_session(psql)()
 
 # a video can have multiple keywords, a keyword can belong to multiple videos
 video_keyword_association = Table(
@@ -501,6 +501,12 @@ CLI.add_argument(
     help=f"choose debug log level: {', '.join(loggingLevelNames())}",
 )
 CLI.add_argument(
+    "--cfg_file",
+    type=str,
+    default="postgres.cfg",
+    help="choose a configuration file",
+)
+CLI.add_argument(
     "--create",
     type=int,
     default=0,
@@ -518,6 +524,14 @@ CLI.add_argument(
 if __name__ == "__main__":
 
     args = CLI.parse_args()
+
+    psql = load_config(
+        db_name="youtube",
+        cfg_file=args.cfg_file,
+        config_dir=config_dir,
+        starts_with=True,
+    )
+    psession = get_session(psql)()
 
     async_session = get_async_session(psql)
     async_db = get_async_db(psql)()
