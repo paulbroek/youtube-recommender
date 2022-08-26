@@ -38,8 +38,9 @@ CAPTIONS_PATH = DATA_DIR / CAPTIONS_FILE
 PYTUBE_VIDEOS_FILE = "pytube_videos.feather"
 PYTUBE_VIDEOS_PATH = DATA_DIR / PYTUBE_VIDEOS_FILE
 
-WATCH_HISTORY_FILE = DATA_DIR / "watch-history.json"
-SEARCH_HISTORY_FILE = DATA_DIR / "search-history.json"
+WATCH_HISTORY_JSON = DATA_DIR / "watch-history.json"
+WATCH_HISTORY_FEATHER = DATA_DIR / "watch-history.feather"
+SEARCH_HISTORY_JSON = DATA_DIR / "search-history.json"
 
 CHAPTERS_JL_FILE = EXPORT_DIR / "chapters.jl"
 

@@ -12,12 +12,16 @@ Todo:
     - Also use file `search-history.json`, can give more info of user's interests
 
 Run:
-    ipy explore_history.py
+    # load raw json dataset, directly from Google Takeout
+    ipy explore_history.py -- -t json
+    # load dataset with scraped YouTube channels using pytube
+    ipy explore_history.py -- -t feather
 
     scrape channels for your watch history:
         df_watch = scrape_channels(df_watch)
 """
 
+import argparse
 import logging
 from typing import Optional
 
@@ -27,8 +31,9 @@ from pytube import YouTube  # type: ignore[import]
 from pytube.exceptions import RegexMatchError  # type: ignore[import]
 from tqdm import tqdm  # type: ignore[import]
 from youtube_recommender.io_methods import io_methods as im
-from youtube_recommender.settings import (SEARCH_HISTORY_FILE,
-                                          WATCH_HISTORY_FILE)
+from youtube_recommender.settings import (SEARCH_HISTORY_JSON,
+                                          WATCH_HISTORY_FEATHER,
+                                          WATCH_HISTORY_JSON)
 
 logger = logging.getLogger(__name__)
 
@@ -68,9 +73,9 @@ def parse_search_history(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def load_watch_history() -> pd.DataFrame:
-    """Load watch history."""
-    df: pd.DataFrame = im.load_json(WATCH_HISTORY_FILE)
+def load_watch_history_json() -> pd.DataFrame:
+    """Load watch history json."""
+    df: pd.DataFrame = im.load_json(WATCH_HISTORY_JSON)
     df = parse_watch_history(df)
 
     return df
@@ -78,10 +83,23 @@ def load_watch_history() -> pd.DataFrame:
 
 def load_search_history() -> pd.DataFrame:
     """Load search history."""
-    df: pd.DataFrame = im.load_json(SEARCH_HISTORY_FILE)
+    df: pd.DataFrame = im.load_json(SEARCH_HISTORY_JSON)
     df = parse_search_history(df)
 
     return df
+
+
+def load_watch_history_feather() -> pd.DataFrame:
+    """Load watch history feather."""
+    df: pd.DataFrame = pd.read_feather(WATCH_HISTORY_FEATHER)
+    df = parse_watch_history(df)
+
+    return df
+
+
+def save_watch_history_feather(df: pd.DataFrame) -> None:
+    """Save watch history."""
+    df.reset_index().drop(["datetime"], axis=1).to_feather(WATCH_HISTORY_FEATHER)
 
 
 def most_viewed_videos(df: pd.DataFrame) -> pd.DataFrame:
@@ -163,8 +181,23 @@ def scrape_channels(df: pd.DataFrame):
     return df
 
 
+parser = argparse.ArgumentParser(description="explore_history.py cli parameters")
+parser.add_argument(
+    "-t",
+    "--file_type",
+    type=str,
+    default="json",
+    help="dataset type to load: json / feather",
+)
+
 if __name__ == "__main__":
-    df_watch = load_watch_history()
+    cli_args = parser.parse_args()
+
+    if cli_args.file_type == "json":
+        df_watch = load_watch_history_json()
+    elif cli_args.file_type == "feather":
+        df_watch = load_watch_history_feather()
+
     df_search = load_search_history()
 
     view = most_viewed_videos(df_watch)
