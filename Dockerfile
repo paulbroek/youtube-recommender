@@ -23,9 +23,9 @@ RUN pip install /tmp/
 
 # compile protobufs
 COPY youtube_recommender/scrape_requests /service/scrape_requests/
-WORKDIR /service/scrape_requests/
+WORKDIR /service/scrape_requests
 RUN python -m grpc_tools.protoc -I ../protobufs --python_out=. \
-           --grpc_python_out=. ../protobufs/recommendations.proto
+           --grpc_python_out=. ../protobufs/scrape_requests.proto
 
 # todo: copy config files
 # ...
