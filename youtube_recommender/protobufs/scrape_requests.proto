@@ -31,6 +31,10 @@ message VideoScrapeResult {
     string video_id = 10;
 }
 
+message CommentScrapeResult {
+    string video_id = 1;
+}
+
 message ChannelScrapeResponse {
     repeated ChannelScrapeResult channelScrapeResults = 1;
 }
@@ -39,10 +43,18 @@ message VideoScrapeResponse {
     repeated VideoScrapeResult videoScrapeResults = 1;
 }
 
+message CommentScrapeResponse {
+    repeated CommentScrapeResult commentScrapeResults = 1;
+}
+
 service ChannelScrapings {
     rpc Scrape (ScrapeRequest) returns (ChannelScrapeResponse);
 }
 
 service VideoScrapings {
     rpc Scrape (ScrapeRequest) returns (VideoScrapeResponse);
+}
+
+service CommentScrapings {
+    rpc Scrape (ScrapeRequest) returns (CommentScrapeResponse);
 }

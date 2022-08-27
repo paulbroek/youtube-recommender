@@ -1,3 +1,10 @@
+"""serve.py.
+
+Run:
+    python serve.py
+    python serve.py --max_workers 20
+"""
+import argparse
 from concurrent import futures
 
 import grpc
@@ -6,8 +13,8 @@ from channel_scrape_requests import ChannelScrapeService
 from video_scrape_requests import VideoScrapeService
 
 
-def serve():
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+def serve(max_workers):
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=max_workers))
     scrape_requests_pb2_grpc.add_ChannelScrapingsServicer_to_server(
         ChannelScrapeService(), server
     )
@@ -19,5 +26,14 @@ def serve():
     server.wait_for_termination()
 
 
+parser = argparse.ArgumentParser(description="cli parameters")
+parser.add_argument(
+    "--max_workers",
+    type=int,
+    default=10,
+    help="max_workers / threads",
+)
+
 if __name__ == "__main__":
-    serve()
+    cli_args = parser.parse_args()
+    serve(cli_args.max_workers)
