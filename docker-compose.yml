@@ -36,14 +36,14 @@ services:
   video-scrape:
     build:
       context: .
-
+    command: python /service/scrape_requests/video_scrape_requests.py
     networks:
       - microservices
 
   channel-scrape:
     build:
       context: .
-
+    command: python /service/scrape_requests/channel_scrape_requests.py
     networks:
       - microservices
 
