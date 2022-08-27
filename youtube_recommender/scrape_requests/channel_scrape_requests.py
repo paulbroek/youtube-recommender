@@ -45,7 +45,6 @@ class ChannelScrapeService(scrape_requests_pb2_grpc.ChannelScrapingsServicer):
 
         return ChannelScrapeResponse(channelScrapeResults=results)
 
-
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     scrape_requests_pb2_grpc.add_ChannelScrapingsServicer_to_server(
