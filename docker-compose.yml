@@ -37,6 +37,8 @@ services:
     build:
       context: .
     command: python /service/scrape_requests/video_scrape_requests.py
+    ports:
+      - "50051:50051"
     networks:
       - microservices
 
@@ -44,6 +46,8 @@ services:
     build:
       context: .
     command: python /service/scrape_requests/channel_scrape_requests.py
+    ports:
+      - "50052:50051"
     networks:
       - microservices
 
