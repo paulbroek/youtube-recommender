@@ -216,9 +216,9 @@ if __name__ == "__main__":
 
     assert isinstance(args.channel_url, str), "pass url as string"
 
-    nskip = int(args.skip)
-    nitems = int(args.nitems)
-    ncore = int(args.ncore)
+    nskip: int = int(args.skip)
+    nitems: int = int(args.nitems)
+    ncore: int = int(args.ncore)
 
     # url = "https://www.youtube.com/watch?v=K4xMBckipWM"
     # yt = YouTube(url, use_oauth=True, allow_oauth_cache=True)
@@ -229,16 +229,16 @@ if __name__ == "__main__":
         df = load_feather(PYTUBE_VIDEOS_PATH)
 
     else:
-        vurls = pytube_channel(args.channel_url)
+        vurls: pytube_channel = pytube_channel(args.channel_url)
 
         # slow call to urls.len?
         # logger.info(f"this channel has {len(vurls):,} videos")
-        last_item = nskip + nitems
+        last_item: int = nskip + nitems
         if nskip > len(vurls):
             raise IndexError(f"{nskip=:,} should be smaller than {len(vurls)=:,}")
 
         last_item = min(last_item, len(vurls))
-        sel_vurls = vurls[nskip:last_item]
+        sel_vurls: List[str] = vurls[nskip:last_item]
 
         # filter vurls based on video_ids in db
         if args.only_new:
