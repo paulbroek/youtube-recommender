@@ -36,7 +36,7 @@ services:
   scrape-service:
     build:
       context: .
-    command: python /service/scrape_requests/serve.py
+    command: python /service/scrape_requests/serve.py --max_workers 20
     ports:
       - "50051:50051"
     networks:
