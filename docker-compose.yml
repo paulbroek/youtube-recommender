@@ -32,3 +32,20 @@ services:
     image: redis
     ports:
       - "6379:6379"
+
+  video-scrape:
+    build:
+      context: .
+
+    networks:
+      - microservices
+
+  channel-scrape:
+    build:
+      context: .
+
+    networks:
+      - microservices
+
+networks:
+  microservices:

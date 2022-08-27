@@ -12,16 +12,36 @@ message ScrapeRequest {
     string value = 3;
 }
 
-message ScrapeResult {
-    string id = 1;
-    ScrapeCategory category = 2;
-    bool success = 3;
+message ChannelScrapeResult {
+    string channel_name = 1;
+    string channel_id = 2;
 }
 
-message ScrapeResponse {
-    repeated ScrapeResult scrapeResults = 1;
+message VideoScrapeResult {
+    string title = 1;
+    string channel_id = 2;
+    string channel_url = 3;
+    string description = 4;
+    repeated string keywords = 5;
+    int32 length = 6;
+    float rating = 7;
+    string publish_date = 8;
+    int32 views = 9;
+    string video_id = 10;
 }
 
-service Scrapings {
-    rpc Scrape (ScrapeRequest) returns (ScrapeResponse);
+message ChannelScrapeResponse {
+    repeated ChannelScrapeResult channelScrapeResults = 1;
+}
+
+message VideoScrapeResponse {
+    repeated VideoScrapeResult videoScrapeResults = 1;
+}
+
+service ChannelScrapings {
+    rpc Scrape (ScrapeRequest) returns (ChannelScrapeResponse);
+}
+
+service VideoScrapings {
+    rpc Scrape (ScrapeRequest) returns (VideoScrapeResponse);
 }
