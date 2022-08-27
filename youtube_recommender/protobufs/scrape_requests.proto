@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+enum ScrapeCategory {
+    CHANNEL = 0;
+    VIDEO = 1;
+    COMMENT = 2;
+}
+
+message ScrapeRequest {
+    int32 id = 1;
+    ScrapeCategory category = 2;
+    string value = 3;
+}
+
+message ScrapeResult {
+    string id = 1;
+    ScrapeCategory category = 2;
+    bool success = 3;
+}
+
+message ScrapeResponse {
+    repeated ScrapeResult scrapeResults = 1;
+}
+
+service Scrapings {
+    rpc Scrape (ScrapeRequest) returns (ScrapeResponse);
+}
