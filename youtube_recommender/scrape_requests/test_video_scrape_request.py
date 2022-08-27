@@ -3,7 +3,9 @@ from google.protobuf.json_format import MessageToDict, MessageToJson
 from scrape_requests_pb2 import ScrapeCategory, ScrapeRequest
 from scrape_requests_pb2_grpc import VideoScrapingsStub
 
-channel = grpc.insecure_channel("localhost:50051")
+# host = "localhost"
+host = "192.168.178.46"
+channel = grpc.insecure_channel(f"{host}:50051")
 client = VideoScrapingsStub(channel)
 request = ScrapeRequest(
     id=0,
