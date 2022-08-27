@@ -63,3 +63,25 @@ PSQL_HOURS_AGO = 7 * 24
 HOUR_LIMIT = 99_999_999
 YOUTUBE_VIDEO_PREFIX = "https://www.youtube.com/watch?v="
 YOUTUBE_CHANNEL_PREFIX = "https://www.youtube.com/channel/"
+
+#############################
+##### Scrape attributes #####
+#############################
+
+VIDEO_FIELDS = (
+    "title",
+    "channel_id",
+    "channel_url",
+    "description",
+    "keywords",
+    "length",
+    "rating",
+    "publish_date",
+    "views",
+    "video_id",
+)
+
+CHANNEL_FIELDS = (
+    "title",
+    "channel_id",
+)

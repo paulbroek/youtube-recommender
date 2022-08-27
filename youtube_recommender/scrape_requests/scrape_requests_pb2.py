@@ -15,7 +15,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x15scrape_requests.proto\"M\n\rScrapeRequest\x12\n\n\x02id\x18\x01 \x01(\x05\x12!\n\x08\x63\x61tegory\x18\x02 \x01(\x0e\x32\x0f.ScrapeCategory\x12\r\n\x05value\x18\x03 \x01(\t\"N\n\x0cScrapeResult\x12\n\n\x02id\x18\x01 \x01(\t\x12!\n\x08\x63\x61tegory\x18\x02 \x01(\x0e\x32\x0f.ScrapeCategory\x12\x0f\n\x07success\x18\x03 \x01(\x08\"6\n\x0eScrapeResponse\x12$\n\rscrapeResults\x18\x01 \x03(\x0b\x32\r.ScrapeResult*5\n\x0eScrapeCategory\x12\x0b\n\x07\x43HANNEL\x10\x00\x12\t\n\x05VIDEO\x10\x01\x12\x0b\n\x07\x43OMMENT\x10\x02\x32\x36\n\tScrapings\x12)\n\x06Scrape\x12\x0e.ScrapeRequest\x1a\x0f.ScrapeResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x15scrape_requests.proto\"M\n\rScrapeRequest\x12\n\n\x02id\x18\x01 \x01(\x05\x12!\n\x08\x63\x61tegory\x18\x02 \x01(\x0e\x32\x0f.ScrapeCategory\x12\r\n\x05value\x18\x03 \x01(\t\"?\n\x13\x43hannelScrapeResult\x12\x14\n\x0c\x63hannel_name\x18\x01 \x01(\t\x12\x12\n\nchannel_id\x18\x02 \x01(\t\"\xc9\x01\n\x11VideoScrapeResult\x12\r\n\x05title\x18\x01 \x01(\t\x12\x12\n\nchannel_id\x18\x02 \x01(\t\x12\x13\n\x0b\x63hannel_url\x18\x03 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x04 \x01(\t\x12\x10\n\x08keywords\x18\x05 \x03(\t\x12\x0e\n\x06length\x18\x06 \x01(\x05\x12\x0e\n\x06rating\x18\x07 \x01(\x02\x12\x14\n\x0cpublish_date\x18\x08 \x01(\t\x12\r\n\x05views\x18\t \x01(\x05\x12\x10\n\x08video_id\x18\n \x01(\t\"K\n\x15\x43hannelScrapeResponse\x12\x32\n\x14\x63hannelScrapeResults\x18\x01 \x03(\x0b\x32\x14.ChannelScrapeResult\"E\n\x13VideoScrapeResponse\x12.\n\x12videoScrapeResults\x18\x01 \x03(\x0b\x32\x12.VideoScrapeResult*5\n\x0eScrapeCategory\x12\x0b\n\x07\x43HANNEL\x10\x00\x12\t\n\x05VIDEO\x10\x01\x12\x0b\n\x07\x43OMMENT\x10\x02\x32\x44\n\x10\x43hannelScrapings\x12\x30\n\x06Scrape\x12\x0e.ScrapeRequest\x1a\x16.ChannelScrapeResponse2@\n\x0eVideoScrapings\x12.\n\x06Scrape\x12\x0e.ScrapeRequest\x1a\x14.VideoScrapeResponseb\x06proto3')
 
 _SCRAPECATEGORY = DESCRIPTOR.enum_types_by_name['ScrapeCategory']
 ScrapeCategory = enum_type_wrapper.EnumTypeWrapper(_SCRAPECATEGORY)
@@ -25,8 +25,10 @@ COMMENT = 2
 
 
 _SCRAPEREQUEST = DESCRIPTOR.message_types_by_name['ScrapeRequest']
-_SCRAPERESULT = DESCRIPTOR.message_types_by_name['ScrapeResult']
-_SCRAPERESPONSE = DESCRIPTOR.message_types_by_name['ScrapeResponse']
+_CHANNELSCRAPERESULT = DESCRIPTOR.message_types_by_name['ChannelScrapeResult']
+_VIDEOSCRAPERESULT = DESCRIPTOR.message_types_by_name['VideoScrapeResult']
+_CHANNELSCRAPERESPONSE = DESCRIPTOR.message_types_by_name['ChannelScrapeResponse']
+_VIDEOSCRAPERESPONSE = DESCRIPTOR.message_types_by_name['VideoScrapeResponse']
 ScrapeRequest = _reflection.GeneratedProtocolMessageType('ScrapeRequest', (_message.Message,), {
   'DESCRIPTOR' : _SCRAPEREQUEST,
   '__module__' : 'scrape_requests_pb2'
@@ -34,32 +36,53 @@ ScrapeRequest = _reflection.GeneratedProtocolMessageType('ScrapeRequest', (_mess
   })
 _sym_db.RegisterMessage(ScrapeRequest)
 
-ScrapeResult = _reflection.GeneratedProtocolMessageType('ScrapeResult', (_message.Message,), {
-  'DESCRIPTOR' : _SCRAPERESULT,
+ChannelScrapeResult = _reflection.GeneratedProtocolMessageType('ChannelScrapeResult', (_message.Message,), {
+  'DESCRIPTOR' : _CHANNELSCRAPERESULT,
   '__module__' : 'scrape_requests_pb2'
-  # @@protoc_insertion_point(class_scope:ScrapeResult)
+  # @@protoc_insertion_point(class_scope:ChannelScrapeResult)
   })
-_sym_db.RegisterMessage(ScrapeResult)
+_sym_db.RegisterMessage(ChannelScrapeResult)
 
-ScrapeResponse = _reflection.GeneratedProtocolMessageType('ScrapeResponse', (_message.Message,), {
-  'DESCRIPTOR' : _SCRAPERESPONSE,
+VideoScrapeResult = _reflection.GeneratedProtocolMessageType('VideoScrapeResult', (_message.Message,), {
+  'DESCRIPTOR' : _VIDEOSCRAPERESULT,
   '__module__' : 'scrape_requests_pb2'
-  # @@protoc_insertion_point(class_scope:ScrapeResponse)
+  # @@protoc_insertion_point(class_scope:VideoScrapeResult)
   })
-_sym_db.RegisterMessage(ScrapeResponse)
+_sym_db.RegisterMessage(VideoScrapeResult)
 
-_SCRAPINGS = DESCRIPTOR.services_by_name['Scrapings']
+ChannelScrapeResponse = _reflection.GeneratedProtocolMessageType('ChannelScrapeResponse', (_message.Message,), {
+  'DESCRIPTOR' : _CHANNELSCRAPERESPONSE,
+  '__module__' : 'scrape_requests_pb2'
+  # @@protoc_insertion_point(class_scope:ChannelScrapeResponse)
+  })
+_sym_db.RegisterMessage(ChannelScrapeResponse)
+
+VideoScrapeResponse = _reflection.GeneratedProtocolMessageType('VideoScrapeResponse', (_message.Message,), {
+  'DESCRIPTOR' : _VIDEOSCRAPERESPONSE,
+  '__module__' : 'scrape_requests_pb2'
+  # @@protoc_insertion_point(class_scope:VideoScrapeResponse)
+  })
+_sym_db.RegisterMessage(VideoScrapeResponse)
+
+_CHANNELSCRAPINGS = DESCRIPTOR.services_by_name['ChannelScrapings']
+_VIDEOSCRAPINGS = DESCRIPTOR.services_by_name['VideoScrapings']
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  _SCRAPECATEGORY._serialized_start=240
-  _SCRAPECATEGORY._serialized_end=293
+  _SCRAPECATEGORY._serialized_start=521
+  _SCRAPECATEGORY._serialized_end=574
   _SCRAPEREQUEST._serialized_start=25
   _SCRAPEREQUEST._serialized_end=102
-  _SCRAPERESULT._serialized_start=104
-  _SCRAPERESULT._serialized_end=182
-  _SCRAPERESPONSE._serialized_start=184
-  _SCRAPERESPONSE._serialized_end=238
-  _SCRAPINGS._serialized_start=295
-  _SCRAPINGS._serialized_end=349
+  _CHANNELSCRAPERESULT._serialized_start=104
+  _CHANNELSCRAPERESULT._serialized_end=167
+  _VIDEOSCRAPERESULT._serialized_start=170
+  _VIDEOSCRAPERESULT._serialized_end=371
+  _CHANNELSCRAPERESPONSE._serialized_start=373
+  _CHANNELSCRAPERESPONSE._serialized_end=448
+  _VIDEOSCRAPERESPONSE._serialized_start=450
+  _VIDEOSCRAPERESPONSE._serialized_end=519
+  _CHANNELSCRAPINGS._serialized_start=576
+  _CHANNELSCRAPINGS._serialized_end=644
+  _VIDEOSCRAPINGS._serialized_start=646
+  _VIDEOSCRAPINGS._serialized_end=710
 # @@protoc_insertion_point(module_scope)

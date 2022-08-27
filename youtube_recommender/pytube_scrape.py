@@ -14,51 +14,33 @@ import logging
 import sys
 from multiprocessing import Pool
 from time import time
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Set
 
 import pandas as pd
 from pytube import Channel as pytube_channel  # type: ignore[import]
 from pytube import YouTube  # type: ignore[import]
 # from pytube import Playlist, Search
 from rarc_utils.log import setup_logger
-from rarc_utils.sqlalchemy_base import get_async_session
+from rarc_utils.sqlalchemy_base import get_async_session, load_config
+from youtube_recommender import config as config_dir
 from youtube_recommender.data_methods import data_methods as dm
 # from youtube_recommender.db.helpers import (
 #     get_keyword_association_rows_by_ids, get_video_ids_by_ids)
 from youtube_recommender.db.helpers import get_video_ids_by_channel_ids
-from youtube_recommender.db.models import psql
-from youtube_recommender.settings import PYTUBE_VIDEOS_PATH
+from youtube_recommender.settings import (CHANNEL_FIELDS, PYTUBE_VIDEOS_PATH,
+                                          VIDEO_FIELDS)
 from youtube_recommender.video_finder import load_feather, save_feather
-
-async_session = get_async_session(psql)
 
 log_fmt = "%(asctime)s - %(module)-16s - %(lineno)-4s - %(funcName)-20s - %(levelname)-7s - %(message)s"  # name
 logger = setup_logger(
     cmdLevel=logging.INFO, saveFile=0, savePandas=1, color=1, fmt=log_fmt
 )  # DEBUG
 
-VIDEO_FIELDS = (
-    "title",
-    "channel_id",
-    "channel_url",
-    "description",
-    "keywords",
-    "length",
-    "rating",
-    "publish_date",
-    "views",
-    "video_id",
-)
-
-CHANNEL_FIELDS = (
-    "title",
-    "channel_id",
-)
-
 
 def extract_video_fields(
     url: str,
     fields=VIDEO_FIELDS,
+    isodate=False
 ) -> Dict[str, Any]:
     """Extract selected fields from YouTube object."""
     assert isinstance(url, str)
@@ -68,6 +50,9 @@ def extract_video_fields(
     # slow?
     for field in fields:
         res[field] = getattr(yt_obj, field)
+
+        if field == 'publish_date' and isodate:
+            res[field] = res[field].isoformat()
 
     return res
 
@@ -105,8 +90,8 @@ def extract_multiple_urls(urls: List[str]) -> List[Dict[str, Any]]:
         yt = YouTube(url)
         res.append(extract_video_fields(yt))
 
-    elapsed = time() - t0
-    download_rate = len(res) / elapsed
+    elapsed: float = time() - t0
+    download_rate: float = len(res) / elapsed
     logger.info(
         f"got {len(res):,} items in {elapsed:.2f} secs ({download_rate:.1f} items/sec)"
     )
@@ -119,8 +104,8 @@ def mp_extract_videos(urls: List[str], nprocess: int) -> List[Dict[str, Any]]:
     with Pool(processes=nprocess) as pool:
         res = pool.map(extract_video_fields, urls)
 
-    elapsed = time() - t0
-    download_rate = len(res) / elapsed
+    elapsed: float = time() - t0
+    download_rate: float = len(res) / elapsed
     logger.info(
         f"got {len(res):,} items in {elapsed:.2f} secs ({download_rate:.1f} items/sec)"
     )
@@ -131,14 +116,14 @@ def mp_extract_videos(urls: List[str], nprocess: int) -> List[Dict[str, Any]]:
 def mp_extract_channels(res: List[Dict[str, Any]], nprocess: int):
     """Extract metadata for multiple videos + channel names."""
     # get unique channels
-    channel_urls = set(r["channel_url"] for r in res)
+    channel_urls: Set[str] = set(r["channel_url"] for r in res)
 
     t0 = time()
     with Pool(processes=nprocess) as pool:
         res = pool.map(extract_channel_fields, channel_urls)
 
-    elapsed = time() - t0
-    download_rate = len(res) / elapsed
+    elapsed: float = time() - t0
+    download_rate: float = len(res) / elapsed
     logger.info(
         f"got {len(res):,} channel metadatas in {elapsed:.2f} secs ({download_rate:.1f} items/sec)"
     )
@@ -160,6 +145,12 @@ parser.add_argument(
     "--ncore",
     default=8,
     help="Max cores to use for multiprocessing",
+)
+parser.add_argument(
+    "--cfg_file",
+    type=str,
+    default="postgres.cfg",
+    help="choose a configuration file",
 )
 parser.add_argument(
     "--channel_url",
@@ -213,6 +204,14 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if args.dryrun:
         sys.exit()
+
+    psql = load_config(
+        db_name="youtube",
+        cfg_file=args.cfg_file,
+        config_dir=config_dir,
+        starts_with=True,
+    )
+    async_session = get_async_session(psql)
 
     assert isinstance(args.channel_url, str), "pass url as string"
 
