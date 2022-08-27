@@ -25,9 +25,10 @@ class ChannelScrapeService(scrape_requests_pb2_grpc.ChannelScrapingsServicer):
         if request.category == ScrapeCategory.CHANNEL:
             # todo: your pytube scrape code for Channel, Video or Comment
             # or should success be omitted, and errors caught by Interceptors?
-            # vurls: pytube_channel = pytube_channel(request.value)
+            vurls: pytube_channel = pytube_channel(request.value)
 
             fields = extract_channel_fields(request.value)
+            fields["vurls"] = list(vurls)
             results = [ChannelScrapeResult(**fields)]
 
             # print(f"{dir(request)=}")
