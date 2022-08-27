@@ -22,6 +22,7 @@ RUN python -m spacy download en_core_web_sm
 RUN pip install /tmp/
 
 # compile protobufs
+COPY youtube_recommender/protobufs /service/protobufs/
 COPY youtube_recommender/scrape_requests /service/scrape_requests/
 WORKDIR /service/scrape_requests
 RUN python -m grpc_tools.protoc -I ../protobufs --python_out=. \
