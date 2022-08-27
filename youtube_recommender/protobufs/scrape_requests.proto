@@ -15,6 +15,7 @@ message ScrapeRequest {
 message ChannelScrapeResult {
     string channel_name = 1;
     string channel_id = 2;
+    repeated string vurls = 3;
 }
 
 message VideoScrapeResult {
