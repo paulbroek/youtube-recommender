@@ -13,6 +13,10 @@ from channel_scrape_requests import ChannelScrapeService
 from comment_scrape_requests import CommentScrapeService
 from video_scrape_requests import VideoScrapeService
 
+# todo: fix with docker-secrets
+# with open("/cert/nginx.crt", "rb") as f:
+#     trusted_certs = f.read()
+
 
 def serve(max_workers):
     # todo: does this workflow needs async functionality?

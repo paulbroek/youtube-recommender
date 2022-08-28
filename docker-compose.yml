@@ -15,44 +15,31 @@ services:
     #   - "50051:50051"
     expose:
       - 50051
-    # networks:
-    #   - microservices
     secrets:
       - nginx.cert
       - nginx.key
-    depends_on:
-      - nginx-reverseproxy
-
-  # video-scrape:
-  #   build:
-  #     context: .
-  #   command: python /service/scrape_requests/video_scrape_requests.py
-  #   ports:
-  #     - "50051:50051"
-  #   networks:
-  #     - microservices
-
-  # channel-scrape:
-  #   build:
-  #     context: .
-  #   command: python /service/scrape_requests/channel_scrape_requests.py
-  #   ports:
-  #     - "50052:50051"
-  #   networks:
-  #     - microservices
+    # depends_on:
+    #   - nginx-reverseproxy
+    networks:
+      - microservices
 
   nginx-reverseproxy:
     image: nginx:1.13.11
     ports:
-      - 127.0.0.1:50051:1443
+      - 127.0.0.1:1443:1443
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf
     secrets:
       - nginx.cert
       - nginx.key
+    depends_on:
+      - scrape-service
+    networks:
+      - microservices
 
-# networks:
-#   microservices:
+networks:
+  microservices:
+    external: true
 
 secrets:
   nginx.cert:
