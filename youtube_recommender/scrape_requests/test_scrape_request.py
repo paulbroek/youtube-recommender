@@ -1,4 +1,4 @@
-"""test_scrape_request.py
+r"""test_scrape_request.py
 
 Run:
     # run serve.py first
@@ -6,6 +6,14 @@ Run:
     export YT_SCRAPE_SERVICE_HOST=localhost         && ipy test_scrape_request.py -- --category video   --id GBTdnfD6s5Q --aio --ntrial 10
     export YT_SCRAPE_SERVICE_HOST=192.168.178.46    && ipy test_scrape_request.py -- --category video   --id GBTdnfD6s5Q --aio --ntrial 10
     export YT_SCRAPE_SERVICE_HOST=192.168.178.46    && ipy test_scrape_request.py -- --category channel --id UCBjOe-Trw6N8neQV7NUsfiA --aio --ntrial 2
+
+    # line by line format
+    export YT_SCRAPE_SERVICE_HOST=localhost &&
+        ipy test_scrape_request.py -- \
+        --category video \
+        --id m6UNCJESYHM \
+        --aio \
+        --ntrial 10
 
 Todo:
     - test number of videos/channels/comments scraped per second, 
