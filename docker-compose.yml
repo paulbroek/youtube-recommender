@@ -36,11 +36,16 @@ services:
   scrape-service:
     build:
       context: .
-    command: python /service/scrape_requests/serve.py --max_workers 20
-    ports:
-      - "50051:50051"
+    command: python /service/scrape_requests/serve.py --max_workers 25
+    # ports:
+    #   - "50051:50051"
+    expose:
+      - 50051
     networks:
       - microservices
+    secrets:
+      - nginx.cert
+      - nginx.key
 
   # video-scrape:
   #   build:
@@ -60,5 +65,21 @@ services:
   #   networks:
   #     - microservices
 
+  nginx:
+    image: nginx:1.13.11
+    ports:
+      - 127.0.0.1:50051:1443
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+    secrets:
+      - nginx.cert
+      - nginx.key
+
 networks:
   microservices:
+
+secrets:
+  nginx.cert:
+    file: ./cert/nginx.cert
+  nginx.key:
+    file: ./cert/nginx.key

@@ -3,6 +3,8 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+/cert
+
 config.yaml
 postgres.cfg
 postgres.cfg.auto
