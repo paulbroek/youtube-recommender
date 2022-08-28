@@ -1,32 +1,6 @@
 version: "3.9"
 
 services:
-  some-scylla:
-    image: scylladb/scylla
-    container_name: some-scylla
-    # ports:
-    #   - "9042:9042"
-
-  some-scylla2:
-    image: scylladb/scylla
-    container_name: some-scylla2
-    command: --seeds=some-scylla
-
-  some-scylla3:
-    image: scylladb/scylla
-    container_name: some-scylla3
-    command: --seeds=some-scylla
-
-  some-scylla4:
-    image: scylladb/scylla
-    container_name: some-scylla4
-    command: --seeds=some-scylla
-
-  some-scylla5:
-    image: scylladb/scylla
-    container_name: some-scylla5
-    command: --seeds=some-scylla
-
   redis:
     restart: unless-stopped
     image: redis
