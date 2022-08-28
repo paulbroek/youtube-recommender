@@ -1,4 +1,4 @@
-"""test_video_scrape_request.py
+"""test_scrape_request.py
 
 Run:
     # run serve.py first
@@ -53,19 +53,28 @@ parser.add_argument(
 )
 
 
-async def scrape(req):
-    return await client.Scrape(req)
+def main_blocking(args, cat: int, url: str):
+    """Run main loop, blocking."""
+    res = None
+    for _ in range(args.ntrial):
+        request = ScrapeRequest(
+            id=0,
+            category=cat,
+            value=url,
+        )
+        res = client.Scrape(request)
 
+    return res
 
 async def main(args, cat: int, url: str):
-
+    """Run main loop."""
     request = ScrapeRequest(
         id=0,
         category=cat,
         value=url,
     )
 
-    cors = [scrape(request) for i in range(args.ntrial)]
+    cors = [client.Scrape(request) for i in range(args.ntrial)]
 
     return await asyncio.gather(*cors)
 
@@ -80,6 +89,7 @@ if __name__ == "__main__":
     cli_args = parser.parse_args()
     print(f"{cli_args=}")
 
+    assert cli_args.id is not None
     category: str = cli_args.category.upper()
     assert category in ScrapeCategory.keys()
     cat = getattr(ScrapeCategory, category)
@@ -97,7 +107,7 @@ if __name__ == "__main__":
         url = "{}{}".format(YOUTUBE_VIDEO_PREFIX, cli_args.id)
     elif cat == ScrapeCategory.COMMENT:
         client = CommentScrapingsStub(channel)
-        url = "{}{}".format(YOUTUBE_VIDEO_PREFIX, cli_args.id)
+        url = cli_args.id
 
     print(f"{url=}")
 
@@ -107,15 +117,8 @@ if __name__ == "__main__":
         loop = asyncio.get_event_loop()
         res = loop.run_until_complete(main(cli_args, cat=cat, url=url))
 
-    # blocking on purpose, to compare against async mode
     else:
-        for i in range(cli_args.ntrial):
-            request = ScrapeRequest(
-                id=0,
-                category=cat,
-                value=url,
-            )
-            res = client.Scrape(request)
+        res = main_blocking(cli_args, cat=cat, url=url)
 
     if cli_args.ntrial == 1:
         print(f"{res=}")
@@ -123,6 +126,6 @@ if __name__ == "__main__":
     # todo: update live progress
 
     # todo: remove test_channel_Scrape_Request, rename this file
-    elapsed = time() - t0
+    elapsed: float = time() - t0
     items_per_sec: float = cli_args.ntrial / elapsed
     print(f"{items_per_sec=:.2f} {category=}")

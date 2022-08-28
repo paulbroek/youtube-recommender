@@ -7,19 +7,24 @@ Run:
 import argparse
 from concurrent import futures
 
-import grpc
+import grpc  # type: ignore[import]
 import scrape_requests_pb2_grpc
 from channel_scrape_requests import ChannelScrapeService
+from comment_scrape_requests import CommentScrapeService
 from video_scrape_requests import VideoScrapeService
 
 
 def serve(max_workers):
+    # todo: does this workflow needs async functionality?
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=max_workers))
     scrape_requests_pb2_grpc.add_ChannelScrapingsServicer_to_server(
         ChannelScrapeService(), server
     )
     scrape_requests_pb2_grpc.add_VideoScrapingsServicer_to_server(
         VideoScrapeService(), server
+    )
+    scrape_requests_pb2_grpc.add_CommentScrapingsServicer_to_server(
+        CommentScrapeService(), server
     )
     server.add_insecure_port("[::]:50051")
     server.start()
