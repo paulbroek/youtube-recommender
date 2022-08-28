@@ -20,6 +20,8 @@ services:
     secrets:
       - nginx.cert
       - nginx.key
+    depends_on:
+      - nginx-reverseproxy
 
   # video-scrape:
   #   build:
@@ -39,7 +41,7 @@ services:
   #   networks:
   #     - microservices
 
-  nginx:
+  nginx-reverseproxy:
     image: nginx:1.13.11
     ports:
       - 127.0.0.1:50051:1443
