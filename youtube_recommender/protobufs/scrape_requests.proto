@@ -32,7 +32,16 @@ message VideoScrapeResult {
 }
 
 message CommentScrapeResult {
-    string video_id = 1;
+    string cid = 1;
+    string text = 2;
+    string time = 3;
+    string author = 4;
+    string channel = 5;
+    string votes = 6;
+    string photo = 7;
+    bool heart = 8;
+    float time_parsed = 9;
+    string video_id = 10;
 }
 
 message ChannelScrapeResponse {
