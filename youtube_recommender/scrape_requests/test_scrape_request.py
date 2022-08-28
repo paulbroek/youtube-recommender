@@ -7,14 +7,27 @@ Run:
     export YT_SCRAPE_SERVICE_HOST=192.168.178.46    && ipy test_scrape_request.py -- --category video   --id GBTdnfD6s5Q --aio --ntrial 10
     export YT_SCRAPE_SERVICE_HOST=192.168.178.46    && ipy test_scrape_request.py -- --category channel --id UCBjOe-Trw6N8neQV7NUsfiA --aio --ntrial 2
 
-    # line by line format
+    # line by line format: video/comment
     export YT_SCRAPE_SERVICE_HOST=localhost &&
     export YT_SCRAPE_SERVICE_PORT=1443 && 
+    export YT_SCRAPE_CERT_PATH=../../cert/nginx.cert && 
         ipy test_scrape_request.py -- \
         --category video \
         --id m6UNCJESYHM \
         --aio \
-        --ntrial 10
+        --ntrial 10 \
+        # --secure
+
+    # line by line format: channel
+    export YT_SCRAPE_SERVICE_HOST=localhost &&
+    export YT_SCRAPE_SERVICE_PORT=1443 && 
+    export YT_SCRAPE_CERT_PATH=../../cert/nginx.cert && 
+        ipy test_scrape_request.py -- \
+        --category channel \
+        --id UCXPHFM88IlFn68OmLwtPmZA \
+        --aio \
+        --ntrial 10 \
+        # --secure
 
 Todo:
     - test number of videos/channels/comments scraped per second, 
@@ -29,6 +42,7 @@ from time import time
 import grpc  # type: ignore[import]
 import grpc.aio  # type: ignore[import]
 from google.protobuf.json_format import MessageToDict, MessageToJson
+from grpc import ssl_channel_credentials
 from scrape_requests_pb2 import ScrapeCategory, ScrapeRequest
 from scrape_requests_pb2_grpc import (ChannelScrapingsStub,
                                       CommentScrapingsStub, VideoScrapingsStub)
@@ -36,6 +50,11 @@ from youtube_recommender.settings import (YOUTUBE_CHANNEL_PREFIX,
                                           YOUTUBE_VIDEO_PREFIX)
 
 parser = argparse.ArgumentParser(description="cli parameters")
+parser.add_argument(
+    "--secure",
+    action="store_true",
+    help="secure gRPC channels with SSL",
+)
 parser.add_argument(
     "--aio",
     action="store_true",
@@ -75,6 +94,7 @@ def main_blocking(args, cat: int, url: str):
 
     return res
 
+
 async def main(args, cat: int, url: str):
     """Run main loop."""
     request = ScrapeRequest(
@@ -91,6 +111,8 @@ async def main(args, cat: int, url: str):
 if __name__ == "__main__":
     host = os.environ.get("YT_SCRAPE_SERVICE_HOST", None)
     port = os.environ.get("YT_SCRAPE_SERVICE_PORT", 50051)
+    cert_path = os.environ.get("YT_SCRAPE_CERT_PATH", "/run/secrets/nginx.cert")
+
     assert host is not None
     assert port is not None
 
@@ -106,7 +128,13 @@ if __name__ == "__main__":
     if cli_args.aio:
         grpc = grpc.aio
 
-    channel = grpc.insecure_channel(addr)
+    if cli_args.secure:
+        with open(cert_path, "rb") as f:
+            trusted_certs = f.read()
+        credentials = ssl_channel_credentials(root_certificates=trusted_certs)
+        channel = grpc.secure_channel(addr, credentials)
+    else:
+        channel = grpc.insecure_channel(addr)
 
     if cat == ScrapeCategory.CHANNEL:
         client = ChannelScrapingsStub(channel)
@@ -120,7 +148,7 @@ if __name__ == "__main__":
 
     print(f"{url=}")
 
-    t0 = time()
+    t0: float = time()
 
     if cli_args.aio:
         loop = asyncio.get_event_loop()
