@@ -15,8 +15,8 @@ services:
     #   - "50051:50051"
     expose:
       - 50051
-    networks:
-      - microservices
+    # networks:
+    #   - microservices
     secrets:
       - nginx.cert
       - nginx.key
@@ -51,8 +51,8 @@ services:
       - nginx.cert
       - nginx.key
 
-networks:
-  microservices:
+# networks:
+#   microservices:
 
 secrets:
   nginx.cert:
