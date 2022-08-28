@@ -9,6 +9,7 @@ Run:
 
     # line by line format
     export YT_SCRAPE_SERVICE_HOST=localhost &&
+    export YT_SCRAPE_SERVICE_PORT=1443 && 
         ipy test_scrape_request.py -- \
         --category video \
         --id m6UNCJESYHM \
