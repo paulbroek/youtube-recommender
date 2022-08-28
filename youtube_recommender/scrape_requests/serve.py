@@ -11,6 +11,7 @@ import grpc  # type: ignore[import]
 import scrape_requests_pb2_grpc
 from channel_scrape_requests import ChannelScrapeService
 from comment_scrape_requests import CommentScrapeService
+from interceptors import ErrorLogger
 from video_scrape_requests import VideoScrapeService
 
 with open("/run/secrets/nginx.key", "rb") as f:  # path to you key location
@@ -31,7 +32,10 @@ server_credentials = grpc.ssl_server_credentials(
 def serve(max_workers, secure=False):
     # todo: does this workflow need async functionality?
     # no, because mostly clients use async calls, always be carefull to use async functionality in server
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=max_workers))
+    interceptors = [ErrorLogger()]
+    server = grpc.server(
+        futures.ThreadPoolExecutor(max_workers=max_workers), interceptors=interceptors
+    )
     scrape_requests_pb2_grpc.add_ChannelScrapingsServicer_to_server(
         ChannelScrapeService(), server
     )
