@@ -7,7 +7,7 @@ example usage:
     ipy pytube_scrape.py -i -- --ncore 12 -sp -n 50 --channel_url https://www.youtube.com/channel/UC8butISFwT-Wl7EV0hUK0BQ
 
 todo:
-        - this whole script will be replaced by microservices, implemented in scrape_requests/*
+        - this whole script will be replaced by microservices, implemented in scrape_requests/scrape.py
 """
 
 import argparse
@@ -140,13 +140,6 @@ def mp_extract_channels(res: List[Dict[str, Any]], nprocess: int):
 
 
 loop = asyncio.get_event_loop()
-# d = extract_video_fields(url)
-# dd = extract_multiple_urls(urls)
-# dd = loop.run_until_complete(aextract_multiple_urls(urls[:10]))
-
-# search
-# res = Search("algo trading")
-# res.results
 
 parser = argparse.ArgumentParser(description="Defining pytube_scrape parameters")
 parser.add_argument(
@@ -259,7 +252,6 @@ if __name__ == "__main__":
             if new_vurls.empty:
                 logger.warning(f"nothing to do for channel={args.channel_url}")
                 sys.exit()
-
             else:
                 sel_vurls = new_vurls.url.to_list()
 

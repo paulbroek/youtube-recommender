@@ -390,8 +390,7 @@ class Caption(Base, UtilityBase):
 
 class scrapeJob(Base, UtilityBase):
     """scrapeJob: a scrapeJob is related to a Channel. Since channels can upload new videos,
-    this table shows user when it was scraped for the last time, and how many videos.
-
+    this table shows user last scraping time, number of videos.
     """
 
     __tablename__ = "scrape_job"
@@ -403,7 +402,7 @@ class scrapeJob(Base, UtilityBase):
         default=uuid.uuid4,
     )
 
-    channel_id = Column(String, ForeignKey("channel.id"), nullable=False)
+    channel_id = Column(String, ForeignKey("channel.id"), nullable=False, unique=True)
     channel = relationship("Channel", uselist=False, lazy="selectin")
 
     nupdate = Column(Integer, default=0)

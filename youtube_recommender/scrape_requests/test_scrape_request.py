@@ -102,7 +102,8 @@ url_formats = {
 }
 
 
-def get_client(cat, chan):
+def get_client(cat: int, chan: grpc.Channel):
+    """Get RPC client based on channel."""
     if cat == ScrapeCategory.CHANNEL:
         cl = ChannelScrapingsStub(chan)
     elif cat == ScrapeCategory.VIDEO:
@@ -113,9 +114,8 @@ def get_client(cat, chan):
     return cl
 
 
-def construct_urls(args, cat, chan) -> List[str]:
-
-    # assert cli_args.id is not None
+def construct_urls(args, cat: int) -> List[str]:
+    """Construct urls based on args.ntrial and category."""
     if args.id is None:
         # get random ids from db
         if cat == ScrapeCategory.CHANNEL:
@@ -139,19 +139,22 @@ def construct_urls(args, cat, chan) -> List[str]:
     return urls
 
 
-def compute_items_received(cat, res) -> int:
+def compute_items_received(cat: int, res) -> int:
+    """Compute items received for scrape category."""
+    mm: list = res
     if cat == ScrapeCategory.VIDEO:
-        return len(res)
+        pass
 
     elif cat == ScrapeCategory.CHANNEL:
-        mm = [ MessageToDict(m)['channelScrapeResults'][0]["vurls"] for m in res]
+        mm = [MessageToDict(m)["channelScrapeResults"][0]["vurls"] for m in res]
         mm = sum(mm, [])
 
     elif cat == ScrapeCategory.COMMENT:
-        mm = [ MessageToDict(m)['commentScrapeResults'] for m in res]
+        mm = [MessageToDict(m)["commentScrapeResults"] for m in res]
         mm = sum(mm, [])
 
     return len(mm)
+
 
 def main_blocking(cat: int, urls: List[str]):
     """Run main loop, blocking."""
@@ -222,7 +225,7 @@ if __name__ == "__main__":
         channel = grpc.insecure_channel(addr)
 
     client = get_client(cat, channel)
-    urls: List[str] = construct_urls(cli_args, cat, channel)
+    urls: List[str] = construct_urls(cli_args, cat)
 
     print(f"{len(urls)=:,}")
 
