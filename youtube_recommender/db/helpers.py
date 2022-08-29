@@ -279,9 +279,13 @@ async def get_channels_by_video_ids(
     return {c.id: c for c in channels}
 
 
-async def get_top_channels_with_comments(asession, dropna=False) -> pd.DataFrame:
+async def get_top_channels_with_comments(
+    asession, dropna=False, n: Optional[int] = None
+) -> pd.DataFrame:
     """Get top channels from materialized view."""
     query = """SELECT * FROM top_channels_with_comments;"""
+    if n is not None:
+        query += """ LIMIT {}""".format(n)
 
     async with asession() as session:
         res = await session.execute(query)
