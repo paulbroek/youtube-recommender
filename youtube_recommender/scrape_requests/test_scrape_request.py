@@ -139,6 +139,10 @@ def construct_urls(args, cat, chan) -> List[str]:
     return urls
 
 
+def compute_items_received(res):
+    raise NotImplementedError
+
+
 def main_blocking(cat: int, urls: List[str]):
     """Run main loop, blocking."""
     res = None
@@ -225,11 +229,9 @@ if __name__ == "__main__":
 
     # todo: update live progress
 
-    # todo: use random video ids from DB instead of calling the same id 1000X times.
-
-    # todo: remove test_channel_Scrape_Request, rename this file
     elapsed: float = time() - t0
-    # items_per_sec: float = cli_args.ntrial / elapsed
     items_per_sec: float = len(res) / elapsed
 
     print(f"{items_per_sec=:.2f} {category=}")
+
+    # todo: compute more precisely number of nested received items: len(urls) for channel, and len(comments) for comments

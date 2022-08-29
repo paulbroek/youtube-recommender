@@ -15,7 +15,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x15scrape_requests.proto\"M\n\rScrapeRequest\x12\n\n\x02id\x18\x01 \x01(\x05\x12!\n\x08\x63\x61tegory\x18\x02 \x01(\x0e\x32\x0f.ScrapeCategory\x12\r\n\x05value\x18\x03 \x01(\t\"N\n\x13\x43hannelScrapeResult\x12\x14\n\x0c\x63hannel_name\x18\x01 \x01(\t\x12\x12\n\nchannel_id\x18\x02 \x01(\t\x12\r\n\x05vurls\x18\x03 \x03(\t\"\xc9\x01\n\x11VideoScrapeResult\x12\r\n\x05title\x18\x01 \x01(\t\x12\x12\n\nchannel_id\x18\x02 \x01(\t\x12\x13\n\x0b\x63hannel_url\x18\x03 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x04 \x01(\t\x12\x10\n\x08keywords\x18\x05 \x03(\t\x12\x0e\n\x06length\x18\x06 \x01(\x05\x12\x0e\n\x06rating\x18\x07 \x01(\x02\x12\x14\n\x0cpublish_date\x18\x08 \x01(\t\x12\r\n\x05views\x18\t \x01(\x05\x12\x10\n\x08video_id\x18\n \x01(\t\"\xb3\x01\n\x13\x43ommentScrapeResult\x12\x0b\n\x03\x63id\x18\x01 \x01(\t\x12\x0c\n\x04text\x18\x02 \x01(\t\x12\x0c\n\x04time\x18\x03 \x01(\t\x12\x0e\n\x06\x61uthor\x18\x04 \x01(\t\x12\x0f\n\x07\x63hannel\x18\x05 \x01(\t\x12\r\n\x05votes\x18\x06 \x01(\t\x12\r\n\x05photo\x18\x07 \x01(\t\x12\r\n\x05heart\x18\x08 \x01(\x08\x12\x13\n\x0btime_parsed\x18\t \x01(\x02\x12\x10\n\x08video_id\x18\n \x01(\t\"K\n\x15\x43hannelScrapeResponse\x12\x32\n\x14\x63hannelScrapeResults\x18\x01 \x03(\x0b\x32\x14.ChannelScrapeResult\"E\n\x13VideoScrapeResponse\x12.\n\x12videoScrapeResults\x18\x01 \x03(\x0b\x32\x12.VideoScrapeResult\"K\n\x15\x43ommentScrapeResponse\x12\x32\n\x14\x63ommentScrapeResults\x18\x01 \x03(\x0b\x32\x14.CommentScrapeResult*5\n\x0eScrapeCategory\x12\x0b\n\x07\x43HANNEL\x10\x00\x12\t\n\x05VIDEO\x10\x01\x12\x0b\n\x07\x43OMMENT\x10\x02\x32\x44\n\x10\x43hannelScrapings\x12\x30\n\x06Scrape\x12\x0e.ScrapeRequest\x1a\x16.ChannelScrapeResponse2@\n\x0eVideoScrapings\x12.\n\x06Scrape\x12\x0e.ScrapeRequest\x1a\x14.VideoScrapeResponse2D\n\x10\x43ommentScrapings\x12\x30\n\x06Scrape\x12\x0e.ScrapeRequest\x1a\x16.CommentScrapeResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x15scrape_requests.proto\"M\n\rScrapeRequest\x12\n\n\x02id\x18\x01 \x01(\x05\x12!\n\x08\x63\x61tegory\x18\x02 \x01(\x0e\x32\x0f.ScrapeCategory\x12\r\n\x05value\x18\x03 \x01(\t\"N\n\x13\x43hannelScrapeResult\x12\x14\n\x0c\x63hannel_name\x18\x01 \x01(\t\x12\x12\n\nchannel_id\x18\x02 \x01(\t\x12\r\n\x05vurls\x18\x03 \x03(\t\"\xc9\x01\n\x11VideoScrapeResult\x12\r\n\x05title\x18\x01 \x01(\t\x12\x12\n\nchannel_id\x18\x02 \x01(\t\x12\x13\n\x0b\x63hannel_url\x18\x03 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x04 \x01(\t\x12\x10\n\x08keywords\x18\x05 \x03(\t\x12\x0e\n\x06length\x18\x06 \x01(\x05\x12\x0e\n\x06rating\x18\x07 \x01(\x02\x12\x14\n\x0cpublish_date\x18\x08 \x01(\t\x12\r\n\x05views\x18\t \x01(\x05\x12\x10\n\x08video_id\x18\n \x01(\t\"\xc1\x01\n\x13\x43ommentScrapeResult\x12\x0b\n\x03\x63id\x18\x01 \x01(\t\x12\x0c\n\x04text\x18\x02 \x01(\t\x12\x0c\n\x04time\x18\x03 \x01(\t\x12\x0e\n\x06\x61uthor\x18\x04 \x01(\t\x12\x0f\n\x07\x63hannel\x18\x05 \x01(\t\x12\r\n\x05votes\x18\x06 \x01(\t\x12\r\n\x05photo\x18\x07 \x01(\t\x12\r\n\x05heart\x18\x08 \x01(\x08\x12\x13\n\x0btime_parsed\x18\t \x01(\x02\x12\x10\n\x08video_id\x18\n \x01(\t\x12\x0c\n\x04paid\x18\x0b \x01(\x08\"K\n\x15\x43hannelScrapeResponse\x12\x32\n\x14\x63hannelScrapeResults\x18\x01 \x03(\x0b\x32\x14.ChannelScrapeResult\"E\n\x13VideoScrapeResponse\x12.\n\x12videoScrapeResults\x18\x01 \x03(\x0b\x32\x12.VideoScrapeResult\"K\n\x15\x43ommentScrapeResponse\x12\x32\n\x14\x63ommentScrapeResults\x18\x01 \x03(\x0b\x32\x14.CommentScrapeResult*5\n\x0eScrapeCategory\x12\x0b\n\x07\x43HANNEL\x10\x00\x12\t\n\x05VIDEO\x10\x01\x12\x0b\n\x07\x43OMMENT\x10\x02\x32\x44\n\x10\x43hannelScrapings\x12\x30\n\x06Scrape\x12\x0e.ScrapeRequest\x1a\x16.ChannelScrapeResponse2@\n\x0eVideoScrapings\x12.\n\x06Scrape\x12\x0e.ScrapeRequest\x1a\x14.VideoScrapeResponse2D\n\x10\x43ommentScrapings\x12\x30\n\x06Scrape\x12\x0e.ScrapeRequest\x1a\x16.CommentScrapeResponseb\x06proto3')
 
 _SCRAPECATEGORY = DESCRIPTOR.enum_types_by_name['ScrapeCategory']
 ScrapeCategory = enum_type_wrapper.EnumTypeWrapper(_SCRAPECATEGORY)
@@ -86,8 +86,8 @@ _COMMENTSCRAPINGS = DESCRIPTOR.services_by_name['CommentScrapings']
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  _SCRAPECATEGORY._serialized_start=795
-  _SCRAPECATEGORY._serialized_end=848
+  _SCRAPECATEGORY._serialized_start=809
+  _SCRAPECATEGORY._serialized_end=862
   _SCRAPEREQUEST._serialized_start=25
   _SCRAPEREQUEST._serialized_end=102
   _CHANNELSCRAPERESULT._serialized_start=104
@@ -95,17 +95,17 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _VIDEOSCRAPERESULT._serialized_start=185
   _VIDEOSCRAPERESULT._serialized_end=386
   _COMMENTSCRAPERESULT._serialized_start=389
-  _COMMENTSCRAPERESULT._serialized_end=568
-  _CHANNELSCRAPERESPONSE._serialized_start=570
-  _CHANNELSCRAPERESPONSE._serialized_end=645
-  _VIDEOSCRAPERESPONSE._serialized_start=647
-  _VIDEOSCRAPERESPONSE._serialized_end=716
-  _COMMENTSCRAPERESPONSE._serialized_start=718
-  _COMMENTSCRAPERESPONSE._serialized_end=793
-  _CHANNELSCRAPINGS._serialized_start=850
-  _CHANNELSCRAPINGS._serialized_end=918
-  _VIDEOSCRAPINGS._serialized_start=920
-  _VIDEOSCRAPINGS._serialized_end=984
-  _COMMENTSCRAPINGS._serialized_start=986
-  _COMMENTSCRAPINGS._serialized_end=1054
+  _COMMENTSCRAPERESULT._serialized_end=582
+  _CHANNELSCRAPERESPONSE._serialized_start=584
+  _CHANNELSCRAPERESPONSE._serialized_end=659
+  _VIDEOSCRAPERESPONSE._serialized_start=661
+  _VIDEOSCRAPERESPONSE._serialized_end=730
+  _COMMENTSCRAPERESPONSE._serialized_start=732
+  _COMMENTSCRAPERESPONSE._serialized_end=807
+  _CHANNELSCRAPINGS._serialized_start=864
+  _CHANNELSCRAPINGS._serialized_end=932
+  _VIDEOSCRAPINGS._serialized_start=934
+  _VIDEOSCRAPINGS._serialized_end=998
+  _COMMENTSCRAPINGS._serialized_start=1000
+  _COMMENTSCRAPINGS._serialized_end=1068
 # @@protoc_insertion_point(module_scope)
