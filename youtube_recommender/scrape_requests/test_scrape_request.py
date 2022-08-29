@@ -139,9 +139,19 @@ def construct_urls(args, cat, chan) -> List[str]:
     return urls
 
 
-def compute_items_received(res):
-    raise NotImplementedError
+def compute_items_received(cat, res) -> int:
+    if cat == ScrapeCategory.VIDEO:
+        return len(res)
 
+    elif cat == ScrapeCategory.CHANNEL:
+        mm = [ MessageToDict(m)['channelScrapeResults'][0]["vurls"] for m in res]
+        mm = sum(mm, [])
+
+    elif cat == ScrapeCategory.COMMENT:
+        mm = [ MessageToDict(m)['commentScrapeResults'] for m in res]
+        mm = sum(mm, [])
+
+    return len(mm)
 
 def main_blocking(cat: int, urls: List[str]):
     """Run main loop, blocking."""
@@ -230,8 +240,9 @@ if __name__ == "__main__":
     # todo: update live progress
 
     elapsed: float = time() - t0
-    items_per_sec: float = len(res) / elapsed
+    requests_per_sec: float = len(res) / elapsed
 
-    print(f"{items_per_sec=:.2f} {category=}")
+    received: int = compute_items_received(cat, res)
+    items_per_sec: float = received / elapsed
 
-    # todo: compute more precisely number of nested received items: len(urls) for channel, and len(comments) for comments
+    print(f"{requests_per_sec=:.2f} {items_per_sec=:.2f} {category=}")
