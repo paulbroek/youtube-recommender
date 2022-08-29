@@ -42,6 +42,7 @@ message CommentScrapeResult {
     bool heart = 8;
     float time_parsed = 9;
     string video_id = 10;
+    bool paid = 11;
 }
 
 message ChannelScrapeResponse {

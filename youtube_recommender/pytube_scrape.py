@@ -14,6 +14,7 @@ import argparse
 import asyncio
 import logging
 import sys
+from http.client import RemoteDisconnected
 from multiprocessing import Pool
 from time import time
 from typing import Any, Dict, List, Set
@@ -51,7 +52,12 @@ def extract_video_fields(
     res = {}
     # slow?
     for field in fields:
-        res[field] = getattr(yt_obj, field)
+        try:
+            res[field] = getattr(yt_obj, field)
+
+        except RemoteDisconnected:
+            logger.error(f"remote disconnected")
+            return {}
 
         if field == 'publish_date' and isodate:
             res[field] = res[field].isoformat()
