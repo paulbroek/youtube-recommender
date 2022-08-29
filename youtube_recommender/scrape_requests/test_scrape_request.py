@@ -43,7 +43,8 @@ from typing import List
 
 import grpc  # type: ignore[import]
 import grpc.aio  # type: ignore[import]
-from google.protobuf.json_format import MessageToDict, MessageToJson
+# from google.protobuf.json_format import MessageToJson
+from google.protobuf.json_format import MessageToDict
 from grpc import ssl_channel_credentials
 from rarc_utils.sqlalchemy_base import (get_async_session, get_session,
                                         load_config)
