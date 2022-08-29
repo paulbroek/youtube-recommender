@@ -185,16 +185,21 @@ async def get_video_ids_by_ids(asession, video_ids: List[VideoId]) -> List[Video
 
 # @cached(ttl=None, cache=cache)
 async def get_top_videos_by_channel_ids(
-    asession, channel_ids: List[ChannelId]
+    asession, channel_ids: Optional[List[ChannelId]] = None, n: Optional[int] = None
 ) -> pd.DataFrame:
-# ) -> List[dict]:
+    # ) -> List[dict]:
     """Get top videos by channel ids."""
     # todo: I use inner method to only cache `channel_ids`, is there a work around for this?
     @cached(ttl=None, cache=Cache.REDIS, serializer=PickleSerializer())
     async def inner(channel_ids=channel_ids):
         async with asession() as session:
-            fmt_ids = "'{0}'".format("', '".join(channel_ids))
-            query = """SELECT * FROM top_videos WHERE channel_id IN ({});""".format(fmt_ids)
+            query: str = """SELECT * FROM top_videos"""
+            if channel_ids is not None:
+                fmt_ids = "'{0}'".format("', '".join(channel_ids))
+                query += """ WHERE channel_id IN ({})""".format(fmt_ids)
+            if n is not None:
+                query += " LIMIT {}".format(n)
+
             res = await session.execute(query)
 
             rows: List[dict] = res.fetchall()
@@ -204,6 +209,7 @@ async def get_top_videos_by_channel_ids(
         return pd.DataFrame(rows)
 
     return await inner(channel_ids)
+
 
 async def get_videos_by_ids(asession, video_ids: List[VideoId]):
     """Get Videos by video_ids."""
