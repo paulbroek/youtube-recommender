@@ -120,16 +120,12 @@ def construct_urls(args, cat, chan) -> List[str]:
         # get random ids from db
         if cat == ScrapeCategory.CHANNEL:
             df = loop.run_until_complete(
-                get_top_channels_with_comments(
-                    async_session, dropna=True, n=args.ntrial
-                )
+                get_top_channels_with_comments(async_session, dropna=True)
             )
-            ids = df.channel_id.to_list()
+            ids = df.channel_id.sample(args.ntrial, replace=True).to_list()
         else:
-            df = loop.run_until_complete(
-                get_top_videos_by_channel_ids(async_session, n=args.ntrial)
-            )
-            ids = df.video_id.to_list()
+            df = loop.run_until_complete(get_top_videos_by_channel_ids(async_session))
+            ids = df.video_id.sample(args.ntrial, replace=True).to_list()
     else:
         ids = [args.id for i in range(args.ntrial)]
 

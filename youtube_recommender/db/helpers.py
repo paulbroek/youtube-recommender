@@ -184,21 +184,23 @@ async def get_video_ids_by_ids(asession, video_ids: List[VideoId]) -> List[Video
 
 
 # @cached(ttl=None, cache=cache)
+# , n: Optional[int] = None
+# do not pass `n` parameter, because with caching its faster to query dataframe in memory, through redis
 async def get_top_videos_by_channel_ids(
-    asession, channel_ids: Optional[List[ChannelId]] = None, n: Optional[int] = None
+    asession, channel_ids: Optional[List[ChannelId]] = None
 ) -> pd.DataFrame:
     # ) -> List[dict]:
     """Get top videos by channel ids."""
     # todo: I use inner method to only cache `channel_ids`, is there a work around for this?
-    # @cached(ttl=None, cache=Cache.REDIS, serializer=PickleSerializer())
+    @cached(ttl=None, cache=Cache.REDIS, serializer=PickleSerializer())
     async def inner(channel_ids=channel_ids):
         async with asession() as session:
             query: str = """SELECT * FROM top_videos"""
             if channel_ids is not None:
                 fmt_ids = "'{0}'".format("', '".join(channel_ids))
                 query += """ WHERE channel_id IN ({})""".format(fmt_ids)
-            if n is not None:
-                query += " LIMIT {}".format(n)
+            # if n is not None:
+            #     query += " LIMIT {}".format(n)
 
             res = await session.execute(query)
 
@@ -279,13 +281,12 @@ async def get_channels_by_video_ids(
     return {c.id: c for c in channels}
 
 
-async def get_top_channels_with_comments(
-    asession, dropna=False, n: Optional[int] = None
-) -> pd.DataFrame:
+# , n: Optional[int] = None
+async def get_top_channels_with_comments(asession, dropna=False) -> pd.DataFrame:
     """Get top channels from materialized view."""
     query = """SELECT * FROM top_channels_with_comments;"""
-    if n is not None:
-        query += """ LIMIT {}""".format(n)
+    # if n is not None:
+    #     query += """ LIMIT {}""".format(n)
 
     async with asession() as session:
         res = await session.execute(query)
