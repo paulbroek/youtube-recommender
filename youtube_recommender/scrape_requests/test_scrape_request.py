@@ -36,6 +36,7 @@ Todo:
 
 import argparse
 import asyncio
+import logging
 import os
 from time import time
 from typing import List
@@ -54,6 +55,8 @@ from youtube_recommender.db.helpers import (get_top_channels_with_comments,
                                             get_top_videos_by_channel_ids)
 from youtube_recommender.settings import (YOUTUBE_CHANNEL_PREFIX,
                                           YOUTUBE_VIDEO_PREFIX)
+
+logger = logging.getLogger(__name__)
 
 parser = argparse.ArgumentParser(description="cli parameters")
 parser.add_argument(
@@ -131,6 +134,11 @@ def construct_urls(args, cat, chan) -> List[str]:
         ids = [args.id for i in range(args.ntrial)]
 
     urls = [url_formats[cat](x) for x in ids]
+
+    if len(urls) < args.ntrial:
+        logger.warning(
+            f"less urls created than requested: {len(urls):,} < {args.ntrial:,}"
+        )
 
     return urls
 
@@ -225,5 +233,7 @@ if __name__ == "__main__":
 
     # todo: remove test_channel_Scrape_Request, rename this file
     elapsed: float = time() - t0
-    items_per_sec: float = cli_args.ntrial / elapsed
+    # items_per_sec: float = cli_args.ntrial / elapsed
+    items_per_sec: float = len(res) / elapsed
+
     print(f"{items_per_sec=:.2f} {category=}")
