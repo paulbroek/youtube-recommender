@@ -27,6 +27,7 @@ from rarc_utils.log import setup_logger
 from rarc_utils.sqlalchemy_base import get_async_session, load_config
 from youtube_recommender import config as config_dir
 from youtube_recommender.data_methods import data_methods as dm
+from youtube_recommender.db.db_methods import refresh_view
 # from youtube_recommender.db.helpers import (
 #     get_keyword_association_rows_by_ids, get_video_ids_by_ids)
 from youtube_recommender.db.helpers import get_video_ids_by_channel_ids
@@ -276,3 +277,9 @@ if __name__ == "__main__":
     if args.push_db:
         df, cdf = dm.extract_chapters(df)
         datad = loop.run_until_complete(dm.push_videos(df, async_session))
+
+    # ask user to refresh materialized view
+    view = "top_channels_with_comments"
+    input_ = input("refresh view {}? Type `y`: ".format(view))
+    if input_ == "y":
+        refresh_view(view)
