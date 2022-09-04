@@ -127,7 +127,7 @@ class AudioTrack(Base, UtilityBase):
     """AudioTrack: holds audio track metadata."""
 
     __tablename__ = "audio_track"
-    id = Column(String, primary_key=True)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     video_id = Column(String, ForeignKey("video.id"), nullable=False, unique=True)
     video = relationship("Video", uselist=False, lazy="selectin")
     file_name = Column(String, nullable=False, unique=True)
