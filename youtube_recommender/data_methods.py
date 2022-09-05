@@ -152,6 +152,18 @@ class data_methods:
         return vdf, cdf
 
     @classmethod
+    async def push_channels(
+        cls, vdf: pd.DataFrame, async_session, columns=("id", "name")
+    ) -> Dict[str, Channel]:
+        """Push channels to db."""
+        channel_recs = cls._make_channel_recs(vdf, columns=columns)
+        items: Dict[str, Channel] = await create_many_items(
+            async_session, Channel, channel_recs, nameAttr="id", returnExisting=True
+        )
+
+        return items
+
+    @classmethod
     async def push_videos(
         cls, vdf: pd.DataFrame, async_session, push_chapters=True
     ) -> Dict[str, Dict[str, TableTypes]]:
@@ -180,10 +192,7 @@ class data_methods:
             # make them unique
             vdf["keywords"] = vdf["keywords"].map(set).map(list)
 
-        channel_recs = cls._make_channel_recs(vdf)
-        records_dict["channel"] = await create_many_items(
-            async_session, Channel, channel_recs, nameAttr="id", returnExisting=True
-        )
+        records_dict["channel"] = await cls.push_channels(vdf, async_session)
 
         # map the new channels onto vdf
         vdf["channel"] = vdf["channel_id"].map(records_dict["channel"])
@@ -201,7 +210,11 @@ class data_methods:
             if not cdf.empty:
                 chapter_recs = cls._make_chapter_recs(cdf)
                 records_dict["chapter"] = await create_many_items(
-                    async_session, Chapter, chapter_recs, nameAttr="id", returnExisting=True
+                    async_session,
+                    Chapter,
+                    chapter_recs,
+                    nameAttr="id",
+                    returnExisting=True,
                 )
 
         logger.info("finished")

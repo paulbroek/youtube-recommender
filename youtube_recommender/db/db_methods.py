@@ -27,6 +27,7 @@ logger = logging.getLogger(__name__)
 
 
 def refresh_view(vw: str) -> None:
+    """Refresh materialized view."""
     query = """REFRESH MATERIALIZED VIEW {};""".format(vw)
     logger.info(f"running query: {query}")
     psession.execute(query)

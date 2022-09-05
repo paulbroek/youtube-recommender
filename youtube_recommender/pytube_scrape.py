@@ -7,7 +7,7 @@ example usage:
     ipy pytube_scrape.py -i -- --ncore 12 -sp -n 50 --channel_url https://www.youtube.com/channel/UC8butISFwT-Wl7EV0hUK0BQ
 
 todo:
-        - this whole script will be replaced by microservices, implemented in scrape_requests/*
+        - this whole script will be replaced by microservices, implemented in scrape_requests/scrape.py
 """
 
 import argparse
@@ -27,6 +27,7 @@ from rarc_utils.log import setup_logger
 from rarc_utils.sqlalchemy_base import get_async_session, load_config
 from youtube_recommender import config as config_dir
 from youtube_recommender.data_methods import data_methods as dm
+from youtube_recommender.db.db_methods import refresh_view
 # from youtube_recommender.db.helpers import (
 #     get_keyword_association_rows_by_ids, get_video_ids_by_ids)
 from youtube_recommender.db.helpers import get_video_ids_by_channel_ids
@@ -140,13 +141,6 @@ def mp_extract_channels(res: List[Dict[str, Any]], nprocess: int):
 
 
 loop = asyncio.get_event_loop()
-# d = extract_video_fields(url)
-# dd = extract_multiple_urls(urls)
-# dd = loop.run_until_complete(aextract_multiple_urls(urls[:10]))
-
-# search
-# res = Search("algo trading")
-# res.results
 
 parser = argparse.ArgumentParser(description="Defining pytube_scrape parameters")
 parser.add_argument(
@@ -259,7 +253,6 @@ if __name__ == "__main__":
             if new_vurls.empty:
                 logger.warning(f"nothing to do for channel={args.channel_url}")
                 sys.exit()
-
             else:
                 sel_vurls = new_vurls.url.to_list()
 
@@ -284,3 +277,9 @@ if __name__ == "__main__":
     if args.push_db:
         df, cdf = dm.extract_chapters(df)
         datad = loop.run_until_complete(dm.push_videos(df, async_session))
+
+    # ask user to refresh materialized view
+    view = "top_channels_with_comments"
+    input_ = input("refresh view {}? Type `y`: ".format(view))
+    if input_ == "y":
+        refresh_view(view)

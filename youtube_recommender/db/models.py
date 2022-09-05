@@ -123,6 +123,31 @@ class VideoCategory(Base, UtilityBase):
         return self.as_dict()
 
 
+class AudioTrack(Base, UtilityBase):
+    """AudioTrack: holds audio track metadata."""
+
+    __tablename__ = "audio_track"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    video_id = Column(String, ForeignKey("video.id"), nullable=False, unique=True)
+    video = relationship("Video", uselist=False, lazy="selectin")
+    file_name = Column(String, nullable=False, unique=True)
+    size_mb = Column(Float, nullable=False, unique=False)
+
+    created = Column(DateTime, server_default=func.now())  # current_timestamp()
+    updated = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    # add this so that it can be accessed
+    __mapper_args__ = {"eager_defaults": True}
+
+    def __repr__(self):
+        return "AudioTrack(id={}, video.title={}, file_name={}, size_mb={})".format(
+            self.id,
+            trunc_msg(self.video.title, 40) if self.video else "NaN",
+            self.file_name,
+            self.size_mb,
+        )
+
+
 class Video(Base, UtilityBase):
     """Video: contains metadata of YouTube videos: views, title, id, etc."""
 
@@ -390,8 +415,7 @@ class Caption(Base, UtilityBase):
 
 class scrapeJob(Base, UtilityBase):
     """scrapeJob: a scrapeJob is related to a Channel. Since channels can upload new videos,
-    this table shows user when it was scraped for the last time, and how many videos.
-
+    this table shows user last scraping time, number of videos.
     """
 
     __tablename__ = "scrape_job"
@@ -403,7 +427,7 @@ class scrapeJob(Base, UtilityBase):
         default=uuid.uuid4,
     )
 
-    channel_id = Column(String, ForeignKey("channel.id"), nullable=False)
+    channel_id = Column(String, ForeignKey("channel.id"), nullable=False, unique=True)
     channel = relationship("Channel", uselist=False, lazy="selectin")
 
     nupdate = Column(Integer, default=0)

@@ -22,6 +22,7 @@ Run:
 """
 
 import argparse
+import asyncio
 import logging
 from typing import Optional
 
@@ -29,7 +30,12 @@ import matplotlib.pyplot as plt  # type: ignore[import]
 import pandas as pd
 from pytube import YouTube  # type: ignore[import]
 from pytube.exceptions import RegexMatchError  # type: ignore[import]
+from rarc_utils.sqlalchemy_base import (get_async_session, get_session,
+                                        load_config)
 from tqdm import tqdm  # type: ignore[import]
+from youtube_recommender import config as config_dir
+from youtube_recommender.data_methods import data_methods as dm
+from youtube_recommender.db.models import scrapeJob
 from youtube_recommender.io_methods import io_methods as im
 from youtube_recommender.settings import (SEARCH_HISTORY_JSON,
                                           WATCH_HISTORY_FEATHER,
@@ -168,6 +174,7 @@ def create_pytube_object(url: str) -> Optional[YouTube]:
 def scrape_channels(df: pd.DataFrame):
     """Scrape channel_id, channel_url via youtube url."""
     df["yt"] = df["titleUrl"].map(create_pytube_object)
+    df = df[~df['yt'].isna()].copy()
     pct_not_valid_url = df["yt"].isna().sum() / df.shape[0]
     logger.info(f"{pct_not_valid_url=:.1%}")
     # yt objects are only scraped when calling an attribute
@@ -175,10 +182,27 @@ def scrape_channels(df: pd.DataFrame):
         lambda x: x.channel_id if x is not None else None
     )
     df["channel_url"] = df["yt"].map(lambda x: x.channel_url if x is not None else None)
+    df["channel_name"] = df["yt"].map(lambda x: x.channel_name if x is not None else None)
 
     del df["yt"]
 
     return df
+
+
+def push_scrape_jobs(df: pd.DataFrame) -> None:
+    """Create channels, and one scrapeJob per (new) channel."""
+    # push channels first
+    datad = loop.run_until_complete(dm.push_channels(df, async_session))
+
+    df = df.dropna(subset=["channel_id"])
+    df["scrapeJob"] = df.channel_id.map(lambda x: scrapeJob(channel_id=x))
+
+    sjs = df["scrapeJob"].to_list()
+    psession.add_all(sjs)
+    psession.commit()
+
+    # todo: push to db
+    # todo: upsert nupdate, done?
 
 
 parser = argparse.ArgumentParser(description="explore_history.py cli parameters")
@@ -189,9 +213,32 @@ parser.add_argument(
     default="json",
     help="dataset type to load: json / feather",
 )
+parser.add_argument(
+    "--cfg_file",
+    type=str,
+    default="postgres.cfg",
+    help="cfg file of db to push scrapeJobs to",
+)
+parser.add_argument(
+    "-p",
+    "--push_scrape_jobs",
+    action="store_true",
+    default=False,
+    help="push channel_ids to db as scrapeJob",
+)
 
 if __name__ == "__main__":
+    loop = asyncio.get_event_loop()
     cli_args = parser.parse_args()
+
+    psql = load_config(
+        db_name="youtube",
+        cfg_file=cli_args.cfg_file,
+        config_dir=config_dir,
+        starts_with=True,
+    )
+    psession = get_session(psql)()
+    async_session = get_async_session(psql)
 
     if cli_args.file_type == "json":
         df_watch = load_watch_history_json()
@@ -201,6 +248,9 @@ if __name__ == "__main__":
     df_search = load_search_history()
 
     view = most_viewed_videos(df_watch)
+
+    if cli_args.push_scrape_jobs:
+        push_scrape_jobs(df_watch)
 
     # vw_search = count_by_period(df_search)
     # vw_watch = count_by_period(df_watch)
