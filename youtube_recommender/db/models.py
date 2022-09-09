@@ -165,6 +165,7 @@ class Video(Base, UtilityBase):
     comments = relationship(
         "Comment", uselist=True, back_populates="video", lazy="selectin"
     )
+    thumbnail_url = Column(String, nullable=True, unique=False)
     is_educational = Column(Boolean)
 
     channel_id = Column(String, ForeignKey("channel.id"), nullable=False)
