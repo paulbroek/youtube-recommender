@@ -13,12 +13,8 @@ import uvloop
 from rarc_utils.log import setup_logger
 from rarc_utils.sqlalchemy_base import get_async_session, get_session
 
-from ..caption_finder import (
-    adownload_captions,
-    captions_to_df,
-    save_feather,
-    select_video_ids,
-)
+from ..caption_finder import (adownload_captions, captions_to_df, save_feather,
+                              select_video_ids)
 from ..data_methods import data_methods as dm
 from ..db.helpers import get_captions_by_vids
 from ..db.models import Caption, psql
@@ -103,7 +99,7 @@ if __name__ == "__main__":
     else:
         video_ids = args.video_ids
 
-    if args.dryrun or vdf.empty:
+    if args.dryrun or (args.from_feather and vdf.empty):
         sys.exit()
 
     # check cache for existing captions
