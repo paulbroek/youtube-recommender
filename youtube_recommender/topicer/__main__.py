@@ -72,6 +72,12 @@ parser.add_argument(
     help="merge resulting captions dataset with videos metadata",
 )
 parser.add_argument(
+    "--with_start_times",
+    action="store_true",
+    default=False,
+    help="include start_times in the output caption string",
+)
+parser.add_argument(
     "-s",
     "--save_captions",
     action="store_true",
@@ -116,7 +122,7 @@ if __name__ == "__main__":
     # download captions
     # captions = download_captions(video_ids) # blocking way
     captions_list: List[Dict[str, Any]] = loop.run_until_complete(
-        adownload_captions(video_ids)
+        adownload_captions(video_ids, withStartTimes=args.with_start_times)
     )
     df = captions_to_df(captions_list)
 
