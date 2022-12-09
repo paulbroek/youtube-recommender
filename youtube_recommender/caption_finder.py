@@ -158,6 +158,7 @@ def _captions_to_str(
     text: str = ""
     assert len(captions) > 0
 
+    # TODO: or add a heuristic to decrease the number of `start` placeholders
     if withStartTimes:
         for t in captions:
             text += f"[{t['start']}]\n"
