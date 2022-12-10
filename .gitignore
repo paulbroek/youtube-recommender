@@ -11,6 +11,7 @@ postgres.cfg.auto
 # db/alembic/versions
 # youtube_recommender/db/alembic.ini
 alembic.ini
+database.ini
 youtube_recommender/db/alembic/versions
 # alembic.ini
 

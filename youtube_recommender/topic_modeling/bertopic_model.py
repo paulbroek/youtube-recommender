@@ -34,14 +34,20 @@ import argparse
 import logging
 
 import pandas as pd
+
 # from sklearn.datasets import fetch_20newsgroups
 from bertopic import BERTopic  # type: ignore[import]
 from rarc_utils.log import setup_logger
 from youtube_recommender.io_methods import io_methods as im
-from youtube_recommender.settings import (EDUCATIONAL_VIDEOS_PATH, MODEL_PATH,
-                                          TOPICS_PATH)
-from youtube_recommender.topic_modeling.methods import (similar_topics_to_word,
-                                                        topic_presence_by)
+from youtube_recommender.settings import (
+    EDUCATIONAL_VIDEOS_PATH,
+    MODEL_PATH,
+    TOPICS_PATH,
+)
+from youtube_recommender.topic_modeling.methods import (
+    similar_topics_to_word,
+    topic_presence_by,
+)
 
 # CAPTIONS_PATH
 
