@@ -14,7 +14,7 @@ requires = [
     "pyarrow",
     "pytube",
     "youtube_comment_downloader",
-    "cqlengine",
+    # "cqlengine",
     "aiocache",
     "aioredis==1.3.1",
     "jsonlines",
@@ -34,9 +34,9 @@ dev_requires = [
 
 setup(
     name="youtube_recommender",
-    version="0.1.0",
+    version="0.1.1",
     description="YouTube recommender - \
-        gives you recommended YouTube videos based on your watch history",
+        data science project to extract recommendations from youtube video metadata",
     url="git@github.com:paulbroek/youtube-recommender.git",
     author="Paul Broek",
     author_email="pcbroek@paulbroek.nl",
