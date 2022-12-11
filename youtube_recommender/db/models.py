@@ -65,22 +65,30 @@ import uuid
 from datetime import datetime, time
 
 import timeago  # type: ignore[import]
-from rarc_utils.log import loggingLevelNames, set_log_level, setup_logger
-from rarc_utils.misc import trunc_msg
-from rarc_utils.sqlalchemy_base import (UtilityBase, async_main, get_async_db,
-                                        get_async_session, get_session,
-                                        load_config)
 from sqlalchemy import (Boolean, Column, DateTime, Float, ForeignKey, Integer,
                         Interval, LargeBinary, String, UniqueConstraint, func)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy.schema import Table
+
+from rarc_utils.log import loggingLevelNames, set_log_level, setup_logger
+from rarc_utils.misc import trunc_msg
+from rarc_utils.sqlalchemy_base import (UtilityBase, async_main, get_async_db,
+                                        get_async_session, get_session,
+                                        load_config)
 from youtube_recommender import config as config_dir
 
 LOG_FMT = "%(asctime)s - %(module)-16s - %(lineno)-4s - %(funcName)-16s - %(levelname)-7s - %(message)s"  # title
 
 Base = declarative_base()
+
+psql = load_config(
+    db_name="youtube",
+    cfg_file="postgres.cfg",
+    config_dir=config_dir,
+    starts_with=True,
+)
 
 # a video can have multiple keywords, a keyword can belong to multiple videos
 video_keyword_association = Table(
@@ -165,6 +173,7 @@ class Video(Base, UtilityBase):
     comments = relationship(
         "Comment", uselist=True, back_populates="video", lazy="selectin"
     )
+    thumbnail_url = Column(String, nullable=True, unique=False)
     is_educational = Column(Boolean)
 
     channel_id = Column(String, ForeignKey("channel.id"), nullable=False)
@@ -549,12 +558,12 @@ if __name__ == "__main__":
 
     args = CLI.parse_args()
 
-    psql = load_config(
-        db_name="youtube",
-        cfg_file=args.cfg_file,
-        config_dir=config_dir,
-        starts_with=True,
-    )
+    # psql = load_config(
+    #     db_name="youtube",
+    #     cfg_file=args.cfg_file,
+    #     config_dir=config_dir,
+    #     starts_with=True,
+    # )
     psession = get_session(psql)()
 
     async_session = get_async_session(psql)

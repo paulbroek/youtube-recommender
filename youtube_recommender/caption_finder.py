@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import pandas as pd
+
 from apiclient.discovery import build  # type: ignore[import]
 from youtube_transcript_api import NoTranscriptFound  # type: ignore[import]
 from youtube_transcript_api import TranscriptsDisabled, YouTubeTranscriptApi
@@ -55,10 +56,11 @@ def download_captions(video_ids: List[VideoId]) -> List[Dict[str, Any]]:
     return list(filter(None, res))
 
 
-def download_caption_v2(video_id: VideoId) -> Optional[Dict[str, Any]]:
+def download_caption_v2(
+    video_id: VideoId, withStartTimes: bool
+) -> Optional[Dict[str, Any]]:
     """Download caption using youtube_transcript_api."""
     captions: Optional[List[Dict[str, Any]]] = None
-
     try:
         captions = YouTubeTranscriptApi.get_transcript(video_id)
     except NoTranscriptFound:
@@ -69,12 +71,15 @@ def download_caption_v2(video_id: VideoId) -> Optional[Dict[str, Any]]:
         logger.error(f"captions are disabled for {video_id=}, dismissing it")
 
     if captions is not None:
-        return _captions_to_dict(captions, video_id)
+        # TODO: do not simply concatenate strings, you lose the `start` and `duration` data
+        return _captions_to_dict(captions, video_id, withStartTimes=withStartTimes)
 
     return captions
 
 
-async def adownload_captions(video_ids: List[VideoId]) -> List[Dict[str, Any]]:
+async def adownload_captions(
+    video_ids: List[VideoId], withStartTimes=False
+) -> List[Dict[str, Any]]:
     """Speed up downloading of captions by running them concurrently.
 
     usage:
@@ -83,7 +88,7 @@ async def adownload_captions(video_ids: List[VideoId]) -> List[Dict[str, Any]]:
     loop = asyncio.get_running_loop()
 
     cors = [
-        loop.run_in_executor(None, download_caption_v2, video_id)
+        loop.run_in_executor(None, download_caption_v2, video_id, withStartTimes)
         for video_id in video_ids
     ]
 
@@ -134,14 +139,33 @@ def captions_to_df(captions: List[Dict[str, Any]], classify_lang=True) -> pd.Dat
 
 
 def _captions_to_dict(
-    captions: List[Dict[str, Any]], video_id: VideoId
+    captions: List[Dict[str, Any]], video_id: VideoId, withStartTimes=False
 ) -> Dict[str, Any]:
-    return dict(text=_captions_to_str(captions, sep=", "), video_id=video_id)
+    return dict(
+        text=_captions_to_str(captions, sep=", ", withStartTimes=withStartTimes),
+        video_id=video_id,
+    )
 
 
-def _captions_to_str(captions: List[Dict[str, Any]], sep=", ") -> str:
-    """Join caption strs into one str."""
+def _captions_to_str(
+    captions: List[Dict[str, Any]], sep=", ", withStartTimes=False
+) -> str:
+    """Join caption strs into one str.
+
+    withStartTimes:
+        include startTimes, like
+    """
+    text: str = ""
     assert len(captions) > 0
-    texts = [t["text"] for t in captions]
 
-    return str(sep.join(texts))
+    # TODO: or add a heuristic to decrease the number of `start` placeholders
+    if withStartTimes:
+        for t in captions:
+            text += f"[{t['start']}]\n"
+            text += f"{t['text']}\n"
+
+    else:
+        texts = [t["text"] for t in captions]
+        text = str(sep.join(texts))
+
+    return text

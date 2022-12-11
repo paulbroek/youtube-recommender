@@ -1,5 +1,5 @@
-DROP MATERIALIZED VIEW vw_last_videos;
-DROP MATERIALIZED VIEW last_videos;
+DROP MATERIALIZED VIEW IF EXISTS vw_last_videos;
+DROP MATERIALIZED VIEW IF EXISTS last_videos;
 
 CREATE MATERIALIZED VIEW last_videos AS
 SELECT
@@ -49,7 +49,7 @@ LIMIT
 -- FROM
     -- last_videos lv WITH DATA;
 
-DROP MATERIALIZED VIEW last_query_results;
+DROP MATERIALIZED VIEW IF EXISTS last_query_results;
 CREATE MATERIALIZED VIEW last_query_results AS
 SELECT
     qr.id AS query_id,
@@ -91,7 +91,7 @@ FROM
 
 
 -- view videos with nchapter
-DROP MATERIALIZED VIEW vw_videos_with_chapters;
+DROP MATERIALIZED VIEW IF EXISTS vw_videos_with_chapters;
 CREATE MATERIALIZED VIEW vw_videos_with_chapters AS
 SELECT
     video.id AS video_id,
@@ -108,7 +108,7 @@ LIMIT
 
 
 -- view comments with truncated text
-DROP MATERIALIZED VIEW vw_comments;
+DROP MATERIALIZED VIEW IF EXISTS vw_comments;
 CREATE MATERIALIZED VIEW vw_comments AS
 SELECT
     left(comment.id, 14) AS trunc_id,
@@ -134,7 +134,7 @@ LIMIT
 
 
 -- view users with most votes
-DROP MATERIALIZED VIEW vw_users_with_most_votes;
+DROP MATERIALIZED VIEW IF EXISTS vw_users_with_most_votes;
 CREATE MATERIALIZED VIEW vw_users_with_most_votes AS
 SELECT
     channel.name AS user_name,
@@ -153,7 +153,7 @@ LIMIT
     100000 WITH DATA;
 
 -- view top views, can be used for videos that didn't scrape comments yet
-DROP MATERIALIZED VIEW top_videos;
+DROP MATERIALIZED VIEW IF EXISTS top_videos;
 CREATE MATERIALIZED VIEW top_videos AS
 SELECT
     video.id AS video_id,
@@ -163,6 +163,38 @@ SELECT
     video.views,
     video.length,
     video.nchapter,
+    vidoe.
+    LENGTH(video.description) AS dlen
+FROM
+    (
+        SELECT video.*, COUNT(chapter.video_id) AS nchapter from chapter FULL OUTER JOIN video ON video.id = chapter.video_id GROUP BY video.id
+    ) video
+        INNER JOIN channel ON video.channel_id = channel.id
+GROUP BY
+    video.id,
+    video.title,
+    video.views,
+    video.length,
+    channel.id,
+    video.nchapter,
+    video.description
+ORDER BY
+    views DESC
+LIMIT 
+    90000 WITH DATA;
+
+-- view top views with description
+DROP MATERIALIZED VIEW IF EXISTS top_videos_with_description;
+CREATE MATERIALIZED VIEW top_videos_with_description AS
+SELECT
+    video.id AS video_id,
+    channel.id AS channel_id,
+    channel.name AS channel_name,
+    video.title,
+    video.views,
+    video.length,
+    video.nchapter,
+    video.description,
     LENGTH(video.description) AS dlen
 FROM
     (
@@ -184,7 +216,7 @@ LIMIT
 
 -- todo: rewrite without having to groupby so many ids
 -- view videos with most comments
-DROP MATERIALIZED VIEW top_videos_with_comments;
+DROP MATERIALIZED VIEW IF EXISTS top_videos_with_comments;
 CREATE MATERIALIZED VIEW top_videos_with_comments AS
 SELECT
     video.id AS video_id,
@@ -218,7 +250,7 @@ LIMIT
     90000 WITH DATA;
 
 -- view top channels
-DROP MATERIALIZED VIEW top_channels;
+DROP MATERIALIZED VIEW IF EXISTS top_channels;
 CREATE MATERIALIZED VIEW top_channels AS
 SELECT
     channel.name,
@@ -235,7 +267,7 @@ LIMIT
     100;
 
 -- to also see channels without comments: they need comment scraping
-DROP MATERIALIZED VIEW top_channels_with_comments;
+DROP MATERIALIZED VIEW IF EXISTS top_channels_with_comments;
 CREATE MATERIALIZED VIEW top_channels_with_comments AS
 SELECT DISTINCT
     channel.name AS channel_name,
@@ -262,7 +294,7 @@ LIMIT
     200;
 
 -- view top keywords
-DROP MATERIALIZED VIEW top_keywords;
+DROP MATERIALIZED VIEW IF EXISTS top_keywords;
 CREATE MATERIALIZED VIEW top_keywords AS
 SELECT
     keyword.name AS keyword_name,
@@ -282,7 +314,7 @@ LIMIT
 -- view channels by educational
 -- can use COALESCE(video.is_educational, 'f')
 -- but now it's more clear that videos have not been classified yet. 
-DROP MATERIALIZED VIEW channels_over_educational;
+DROP MATERIALIZED VIEW IF EXISTS channels_over_educational;
 CREATE MATERIALIZED VIEW channels_over_educational AS
 SELECT channel.id, channel.name, count(*) as nvideo,
        avg( video.is_educational::int ) as pct_educational

@@ -13,12 +13,8 @@ import uvloop
 from rarc_utils.log import setup_logger
 from rarc_utils.sqlalchemy_base import get_async_session, get_session
 
-from ..caption_finder import (
-    adownload_captions,
-    captions_to_df,
-    save_feather,
-    select_video_ids,
-)
+from ..caption_finder import (adownload_captions, captions_to_df, save_feather,
+                              select_video_ids)
 from ..data_methods import data_methods as dm
 from ..db.helpers import get_captions_by_vids
 from ..db.models import Caption, psql
@@ -76,6 +72,12 @@ parser.add_argument(
     help="merge resulting captions dataset with videos metadata",
 )
 parser.add_argument(
+    "--with_start_times",
+    action="store_true",
+    default=False,
+    help="include start_times in the output caption string",
+)
+parser.add_argument(
     "-s",
     "--save_captions",
     action="store_true",
@@ -103,7 +105,7 @@ if __name__ == "__main__":
     else:
         video_ids = args.video_ids
 
-    if args.dryrun or vdf.empty:
+    if args.dryrun or (args.from_feather and vdf.empty):
         sys.exit()
 
     # check cache for existing captions
@@ -120,7 +122,7 @@ if __name__ == "__main__":
     # download captions
     # captions = download_captions(video_ids) # blocking way
     captions_list: List[Dict[str, Any]] = loop.run_until_complete(
-        adownload_captions(video_ids)
+        adownload_captions(video_ids, withStartTimes=args.with_start_times)
     )
     df = captions_to_df(captions_list)
 
