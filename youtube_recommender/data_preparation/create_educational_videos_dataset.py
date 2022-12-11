@@ -8,22 +8,24 @@ import argparse
 import logging
 
 import pandas as pd
-from rarc_utils.log import setup_logger
+from rarc_utils.log import setup_logger, LOG_FMT
 from rarc_utils.sqlalchemy_base import get_session
+
 # from sqlalchemy.future import select  # type: ignore[import]
 # from youtube_recommender.db.models import Channel, Video, psql
 from youtube_recommender.db.models import psql
 from youtube_recommender.io_methods import io_methods as im
 from youtube_recommender.settings import EDUCATIONAL_VIDEOS_PATH
 
-log_fmt = "%(asctime)s - %(module)-16s - %(lineno)-4s - %(funcName)-20s - %(levelname)-7s - %(message)s"  # name
 logger = setup_logger(
-    cmdLevel=logging.INFO, saveFile=0, savePandas=1, color=1, fmt=log_fmt
+    cmdLevel=logging.INFO, saveFile=0, savePandas=1, color=1, fmt=LOG_FMT
 )
 
 s = get_session(psql)()
 
-parser = argparse.ArgumentParser(description="create_educational_videos_dataset optional parameters")
+parser = argparse.ArgumentParser(
+    description="create_educational_videos_dataset optional parameters"
+)
 parser.add_argument(
     "-s",
     "--save_feather",

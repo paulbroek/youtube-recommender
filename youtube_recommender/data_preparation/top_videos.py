@@ -4,6 +4,7 @@ Get top videos from materialized view
 Save to .feather 
 """
 
+from typing import Final
 import argparse
 import logging
 from youtube_recommender.io_methods import io_methods
@@ -20,8 +21,9 @@ logger = setup_logger(
 PROJECT_ROOT = get_project_root()
 
 # Read database - PostgreSQL
-VIEW: str = "top_videos"
-LIMIT: int = 50_000
+# VIEW: Final[str] = "top_videos"
+VIEW: Final[str] = "top_videos_with_description"
+LIMIT: Final[int] = 50_000
 df = load_db_table(
     config_db="database.ini", query=f"SELECT * FROM {VIEW} LIMIT {LIMIT}"
 )

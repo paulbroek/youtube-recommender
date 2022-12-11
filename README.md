@@ -63,7 +63,7 @@ pip install -U ~/repos/youtube_recommender
 cp -r ${SECRETS_DIR}/rarc/config/youtube_recommender/*  ~/anaconda3/envs/py39/lib/python3.9/site-packages/youtube_recommender/config
 ````
 
-## 2.2 How to run
+## 2.2.1 How to run
 
 Search for YouTube videos, example usage:
 
@@ -142,4 +142,13 @@ optional arguments:
   --merge_with_videos  merge resulting captions dataset with videos metadata
   -s, --save_captions  Save captions to `/home/paul/repos/youtube-recommender/youtube_recommender/data/captions.feather`
   -p, --push_db        push Video, Channel and Caption rows to PostgreSQL`
+```
+
+## 2.2.2 Run notebook files in IPython
+
+Convert `.ipynb` to `.py` files and run them in `ipython`
+
+```bash
+cd ~/repos/youtube-recommender/youtube_recommender
+jupyter nbconvert --to script recommend/logistic_regression/train.ipynb && ipy recommend/logistic_regression/train.py
 ```
