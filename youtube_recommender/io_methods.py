@@ -1,13 +1,12 @@
 """io.methods.py, methods related to IO."""
 
 import logging
-import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 import jsonlines
 import pandas as pd
-from rarc_utils.decorators import items_per_sec
+from rarc_utils.decorators import check_file_exists, items_per_sec
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +28,7 @@ class io_methods:
                 writer.write(item)
 
     @staticmethod
+    @check_file_exists
     def load_jsonlines(path: Path) -> pd.DataFrame:
         """Load jsonlines file and parse to dataframe."""
         items: List[Dict[str, Any]] = []
@@ -41,6 +41,7 @@ class io_methods:
         return df
 
     @staticmethod
+    @check_file_exists
     def load_json(path: Path) -> pd.DataFrame:
         """Load json file and parse to dataframe."""
         df: pd.DataFrame = pd.read_json(path)
@@ -62,10 +63,10 @@ class io_methods:
         logger.info(f"saved {len(df):,} {WHATS} to {df_path.as_posix()}")
 
     @staticmethod
+    @check_file_exists
     def load_feather(df_path: Path, what: Optional[str]) -> pd.DataFrame:
         """Load any dataframe from feather."""
         # check if file exists, or warn user to run main.py first
-        assert os.path.exists(df_path), f"{df_path.as_posix()} does not exist"
         assert what is not None
         df: pd.DataFrame = pd.read_feather(df_path)
 
@@ -91,10 +92,10 @@ class io_methods:
 
     @staticmethod
     @items_per_sec
+    @check_file_exists
     def load_pickle(df_path: Path, what: Optional[str]) -> pd.DataFrame:
         """Load any dataframe from pickle."""
         # check if file exists, or warn user to run main.py first
-        assert os.path.exists(df_path), f"{df_path.as_posix()} does not exist"
         assert what is not None
         df: pd.DataFrame = pd.read_pickle(df_path)
 
@@ -111,6 +112,7 @@ class io_methods:
         cls.save_feather(df, df_path, what="topic")
 
     @classmethod
+    @check_file_exists
     def load_topics(cls, df_path: Path) -> Tuple[List[int], List[float]]:
         """Load topic ids and probabilities from feather."""
         df = cls.load_feather(df_path, what="topic")

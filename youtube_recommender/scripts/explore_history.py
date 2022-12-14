@@ -9,11 +9,12 @@ How to get watch history from Google Takeout?
     -> next time you an click on "Manage your exports" and press "Create new export"
 
 Todo:
-    - Also use file `search-history.json`, can give more info of user's interests
+    [ ] Also use file `search-history.json`, can give more info of user's interests
 
 Run:
     # load raw json dataset, directly from Google Takeout
     ipy explore_history.py -- -t json
+
     # load dataset with scraped YouTube channels using pytube
     ipy explore_history.py -- -t feather
 
@@ -28,11 +29,12 @@ from typing import Optional
 
 import matplotlib.pyplot as plt  # type: ignore[import]
 import pandas as pd
+from tqdm import tqdm  # type: ignore[import]
+
 from pytube import YouTube  # type: ignore[import]
 from pytube.exceptions import RegexMatchError  # type: ignore[import]
 from rarc_utils.sqlalchemy_base import (get_async_session, get_session,
                                         load_config)
-from tqdm import tqdm  # type: ignore[import]
 from youtube_recommender import config as config_dir
 from youtube_recommender.data_methods import data_methods as dm
 from youtube_recommender.db.models import scrapeJob
@@ -160,7 +162,7 @@ def plot_usage_over_time(df: pd.DataFrame, ax=None) -> None:
     plt.show()
 
 
-def create_pytube_object(url: str) -> Optional[YouTube]:
+def create_pytube(url: str) -> Optional[YouTube]:
     """Create PyTube object."""
     res: Optional[YouTube] = None
     try:
@@ -173,7 +175,7 @@ def create_pytube_object(url: str) -> Optional[YouTube]:
 
 def scrape_channels(df: pd.DataFrame):
     """Scrape channel_id, channel_url via youtube url."""
-    df["yt"] = df["titleUrl"].map(create_pytube_object)
+    df["yt"] = df["titleUrl"].map(create_pytube)
     df = df[~df['yt'].isna()].copy()
     pct_not_valid_url = df["yt"].isna().sum() / df.shape[0]
     logger.info(f"{pct_not_valid_url=:.1%}")

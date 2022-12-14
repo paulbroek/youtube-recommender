@@ -21,3 +21,4 @@ grpcio-tools
 grpc-interceptor ~= 0.12.0
 pytest
 pyperclip
+matplotlib
