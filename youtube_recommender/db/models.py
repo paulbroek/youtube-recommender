@@ -72,14 +72,13 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy.schema import Table
 
-from rarc_utils.log import loggingLevelNames, set_log_level, setup_logger
+from rarc_utils.log import (LOG_FMT, loggingLevelNames, set_log_level,
+                            setup_logger)
 from rarc_utils.misc import trunc_msg
 from rarc_utils.sqlalchemy_base import (UtilityBase, async_main, get_async_db,
                                         get_async_session, get_session,
                                         load_config)
 from youtube_recommender import config as config_dir
-
-LOG_FMT = "%(asctime)s - %(module)-16s - %(lineno)-4s - %(funcName)-16s - %(levelname)-7s - %(message)s"  # title
 
 Base = declarative_base()
 

@@ -9,6 +9,7 @@ import logging
 import sys
 from typing import Any, Dict, List
 
+import pyperclip
 import uvloop
 from rarc_utils.log import setup_logger
 from rarc_utils.sqlalchemy_base import get_async_session, get_session
@@ -85,6 +86,13 @@ parser.add_argument(
     help=f"Save captions to `{CAPTIONS_PATH.as_posix()}`",
 )
 parser.add_argument(
+    "-c",
+    "--to_clipboard",
+    action="store_true",
+    default=False,
+    help="Save captions to clipboard",
+)
+parser.add_argument(
     "-p",
     "--push_db",
     action="store_true",
@@ -137,6 +145,11 @@ if __name__ == "__main__":
 
         if args.save_captions:
             save_feather(df, CAPTIONS_PATH)
+
+        if args.to_clipboard:
+            if len(df) > 1:
+                logger.warning("data contains more than one row, only printing first row")
+            pyperclip.copy(df.text[0])
 
         if args.push_db:
             captions: Dict[str, Caption] = loop.run_until_complete(
