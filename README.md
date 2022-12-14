@@ -4,51 +4,21 @@ Recommending YouTube videos based on personal needs, using YouTube API and speci
 
 Extends on [this](https://github.com/chris-lovejoy/YouTube-video-finder) repo, based on [this](https://towardsdatascience.com/i-created-my-own-youtube-algorithm-to-stop-me-wasting-time-afd170f4ca3a) Medium article
 
-## 1.1 Requirements
+## 1.0 Config
 
-- [x] Retrieve videos by search term
-- [x] Retrieve captions by video_id
-- [x] Dismiss non-English ideos with help of [langid](https://github.com/saffsd/langid.py)
-- [x] Join YouTube API metadata and YouTubeTranscriptApi captions data into one dataset
-- [x] Create data models
-- [x] Save compressed captions data
-- [x] Cache search results in PostgreSQL
-- [x] Make package installable
-- [x] Also cache load captions in `topicer/__main__.py`
-- [x] Reconstruct videos tables from cache results
-- [x] Save favourite channels to channels.json, for easy reconstruction of db
-- [x] Containerize the application
-- [ ] Run tests in GitHub Actions
-- [x] Create fastAPI api to retrieve this data
-- [ ] Create job to collect search results for popular/personal search terms, in order not to exceed API quota (10_000 units/day, [extend quota here](https://support.google.com/youtube/contact/yt_api_form))
-- [x] Export personal watch history from YouTube
-- [x] Extract personal watch history from YouTube export file, is all metadata accessible?
-- [ ] Get all, or popular video **genres**
-- [ ] With these genres, try to make **recommendations**
-- [ ] Extract plain text/captions from videos, so topic modeling can be applied to it
-- [ ] Classify videos by genre, difficulty, (latent) topics, ...
-- [ ] Query on categories of videos you watched before: science, AI, ML, python, etc. \
-       Collect best videos by custom rating of all these queries. \
-       Start recommending videos based on this sample
-- [ ] Verify if pushing the same video to postgres only updates changed fields.
-- [ ] ...
-
-## 1.2 Nice to haves
-
-- [x] Use async http requests to query YouTube API
-- [x] Query captions asynchronously
-- [ ] Save Video keywords to db
-- [ ] Save Video rating to db
-
-## 2.1 How to install
-
-````bash
-# add YouTube v3 API key to youtube_recommender/config/config.yaml first!
+```bash
+# add YouTube v3 API key to youtube_recommender/config/config.yaml
 # structure:
 # api_key:
 #   "your_api_key"
 
+# copy configuration files
+cp -r ${SECRETS_DIR}/rarc/config/youtube_recommender/*  ~/anaconda3/envs/py39/lib/python3.9/site-packages/youtube_recommender/config
+```
 
+## 2.1 How to install
+
+```bash
 # install deps
 pip install -r requirements.txt
 
@@ -57,11 +27,7 @@ python -m spacy download en_core_web_sm
 
 # install app
 pip install -U ~/repos/youtube_recommender
-
-# copy configuration files
-```bash
-cp -r ${SECRETS_DIR}/rarc/config/youtube_recommender/*  ~/anaconda3/envs/py39/lib/python3.9/site-packages/youtube_recommender/config
-````
+```
 
 ## 2.2.1 How to run
 
