@@ -13,7 +13,7 @@ on:
   #     - ".github/workflows/**"
 
   workflow_run:
-    workflows: ["Docker push"]
+    workflows: ["Publish ghcr"]
     # branches: [main]
     types:
       - completed
@@ -74,18 +74,18 @@ jobs:
 
       - name: Update env variables in deployment file
         run: |
-          sed -i 's|<NOTION_API_KEY>|${{ secrets.NOTION_API_KEY }}|' $GITHUB_WORKSPACE/config/deployment.yml
-          sed -i 's|<TELEGRAM_BOT_TOKEN>|${{ secrets.TELEGRAM_BOT_TOKEN }}|' $GITHUB_WORKSPACE/config/deployment.yml
-          sed -i 's|<NOTION_DATABASE_ID>|${{ secrets.NOTION_DATABASE_ID }}|' $GITHUB_WORKSPACE/config/deployment.yml
-          sed -i 's|<DATABASE_URL>|${{ secrets.DATABASE_URL }}|' $GITHUB_WORKSPACE/config/deployment.yml
-          TAG=main && sed -i 's|<IMAGE>|ghcr.io/paulbroek/notion-utils-js:'${TAG}'|' $GITHUB_WORKSPACE/config/deployment.yml
-          cat $GITHUB_WORKSPACE/config/deployment.yml
+          # sed -i 's|<NOTION_API_KEY>|${{ secrets.NOTION_API_KEY }}|' $GITHUB_WORKSPACE/deployment.yml
+          # sed -i 's|<TELEGRAM_BOT_TOKEN>|${{ secrets.TELEGRAM_BOT_TOKEN }}|' $GITHUB_WORKSPACE/deployment.yml
+          # sed -i 's|<NOTION_DATABASE_ID>|${{ secrets.NOTION_DATABASE_ID }}|' $GITHUB_WORKSPACE/deployment.yml
+          # sed -i 's|<DATABASE_URL>|${{ secrets.DATABASE_URL }}|' $GITHUB_WORKSPACE/deployment.yml
+          TAG=main && sed -i 's|<IMAGE>|ghcr.io/paulbroek/youtube-recommender:'${TAG}'|' $GITHUB_WORKSPACE/deployment.yml
+          cat $GITHUB_WORKSPACE/deployment.yml
 
       - name: Save DigitalOcean kubeconfig with short-lived credentials
         run: doctl kubernetes cluster kubeconfig save --expiry-seconds 600 ${{ secrets.DIGITAL_OCEAN_CLUSTER_NAME }}
 
       - name: Deploy to DigitalOcean Kubernetes
-        run: kubectl apply -f $GITHUB_WORKSPACE/config/deployment.yml
+        run: kubectl apply -f $GITHUB_WORKSPACE/deployment.yml
 
       - name: Verify deployment
-        run: kubectl rollout status deployment/notion-telegram-bot-js
+        run: kubectl rollout status deployment/distributed-scraper
