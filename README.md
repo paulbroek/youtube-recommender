@@ -1,8 +1,11 @@
 # youtube-recommender
 
-Recommending YouTube videos based on personal needs, using YouTube API and specified tags / fields of interest through [GenSim](https://radimrehurek.com/gensim/)
+Recommending YouTube videos based on personal needs, using YouTube API and specified tags / fields of interest through [GenSim](https://radimrehurek.com/gensim/) and [BERTopic](https://github.com/MaartenGr/BERTopic)
 
-Extends on [this](https://github.com/chris-lovejoy/YouTube-video-finder) repo, based on [this](https://towardsdatascience.com/i-created-my-own-youtube-algorithm-to-stop-me-wasting-time-afd170f4ca3a) Medium article
+Extends on [this](https://github.com/chris-lovejoy/YouTube-video-finder) project, based on [this](https://towardsdatascience.com/i-created-my-own-youtube-algorithm-to-stop-me-wasting-time-afd170f4ca3a) Medium article
+
+[pytube](https://github.com/pytube/pytube) is used to scrape video metadata
+[youtube-transcript-api](https://github.com/jdepoix/youtube-transcript-api) is used to download captions
 
 ## 1.0 Config
 
@@ -51,20 +54,22 @@ ipy -m youtube_recommender -- 'search term 1' 'search term 2' --save
 `python -m youtube_recommender --help`:
 
 ```
-usage: __main__.py [-h] [--search-period SEARCH_PERIOD] [--dryrun] [-f] [--filter] [-s] [-p] search_terms [search_terms ...]
+usage: __main__.py [-h] [--search-period SEARCH_PERIOD] [--dryrun] [-f] [--filter] [-n NITEMS] [-s] [-p] search_terms [search_terms ...]
 
 Defining search parameters
 
 positional arguments:
   search_terms          The terms to query. Can be multiple.
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   --search-period SEARCH_PERIOD
                         The number of days to search for.
   --dryrun              only load modules, do not requests APIs
   -f, --force           force to run query, do not use cache
   --filter              filter non English titles from dataset using langid
+  -n NITEMS, --nitems NITEMS
+                        Max search results to fetch from YouTube API
   -s, --save            Save results to
   -p, --push_db         push queryResult and Video rows to PostgreSQL`
 ```
@@ -87,26 +92,32 @@ ipy -m youtube_recommender.topicer -- --save_captions --from_feather --merge_wit
 ipy -m youtube_recommender.topicer -- --from_feather -sp
 
 # to inspect results, inspect `captions` object`
+
+# download video caption and save to clipboard
+python -m youtube_recommender.topicer --with_start_times --to_clipboard \
+  VIDEO_ID
 ```
 
 `python -m youtube_recommender.topicer --help`:
 
 ```
-usage: __main__.py [-h] [--from_feather] [-n N] [--dryrun] [-f] [--merge_with_videos] [-s] [-p] [video_ids ...]
+usage: __main__.py [-h] [--from_feather] [-n N] [--dryrun] [-f] [--merge_with_videos] [--with_start_times] [-s] [-c] [-p] [video_ids ...]
 
 Defining parameters
 
 positional arguments:
   video_ids            The YouTube videos to extract captions from. Can be multiple.
 
-optional arguments:
+options:
   -h, --help           show this help message and exit
   --from_feather       Import video ids from `/home/paul/repos/youtube-recommender/youtube_recommender/data/top_videos.feather`, created in main.py. ignores any manually passed video_ids
   -n N                 select first `n` rows from feather file
   --dryrun             only load data, do not download captions
   -f, --force          force to download captions, do not use cache
   --merge_with_videos  merge resulting captions dataset with videos metadata
+  --with_start_times   include start_times in the output caption string
   -s, --save_captions  Save captions to `/home/paul/repos/youtube-recommender/youtube_recommender/data/captions.feather`
+  -c, --to_clipboard   Save captions to clipboard
   -p, --push_db        push Video, Channel and Caption rows to PostgreSQL`
 ```
 
