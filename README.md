@@ -16,7 +16,10 @@ Extends on [this](https://github.com/chris-lovejoy/YouTube-video-finder) project
 #   "your_api_key"
 
 # copy configuration files
+# to installed package
 cp -r ${SECRETS_DIR}/rarc/config/youtube_recommender/*  ~/anaconda3/envs/py39/lib/python3.9/site-packages/youtube_recommender/config
+# to cloned repo
+cp -r ${SECRETS_DIR}/rarc/config/youtube_recommender/*  ~/repos/youtube-recommender/youtube_recommender/config
 ```
 
 ## 2.1 How to install
@@ -32,7 +35,7 @@ python -m spacy download en_core_web_sm
 pip install -U ~/repos/youtube_recommender
 ```
 
-## 2.2.1 How to run
+## 2.2.1 How to run the package
 
 Search for YouTube videos, example usage:
 
@@ -128,4 +131,15 @@ Convert `.ipynb` to `.py` files and run them in `ipython`
 ```bash
 cd ~/repos/youtube-recommender/youtube_recommender
 jupyter nbconvert --to script recommend/logistic_regression/train.ipynb && ipy recommend/logistic_regression/train.py
+```
+
+## 2.2.3 Build and run distributed scraper
+
+```bash
+# rsync nginx configuration: nginx.cert and nginx.key
+rsync -avz -e "ssh -p PORT" --progress USER@HOST:/home/paul/repos/youtube-recommender/cert ~/repos/youtube-recommender
+# create network
+docker network create microservices
+# deploy scraper
+docker-compose --scale scrape-service=5 --build && docker-compose logs -f
 ```
