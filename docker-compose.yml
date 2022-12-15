@@ -10,8 +10,13 @@ services:
   scrape-service:
     build:
       context: .
-    command: python /service/scrape_requests/serve.py --max_workers 25
-    # command: python /service/scrape_requests/serve.py --max_workers 25 --secure
+    command:
+      - /bin/bash
+      - -c
+      - |
+        python /service/scrape_requests/serve.py --max_workers 25
+        # python /service/scrape_requests/serve.py --max_workers 25 --secure
+        # python -c "while True: pass"
     # ports:
     #   - "50051:50051"
     expose:
@@ -23,6 +28,8 @@ services:
     #   - nginx-reverseproxy
     networks:
       - microservices
+    volumes:
+      - ./youtube_recommender/config/postgres.cfg:/usr/local/lib/python3.9/site-packages/youtube_recommender/config/postgres.cfg
 
   nginx-reverseproxy:
     image: nginx:1.13.11

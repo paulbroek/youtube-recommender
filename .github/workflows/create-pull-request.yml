@@ -1,0 +1,17 @@
+name: Create pull request
+
+on:
+  push:
+    branches: ["test"]
+
+jobs:
+  create-pull-request:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: create pull request
+        run: |
+          gh label create -f ready-to-merge
+          gh pr create -B main -H test -l ready-to-merge --title 'Merge test into main' --body 'Created by Github action'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

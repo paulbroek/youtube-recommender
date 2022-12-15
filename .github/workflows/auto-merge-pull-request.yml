@@ -1,0 +1,20 @@
+name: Auto merge pull request
+
+on:
+  pull_request:
+    branches: ["test", "main"]
+    types: [opened]
+
+jobs:
+  auto-merge-pull-request:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: auto merge pull request
+        run: |
+          # get last pull-request id
+          prId=$(gh pr list | awk '{print $1}')
+          # auto-merge pull-request
+          gh pr merge $prId --auto -md
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

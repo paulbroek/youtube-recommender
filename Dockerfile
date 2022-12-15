@@ -11,12 +11,12 @@ COPY requirements.txt /tmp
 RUN /usr/local/bin/python -m pip install --upgrade pip
 RUN pip install -r /tmp/requirements.txt
 
-COPY . /tmp
+# download english corpus for SpaCy
+RUN python -m spacy download en_core_web_sm
 
 RUN pip install -U git+https://git@github.com/paulbroek/rarc-utils.git 
 
-# download english corpus for SpaCy
-RUN python -m spacy download en_core_web_sm
+COPY . /tmp
 
 # install package
 RUN pip install /tmp/
@@ -28,8 +28,9 @@ WORKDIR /service/scrape_requests
 RUN python -m grpc_tools.protoc -I ../protobufs --python_out=. \
            --grpc_python_out=. ../protobufs/scrape_requests.proto
 
-# todo: copy config files
+# TODO: copy config files
 # ...
+# or mount in compose file
 
 # adds deps here that can later me moved to requirements.txt
 # RUN pip install pandas  

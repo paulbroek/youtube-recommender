@@ -8,14 +8,10 @@ import argparse
 import asyncio
 import logging
 import sys
-from http.client import RemoteDisconnected
-from multiprocessing import Pool
-from time import time
-from typing import Any, Dict, List, Set
+from typing import List
 
 import pandas as pd
 from pytube import Channel as pytube_channel  # type: ignore[import]
-from pytube import YouTube  # type: ignore[import]
 # from pytube import Playlist, Search
 from rarc_utils.log import setup_logger
 from rarc_utils.sqlalchemy_base import get_async_session, load_config
@@ -24,9 +20,8 @@ from youtube_recommender.data_methods import data_methods as dm
 # from youtube_recommender.db.helpers import (
 #     get_keyword_association_rows_by_ids, get_video_ids_by_ids)
 from youtube_recommender.db.helpers import get_video_ids_by_channel_ids
-from youtube_recommender.settings import (CHANNEL_FIELDS, PYTUBE_VIDEOS_PATH,
-                                          VIDEO_FIELDS)
-from youtube_recommender.video_finder import load_feather, save_feather
+from youtube_recommender.settings import PYTUBE_VIDEOS_PATH
+from youtube_recommender.video_finder import save_feather
 
 log_fmt = "%(asctime)s - %(module)-16s - %(lineno)-4s - %(funcName)-20s - %(levelname)-7s - %(message)s"  # name
 logger = setup_logger(
@@ -95,6 +90,8 @@ if __name__ == "__main__":
     assert isinstance(args.channel_url, str), "pass url as string"
 
     nskip: int = int(args.skip)
+    nitems: int = int(args.nitems)
+    ncore: int = int(args.ncore)
 
     # todo: get scrapeJobs from db
     vurls: pytube_channel = pytube_channel(args.channel_url)

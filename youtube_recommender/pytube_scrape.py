@@ -7,7 +7,7 @@ example usage:
     ipy pytube_scrape.py -i -- --ncore 12 -sp -n 50 --channel_url https://www.youtube.com/channel/UC8butISFwT-Wl7EV0hUK0BQ
 
 todo:
-        - this whole script will be replaced by microservices, implemented in scrape_requests/scrape.py
+    - [] this whole script will be replaced by microservices, implemented in scrape_requests/scrape.py
 """
 
 import argparse
@@ -23,7 +23,7 @@ import pandas as pd
 from pytube import Channel as pytube_channel  # type: ignore[import]
 from pytube import YouTube  # type: ignore[import]
 # from pytube import Playlist, Search
-from rarc_utils.log import setup_logger
+from rarc_utils.log import LOG_FMT, setup_logger
 from rarc_utils.sqlalchemy_base import get_async_session, load_config
 from youtube_recommender import config as config_dir
 from youtube_recommender.data_methods import data_methods as dm
@@ -35,9 +35,8 @@ from youtube_recommender.settings import (CHANNEL_FIELDS, PYTUBE_VIDEOS_PATH,
                                           VIDEO_FIELDS)
 from youtube_recommender.video_finder import load_feather, save_feather
 
-log_fmt = "%(asctime)s - %(module)-16s - %(lineno)-4s - %(funcName)-20s - %(levelname)-7s - %(message)s"  # name
 logger = setup_logger(
-    cmdLevel=logging.INFO, saveFile=0, savePandas=1, color=1, fmt=log_fmt
+    cmdLevel=logging.INFO, saveFile=0, savePandas=1, color=1, fmt=LOG_FMT
 )  # DEBUG
 
 
@@ -91,7 +90,7 @@ def extract_channel_fields(
 
 
 def extract_multiple_urls(urls: List[str]) -> List[Dict[str, Any]]:
-    """Extract metadata from multiple urls. Using slow for loop."""
+    """Extract metadata from multiple urls. Caution: uses slow for loop."""
     res = []
     t0 = time()
     # slow?
@@ -108,7 +107,7 @@ def extract_multiple_urls(urls: List[str]) -> List[Dict[str, Any]]:
 
 
 def mp_extract_videos(urls: List[str], nprocess: int) -> List[Dict[str, Any]]:
-    """Multiprocessing extract metadata from multiple urls."""
+    """Extract metadata from multiple urls using ultiprocessing ."""
     t0 = time()
     with Pool(processes=nprocess) as pool:
         res = pool.map(extract_video_fields, urls)
@@ -123,7 +122,7 @@ def mp_extract_videos(urls: List[str], nprocess: int) -> List[Dict[str, Any]]:
 
 
 def mp_extract_channels(res: List[Dict[str, Any]], nprocess: int):
-    """Extract metadata for multiple videos + channel names."""
+    """Extract metadata for multiple videos + channel names using multiprocessing."""
     # get unique channels
     channel_urls: Set[str] = set(r["channel_url"] for r in res)
 
