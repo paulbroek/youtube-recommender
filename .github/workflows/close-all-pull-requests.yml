@@ -13,7 +13,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  run:
+  close-all-pull-requests:
     runs-on: ubuntu-latest
     steps:
       - uses: crondaemon/close-pr@v1
