@@ -9,6 +9,14 @@ on:
   # schedule:
   #   - cron: "0 0 * * *"
 
+  # for manual runs
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "The branch to run the workflow for"
+        required: true
+        default: "main"
+
 jobs:
   run:
     runs-on: ubuntu-latest
