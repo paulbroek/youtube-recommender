@@ -1,8 +1,13 @@
-r"""test_scrape_request.py
+"""test_scrape_request.py
 
 Run:
     # run serve.py first
     # python serve.py, OR docker-compose build && docker-compose up -d scrape-service
+
+    # go to this dir
+    cd ~/repos/youtube-recommender/youtube_recommender/scrape_requests
+
+    # now test scrape_requests
     export YT_SCRAPE_SERVICE_HOST=localhost         && ipy test_scrape_request.py -- --category video   --id GBTdnfD6s5Q --aio --ntrial 10
     export YT_SCRAPE_SERVICE_HOST=192.168.178.46    && ipy test_scrape_request.py -- --category video   --id GBTdnfD6s5Q --aio --ntrial 10
     export YT_SCRAPE_SERVICE_HOST=192.168.178.46    && ipy test_scrape_request.py -- --category channel --id UCBjOe-Trw6N8neQV7NUsfiA --aio --ntrial 2
@@ -29,7 +34,7 @@ Run:
         --ntrial 10 \
         # --secure
 
-Todo:
+TODO:
     - test number of videos/channels/comments scraped per second, 
         by scaling number of threads / containers on the server side
 """
@@ -147,8 +152,9 @@ def compute_items_received(cat: int, res) -> int:
         pass
 
     elif cat == ScrapeCategory.CHANNEL:
-        mm = [MessageToDict(m)["channelScrapeResults"][0]["vurls"] for m in res]
-        mm = sum(mm, [])
+        # mm = [MessageToDict(m)["channelScrapeResults"][0]["vurls"] for m in res]
+        # mm = sum(mm, [])
+        pass
 
     elif cat == ScrapeCategory.COMMENT:
         mm = [MessageToDict(m)["commentScrapeResults"] for m in res]
@@ -241,7 +247,8 @@ if __name__ == "__main__":
     if cli_args.ntrial == 1:
         print(f"{res=}")
 
-    # todo: update live progress
+    # TODO: update live progress
+    # implement as a service running in compose.yml?
 
     elapsed: float = time() - t0
     requests_per_sec: float = len(res) / elapsed

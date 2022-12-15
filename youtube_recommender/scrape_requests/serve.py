@@ -5,6 +5,7 @@ Run:
     python serve.py --max_workers 20
 """
 import argparse
+import logging
 from concurrent import futures
 
 import grpc  # type: ignore[import]
@@ -13,6 +14,8 @@ from channel_scrape_requests import ChannelScrapeService
 from comment_scrape_requests import CommentScrapeService
 from interceptors import ErrorLogger
 from video_scrape_requests import VideoScrapeService
+
+logger = logging.getLogger(__name__)
 
 with open("/run/secrets/nginx.key", "rb") as f:  # path to you key location
     private_key = f.read()
@@ -69,4 +72,5 @@ parser.add_argument(
 
 if __name__ == "__main__":
     cli_args = parser.parse_args()
+    logger.info("running")
     serve(cli_args.max_workers, secure=cli_args.secure)

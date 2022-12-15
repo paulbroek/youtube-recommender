@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: distributed-scraper
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: distributed-scraper
+  template:
+    metadata:
+      labels:
+        app: distributed-scraper
+    spec:
+      containers:
+        - name: distributed-scraper
+          image: <IMAGE>
+          resources:
+            requests:
+              cpu: 100m
+              memory: 328Mi
+            limits:
+              cpu: 100m
+              memory: 328Mi
+
+          # env:
+          #   - name: NODE_ENV
+          #     # value: production
+          #     value: test
+
+          imagePullPolicy: Always

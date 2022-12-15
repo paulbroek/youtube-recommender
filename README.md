@@ -142,4 +142,6 @@ rsync -avz -e "ssh -p PORT" --progress USER@HOST:/home/paul/repos/youtube-recomm
 docker network create microservices
 # deploy scraper
 docker-compose --scale scrape-service=5 --build && docker-compose logs -f
+# check if reverseproxy is running succesfully
+docker logs youtube-recommender_nginx-reverseproxy_1 --tail 20 -f
 ```

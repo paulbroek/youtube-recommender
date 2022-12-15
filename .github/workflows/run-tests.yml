@@ -1,0 +1,54 @@
+name: Run tests
+
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+on:
+  # runs daily tests
+  schedule:
+    - cron: "0 7 * * *"
+
+  push:
+    branches: ["test"]
+    # Publish semver tags as releases.
+    # tags: ["v*.*.*"]
+
+  # pull_request:
+  #   branches: ["main"]
+
+env:
+  TELEGRAM_API_ID: ${{ secrets.TELEGRAM_API_ID }}
+  TELEGRAM_API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
+  TELEGRAM_SESSION_KEY: ${{ secrets.TELEGRAM_SESSION_KEY }}
+  TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+  NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
+  NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
+
+jobs:
+  tsc:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - run: yarn install
+      - run: tsc -p .
+
+  jest:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x]
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - run: yarn install
+      # - run: yarn test
+      - run: yarn jest __tests__/telegram.ts --forceExit --runInBand

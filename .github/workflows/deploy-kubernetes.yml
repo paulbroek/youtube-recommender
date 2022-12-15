@@ -1,0 +1,91 @@
+# originally from: https://github.com/do-community/example-doctl-action/blob/main/.github/workflows/workflow.yaml
+name: Kubernetes deploy
+
+# runs after deploying image to ghcr
+on:
+  # push:
+  #   branches:
+  #     - main
+  #   paths:
+  #     - "config/**"
+  #     - "src/**"
+  #     - "Dockerfile"
+  #     - ".github/workflows/**"
+
+  workflow_run:
+    workflows: ["Docker push"]
+    # branches: [main]
+    types:
+      - completed
+
+  # for manual runs
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "The branch to run the workflow for"
+        required: true
+        default: "main"
+
+env:
+  # Use docker.io for Docker Hub if empty
+  REGISTRY: ghcr.io
+  # github.repository as <account>/<repo>
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build:
+    # name: Build, push, and deploy
+    name: pull and deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.inputs.branch }}
+
+      - name: Update SHA
+        run: echo $GITHUB_SHA > $GITHUB_WORKSPACE/src/_meta
+
+      # - name: Build container image
+      #   run: docker build -t registry.digitalocean.com/asb/static-example:$(echo $GITHUB_SHA | head -c7) .
+
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      # use ghcr.io for now
+      # - name: Log in to DigitalOcean Container Registry with short-lived credentials
+      #   run: doctl registry login --expiry-seconds 600
+
+      # - name: Push image to DigitalOcean Container Registry
+      #   run: docker push registry.digitalocean.com/asb/static-example:$(echo $GITHUB_SHA | head -c7)
+
+      # better: inject directly into <SOME_ENV_VAR> placeholers
+      # - name: Create .env file
+      #   run: |
+      #     touch .env
+      #     echo NOTION_API_KEY=${{ secrets.NOTION_API_KEY }} >> .env
+      #     echo TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }} >> .env
+      #     echo NOTION_PAGE_ID=${{ secrets.NOTION_PAGE_ID }} >> .env
+      #     echo NOTION_DATABASE_ID=${{ secrets.NOTION_DATABASE_ID }} >> .env
+      #     # cat .env
+      #     source .env
+
+      - name: Update env variables in deployment file
+        run: |
+          sed -i 's|<NOTION_API_KEY>|${{ secrets.NOTION_API_KEY }}|' $GITHUB_WORKSPACE/config/deployment.yml
+          sed -i 's|<TELEGRAM_BOT_TOKEN>|${{ secrets.TELEGRAM_BOT_TOKEN }}|' $GITHUB_WORKSPACE/config/deployment.yml
+          sed -i 's|<NOTION_DATABASE_ID>|${{ secrets.NOTION_DATABASE_ID }}|' $GITHUB_WORKSPACE/config/deployment.yml
+          sed -i 's|<DATABASE_URL>|${{ secrets.DATABASE_URL }}|' $GITHUB_WORKSPACE/config/deployment.yml
+          TAG=main && sed -i 's|<IMAGE>|ghcr.io/paulbroek/notion-utils-js:'${TAG}'|' $GITHUB_WORKSPACE/config/deployment.yml
+          cat $GITHUB_WORKSPACE/config/deployment.yml
+
+      - name: Save DigitalOcean kubeconfig with short-lived credentials
+        run: doctl kubernetes cluster kubeconfig save --expiry-seconds 600 ${{ secrets.DIGITAL_OCEAN_CLUSTER_NAME }}
+
+      - name: Deploy to DigitalOcean Kubernetes
+        run: kubectl apply -f $GITHUB_WORKSPACE/config/deployment.yml
+
+      - name: Verify deployment
+        run: kubectl rollout status deployment/notion-telegram-bot-js
