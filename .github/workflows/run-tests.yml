@@ -7,13 +7,13 @@ name: Run tests
 
 on:
   # runs daily tests
-  schedule:
-    - cron: "0 7 * * *"
+  # schedule:
+  #   - cron: "0 7 * * *"
 
-  push:
-    branches: ["test"]
-    # Publish semver tags as releases.
-    # tags: ["v*.*.*"]
+  # push:
+  #   branches: ["test"]
+  #   # Publish semver tags as releases.
+  #   # tags: ["v*.*.*"]
 
   # pull_request:
   #   branches: ["main"]
