@@ -11,11 +11,6 @@ on:
 
   # for manual runs
   workflow_dispatch:
-    inputs:
-      branch:
-        description: "The branch to run the workflow for"
-        required: true
-        default: "main"
 
 jobs:
   run:
