@@ -54,24 +54,6 @@ jobs:
         with:
           token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
 
-      # use ghcr.io for now
-      # - name: Log in to DigitalOcean Container Registry with short-lived credentials
-      #   run: doctl registry login --expiry-seconds 600
-
-      # - name: Push image to DigitalOcean Container Registry
-      #   run: docker push registry.digitalocean.com/asb/static-example:$(echo $GITHUB_SHA | head -c7)
-
-      # better: inject directly into <SOME_ENV_VAR> placeholers
-      # - name: Create .env file
-      #   run: |
-      #     touch .env
-      #     echo NOTION_API_KEY=${{ secrets.NOTION_API_KEY }} >> .env
-      #     echo TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }} >> .env
-      #     echo NOTION_PAGE_ID=${{ secrets.NOTION_PAGE_ID }} >> .env
-      #     echo NOTION_DATABASE_ID=${{ secrets.NOTION_DATABASE_ID }} >> .env
-      #     # cat .env
-      #     source .env
-
       - name: Update env variables in deployment file
         run: |
           # sed -i 's|<NOTION_API_KEY>|${{ secrets.NOTION_API_KEY }}|' $GITHUB_WORKSPACE/deployment.yml
