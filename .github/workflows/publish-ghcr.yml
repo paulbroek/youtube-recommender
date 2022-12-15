@@ -7,7 +7,7 @@ name: Publish ghcr
 
 on:
   push:
-    branches: ["draft"]
+    branches: ["test"]
     # Publish semver tags as releases.
     # tags: ["v*.*.*"]
 
