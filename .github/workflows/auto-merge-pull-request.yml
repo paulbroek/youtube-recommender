@@ -1,9 +1,9 @@
 name: Auto merge pull request
 
 on:
-  pull_request.opened:
+  pull_request:
     branches: ["test", "main"]
-    # types: [opened]
+    types: [opened]
 
 jobs:
   auto-merge-pull-request:
