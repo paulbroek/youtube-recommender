@@ -11,9 +11,9 @@ on:
   #   # Publish semver tags as releases.
   #   # tags: ["v*.*.*"]
 
-  pull_request:
-    branches: ["main"]
-    types: [closed]
+  # pull_request:
+  #   branches: ["main"]
+  #   types: [closed]
 
   # for manual runs
   workflow_dispatch:

@@ -1,0 +1,29 @@
+name: Close All Pull Requests
+
+on:
+  push:
+    branches:
+      - ["no_branch"]
+
+  # pull_request:
+  # schedule:
+  #   - cron: "0 0 * * *"
+
+  # for manual runs
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "The branch to run the workflow for"
+        required: true
+        default: "main"
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: crondaemon/close-pr@v1
+        with:
+          # Optional. Post a issue comment just before closing a pull request.
+          comment: "Closed by bot."
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

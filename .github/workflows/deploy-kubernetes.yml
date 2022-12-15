@@ -44,7 +44,7 @@ jobs:
           ref: ${{ github.event.inputs.branch }}
 
       - name: Update SHA
-        run: echo $GITHUB_SHA > $GITHUB_WORKSPACE/src/_meta
+        run: echo $GITHUB_SHA > $GITHUB_WORKSPACE/_meta
 
       # - name: Build container image
       #   run: docker build -t registry.digitalocean.com/asb/static-example:$(echo $GITHUB_SHA | head -c7) .
