@@ -19,12 +19,7 @@ on:
   #   branches: ["main"]
 
 env:
-  TELEGRAM_API_ID: ${{ secrets.TELEGRAM_API_ID }}
-  TELEGRAM_API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
-  TELEGRAM_SESSION_KEY: ${{ secrets.TELEGRAM_SESSION_KEY }}
-  TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-  NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
-  NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
+  SOME_KEY: ${{ secrets.SOME_KEY }}
 
 jobs:
   tsc:
