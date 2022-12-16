@@ -30,10 +30,11 @@ spec:
             - /bin/bash
             - -c
             - |
-              python /service/scrape_requests/serve.py --max_workers 25
+              # python /service/scrape_requests/serve.py --max_workers 25
               # python /service/scrape_requests/serve.py --max_workers 25 --secure
-              # python -c "while True: pass"
-          image: ghcr.io/paulbroek/youtube-recommender:main
+              python -c "while True: pass"
+          # image: ghcr.io/paulbroek/youtube-recommender:main
+          image: ghcr.io/paulbroek/youtube-recommender:latest
           name: scrape-service
           ports:
             - containerPort: 50051
