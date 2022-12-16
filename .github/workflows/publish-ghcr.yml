@@ -6,16 +6,16 @@ name: Publish ghcr
 # documentation.
 
 on:
-  push:
-    branches: ["main"]
-    # Publish semver tags as releases.
-    # tags: ["v*.*.*"]
+  # push:
+  #   branches: ["main"]
+  #   # Publish semver tags as releases.
+  #   # tags: ["v*.*.*"]
 
-    paths:
-      # - "config/**"
-      - "youtube_recommender/**"
-      - "Dockerfile"
-      # - ".github/workflows/**"
+  #   paths:
+  #     # - "config/**"
+  #     - "youtube_recommender/**"
+  #     - "Dockerfile"
+  #     # - ".github/workflows/**"
 
   pull_request:
     branches: ["main"]
