@@ -12,11 +12,11 @@ on:
   #     - "Dockerfile"
   #     - ".github/workflows/**"
 
-  workflow_run:
-    workflows: ["Publish ghcr"]
-    # branches: [main]
-    types:
-      - completed
+  # workflow_run:
+  #   workflows: ["Publish ghcr"]
+  #   # branches: [main]
+  #   types:
+  #     - completed
 
   # for manual runs
   workflow_dispatch:
