@@ -13,14 +13,16 @@ def load_config():
     """
     releaseMode = os.environ.get("RELEASE_MODE", "DEVELOPMENT")
     # take from secrets dur if running in production: kubernetes
-    configDir = config_dir.__file__ if releaseMode == "DEVELOPMENT" else "/run/secrets"
-
-    p = Path(configDir)
-    cfgFile = p.with_name("postgres.cfg")
+    cfgFile = "postgres.cfg"
+    cfgPath = (
+        Path(config_dir.__file__).with_name(cfgFile)
+        if releaseMode == "DEVELOPMENT"
+        else Path("/run/secrets") / cfgFile
+    )
 
     parser = configparser.ConfigParser()
-    parser.read(cfgFile)
-    assert "psql" in parser, f"'psql' not in {cfgFile=}"
+    parser.read(cfgPath)
+    assert "psql" in parser, f"'psql' not in {cfgPath=}"
     psql = AttrDict(parser["psql"])
     assert psql["db"] == "youtube"  # do not overwrite existing other db
 
