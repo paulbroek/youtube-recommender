@@ -11,6 +11,12 @@ on:
     # Publish semver tags as releases.
     # tags: ["v*.*.*"]
 
+    paths:
+      # - "config/**"
+      - "youtube_recommender/**"
+      - "Dockerfile"
+      # - ".github/workflows/**"
+
   # TODO: disabled for now, DO only supports Docker hub for auto app deployments
   pull_request:
     branches: ["main"]
