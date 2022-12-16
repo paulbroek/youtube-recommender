@@ -220,10 +220,6 @@ if __name__ == "__main__":
     nitems: int = int(args.nitems)
     ncore: int = int(args.ncore)
 
-    # url = "https://www.youtube.com/watch?v=K4xMBckipWM"
-    # yt = YouTube(url, use_oauth=True, allow_oauth_cache=True)
-    # yt = YouTube(url)
-
     # todo: load cannot be used to push items, since object relation to db is lost
     if args.load:
         df = load_feather(PYTUBE_VIDEOS_PATH)
