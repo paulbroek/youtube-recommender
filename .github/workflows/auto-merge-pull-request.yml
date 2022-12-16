@@ -3,7 +3,7 @@ name: Auto merge pull request
 # TODO: will not trigger when pr was created by action / bot
 on:
   pull_request:
-    branches: ["test", "main"]
+    # branches: ["test", "main"]
     # types: [opened]
     types: [labeled]
     # option below is safer than `types: [opened]`, since auto created prs won't trigger this workflow
