@@ -12,9 +12,9 @@ on:
     # tags: ["v*.*.*"]
 
   # TODO: disabled for now, DO only supports Docker hub for auto app deployments
-  # pull_request:
-  #   branches: ["main"]
-  #   types: [closed]
+  pull_request:
+    branches: ["main"]
+    types: [closed]
 
   # for manual runs
   workflow_dispatch:

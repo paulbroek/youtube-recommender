@@ -10,7 +10,7 @@ on:
   #   - cron: "0 0 * * *"
 
   # for manual runs
-  workflow_dispatch:
+  # workflow_dispatch:
 
 jobs:
   close-all-pull-requests:

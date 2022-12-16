@@ -3,9 +3,9 @@ name: Kubernetes deploy
 
 # runs after deploying image to ghcr
 on:
-  push:
-    branches:
-      - main
+  # push:
+  #   branches:
+  #     - main
   #   paths:
   #     - "config/**"
   #     - "src/**"
