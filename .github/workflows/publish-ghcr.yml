@@ -6,20 +6,20 @@ name: Publish ghcr
 # documentation.
 
 on:
-  # push:
-  #   branches: ["main"]
-  #   # Publish semver tags as releases.
-  #   # tags: ["v*.*.*"]
-
-  #   paths:
-  #     # - "config/**"
-  #     - "youtube_recommender/**"
-  #     - "Dockerfile"
-  #     # - ".github/workflows/**"
-
-  pull_request:
+  push:
     branches: ["main"]
-    types: [closed]
+    # Publish semver tags as releases.
+    # tags: ["v*.*.*"]
+
+    paths:
+      # - "config/**"
+      - "youtube_recommender/**"
+      - "Dockerfile"
+      # - ".github/workflows/**"
+
+  # pull_request:
+  #   branches: ["main"]
+  #   types: [closed]
 
   # for manual runs
   workflow_dispatch:
@@ -38,7 +38,7 @@ env:
 jobs:
   build:
     # if: (!(github.event.action == 'closed' && github.event.pull_request.merged != true))
-    if: github.event.pull_request.merged == true
+    # if: github.event.pull_request.merged == true
     # if: false
     runs-on: ubuntu-latest
     permissions:
