@@ -1,9 +1,12 @@
 name: Auto merge pull request
 
+# TODO: will not trigger when pr was created by action / bot
 on:
   pull_request:
     branches: ["test", "main"]
-    types: [opened]
+    # types: [opened]
+    # safer than `types: [opened]`, since auto created prs won't trigger this workflow
+    labeled: ["ready-to-merge"]
 
 jobs:
   auto-merge-pull-request:
@@ -13,7 +16,8 @@ jobs:
       - name: auto merge pull request
         run: |
           # get last pull-request id
-          prId=$(gh pr list | awk '{print $1}')
+          # TODO: not safe when multiple prs are opened
+          prId=$(gh pr list -tail -n 1 | awk '{print $1}')
           # auto-merge pull-request
           gh pr merge $prId --auto -md
         env:
