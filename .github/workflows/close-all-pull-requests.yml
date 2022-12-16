@@ -2,8 +2,7 @@ name: Close All Pull Requests
 
 on:
   push:
-    branches:
-      - ["no_branch"]
+    branches: ["no_branch"]
 
   # pull_request:
   # schedule:
