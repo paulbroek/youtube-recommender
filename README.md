@@ -145,3 +145,10 @@ docker-compose --scale scrape-service=5 --build && docker-compose logs -f
 # check if reverseproxy is running succesfully
 docker logs youtube-recommender_nginx-reverseproxy_1 --tail 20 -f
 ```
+
+With Kubernetes:
+
+```bash
+# only deploy scrape-service and its secret files
+k apply -f $(find ./kubernetes -name 'scrape-service*.yaml' -o -name '*secret.yaml' -type f | tr '\n' ',' | sed 's/,$//')
+```

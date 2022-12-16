@@ -30,36 +30,41 @@ spec:
             - /bin/bash
             - -c
             - |
-              python /service/scrape_requests/serve.py --max_workers 25
+              # python /service/scrape_requests/serve.py --max_workers 25
               # python /service/scrape_requests/serve.py --max_workers 25 --secure
-              # python -c "while True: pass"
-          image: scrape-service
+              python -c "while True: pass"
+          image: ghcr.io/paulbroek/youtube-recommender:main
           name: scrape-service
           ports:
             - containerPort: 50051
           resources: {}
           volumeMounts:
             - mountPath: /run/secrets/nginx.cert
-              name: nginx.cert
+              name: nginx-cert-secret
             - mountPath: /run/secrets/nginx.key
-              name: nginx.key
-            - mountPath: /usr/local/lib/python3.9/site-packages/youtube_recommender/config/postgres.cfg
-              name: scrape-service-claim0
+              name: nginx-key-secret
+            # - mountPath: /usr/local/lib/python3.9/site-packages/youtube_recommender/config/postgres.cfg
+            - mountPath: /run/secrets/postgres.cfg
+              name: postgres-cfg-secret
+          env:
+            - name: RELEASE_MODE
+              value: PRODUCTION
+
       restartPolicy: Always
       volumes:
-        - name: nginx.cert
+        - name: nginx-cert-secret
           secret:
-            items:
-              - key: nginx.cert
-                path: nginx.cert
-            secretName: nginx.cert
-        - name: nginx.key
+            # items:
+            #   - key: nginx-cert
+            #     path: nginx.cert
+            secretName: nginx-cert-secret
+        - name: nginx-key-secret
           secret:
-            items:
-              - key: nginx.key
-                path: nginx.key
-            secretName: nginx.key
-        - name: scrape-service-claim0
-          persistentVolumeClaim:
-            claimName: scrape-service-claim0
+            # items:
+            #   - key: nginx-key
+            #     path: nginx.key
+            secretName: nginx-key-secret
+        - name: postgres-cfg-secret
+          secret:
+            secretName: postgres-cfg-secret
 status: {}

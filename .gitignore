@@ -24,6 +24,11 @@ scylla.yaml
 youtube_recommender/data/search-history.json
 youtube_recommender/data/watch-history.json
 
+# kubernetes secret files
+# TODO: use sealed secrets
+kubernetes/secrets
+
+
 # C extensions
 *.so
 
