@@ -17,7 +17,7 @@ def load_config():
     cfgPath = (
         Path(config_dir.__file__).with_name(cfgFile)
         if releaseMode == "DEVELOPMENT"
-        else Path("/run/secrets") / cfgFile
+        else Path("/run/secrets") / cfgFile / "secret.file"
     )
 
     parser = configparser.ConfigParser()
