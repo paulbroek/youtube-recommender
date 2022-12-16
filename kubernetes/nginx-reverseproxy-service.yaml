@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -o ./kubernetes
+    kompose.version: 1.26.0 (40646f47)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: nginx-reverseproxy
+  name: nginx-reverseproxy
+spec:
+  ports:
+    - name: "1443"
+      port: 1443
+      targetPort: 1443
+  selector:
+    io.kompose.service: nginx-reverseproxy
+status:
+  loadBalancer: {}

@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -o ./kubernetes
+    kompose.version: 1.26.0 (40646f47)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: scrape-service
+  name: scrape-service
+spec:
+  ports:
+    - name: "50051"
+      port: 50051
+      targetPort: 50051
+  selector:
+    io.kompose.service: scrape-service
+status:
+  loadBalancer: {}

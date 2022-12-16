@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -o ./kubernetes
+    kompose.version: 1.26.0 (40646f47)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: scrape-service
+  name: scrape-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: scrape-service
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -o ./kubernetes
+        kompose.version: 1.26.0 (40646f47)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/microservices: "true"
+        io.kompose.service: scrape-service
+    spec:
+      containers:
+        - args:
+            - /bin/bash
+            - -c
+            - |
+              python /service/scrape_requests/serve.py --max_workers 25
+              # python /service/scrape_requests/serve.py --max_workers 25 --secure
+              # python -c "while True: pass"
+          image: scrape-service
+          name: scrape-service
+          ports:
+            - containerPort: 50051
+          resources: {}
+          volumeMounts:
+            - mountPath: /run/secrets/nginx.cert
+              name: nginx.cert
+            - mountPath: /run/secrets/nginx.key
+              name: nginx.key
+            - mountPath: /usr/local/lib/python3.9/site-packages/youtube_recommender/config/postgres.cfg
+              name: scrape-service-claim0
+      restartPolicy: Always
+      volumes:
+        - name: nginx.cert
+          secret:
+            items:
+              - key: nginx.cert
+                path: nginx.cert
+            secretName: nginx.cert
+        - name: nginx.key
+          secret:
+            items:
+              - key: nginx.key
+                path: nginx.key
+            secretName: nginx.key
+        - name: scrape-service-claim0
+          persistentVolumeClaim:
+            claimName: scrape-service-claim0
+status: {}
