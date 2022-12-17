@@ -21,7 +21,13 @@ install:
 	pip install -U .
 
 sync_env_to_here:
-	rsync -avz -e ssh $(SERVER_USER)@$(SERVER_ADDR):~/repos/youtube-recommender/.env ~/repos/youtube-recommender
+	rsync -avz -e ssh $(SERVER_USER)@$(SERVER_ADDR):$(REPO_PATH)/.env $(REPO_PATH)
+
+sync_secrets_to_here:
+	rsync -avz -e ssh $(SERVER_USER)@$(SERVER_ADDR):$(REPO_PATH)/kubernetes/secrets $(REPO_PATH)/kubernetes
 
 sync_env_to_server:
-	rsync -avz -e ssh ~/repos/youtube-recommender/.env $(SERVER_USER)@$(SERVER_ADDR):~/repos/youtube-recommender/.env
+	rsync -avz -e ssh $(REPO_PATH)/.env $(SERVER_USER)@$(SERVER_ADDR):$(REPO_PATH)/.env
+
+sync_secrets_to_server:
+	rsync -avz -e ssh $(REPO_PATH)/kubernetes/secrets $(SERVER_USER)@$(SERVER_ADDR):$(REPO_PATH)/kubernetes

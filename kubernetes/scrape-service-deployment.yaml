@@ -42,15 +42,25 @@ spec:
           resources: {}
           volumeMounts:
             - name: nginx-cert-secret
-              mountPath: /run/secrets/nginx.cert
+              mountPath: /run/secrets_from/nginx.cert
               readOnly: true
             - name: nginx-key-secret
-              mountPath: /run/secrets/nginx.key
+              mountPath: /run/secrets_from/nginx.key
               readOnly: true
             - name: postgres-cfg-secret
-              mountPath: /run/secrets/postgres.cfg
+              mountPath: /run/secrets_from/postgres.cfg
               # mountPath: /usr/local/lib/python3.9/site-packages/youtube_recommender/config/postgres.cfg
               readOnly: true
+          # hack: copy secrets file to desired path. k8s doesn't allow to mount a file to a specific file location
+          lifecycle:
+            postStart:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - cp /run/secrets_from/nginx.cert/secret.file /run/secrets/nginx.cert
+                  - cp /run/secrets_from/nginx.key/secret.file /run/secrets/nginx.key
+                  - cp /run/secrets_from/postgres.cfg/secret.file /run/secrets/postgres.cfg
           env:
             - name: RELEASE_MODE
               value: PRODUCTION
