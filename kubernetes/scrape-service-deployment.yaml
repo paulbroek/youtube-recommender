@@ -9,7 +9,7 @@ metadata:
     io.kompose.service: scrape-service
   name: scrape-service
 spec:
-  replicas: 1
+  replicas: 16
   selector:
     matchLabels:
       io.kompose.service: scrape-service
@@ -30,7 +30,7 @@ spec:
             - /bin/bash
             - -c
             - |
-              python /service/scrape_requests/serve.py --max_workers 25
+              python /service/scrape_requests/serve.py --max_workers 25 --debug
               # python /service/scrape_requests/serve.py --max_workers 25 --secure
               # python -c "while True: pass"
           image: ghcr.io/paulbroek/youtube-recommender:main
