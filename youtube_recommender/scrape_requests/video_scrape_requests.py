@@ -1,4 +1,5 @@
 # scrape_requests/scrape_requests.py
+import logging
 from concurrent import futures
 
 import grpc  # type: ignore[import]
@@ -10,6 +11,8 @@ from youtube_recommender.pytube_scrape import extract_video_fields
 
 cats = ScrapeCategory.values()
 
+logger = logging.getLogger(__name__)
+
 
 class VideoScrapeService(scrape_requests_pb2_grpc.VideoScrapingsServicer):
     def Scrape(self, request, context):
@@ -19,7 +22,7 @@ class VideoScrapeService(scrape_requests_pb2_grpc.VideoScrapingsServicer):
         if request.value == "":
             context.abort(grpc.StatusCode.OUT_OF_RANGE, "value missing")
 
-        print(f"{request.value=}")
+        logger.debug(f"{request.value=}")
 
         if request.category == ScrapeCategory.VIDEO:
             fields: dict = extract_video_fields(request.value, isodate=True)

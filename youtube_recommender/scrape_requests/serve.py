@@ -13,9 +13,8 @@ import scrape_requests_pb2_grpc
 from channel_scrape_requests import ChannelScrapeService
 from comment_scrape_requests import CommentScrapeService
 from interceptors import ErrorLogger
+from rarc_utils.log import LOG_FMT, setup_logger
 from video_scrape_requests import VideoScrapeService
-
-logger = logging.getLogger(__name__)
 
 with open("/run/secrets/nginx.key", "rb") as f:  # path to you key location
     private_key = f.read()
@@ -69,8 +68,23 @@ parser.add_argument(
     default=10,
     help="max_workers / threads",
 )
+parser.add_argument(
+    "--debug",
+    action="store_true",
+    help="show debug output",
+)
 
 if __name__ == "__main__":
     cli_args = parser.parse_args()
+
+    logger = setup_logger(
+        cmdLevel=logging.DEBUG if cli_args.debug else logging.INFO,
+        saveFile=0,
+        savePandas=0,
+        color=1,
+        fmt=LOG_FMT,
+    )
+    # logger = logging.getLogger(__name__)
     logger.info("running")
+
     serve(cli_args.max_workers, secure=cli_args.secure)
