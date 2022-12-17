@@ -13,10 +13,10 @@ jobs:
       - name: Create Pull Request
         id: cpr
         uses: peter-evans/create-pull-request@v4
-        with:
-          token: ${{ secrets.GH_ACCESS_TOKEN }}
-          branch: test
-          base: main
+        # with:
+        #   token: ${{ secrets.GH_ACCESS_TOKEN }}
+        #   branch: test
+        #   base: main
 
       - name: Check outputs
         if: ${{ steps.cpr.outputs.pull-request-number }}
