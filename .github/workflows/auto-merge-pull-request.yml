@@ -2,16 +2,19 @@ name: Auto merge pull request
 
 # TODO: will not trigger when pr was created by action / bot
 on:
+  push:
+    branches: [main"]
+
   pull_request:
-    # branches: ["test", "main"]
     # types: [opened]
-    # types: [labeled]
+    types: [labeled, unlabeled]
     # option below is safer than `types: [opened]`, since auto created prs won't trigger this workflow
     # labeled: ["ready-to-merge"]
 
 jobs:
   auto-merge-pull-request:
-    if: ${{ github.event.label.name == 'ready-to-merge' }}
+    # if: ${{ github.event.label.name == 'ready-to-merge' }}
+    if: github.event_name == 'pull_request' && github.event.pull_request.labels.some(label => label.name == 'ready-to-merge')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
