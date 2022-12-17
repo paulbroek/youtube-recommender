@@ -15,8 +15,8 @@ jobs:
         uses: peter-evans/create-pull-request@v4
         with:
           token: ${{ secrets.GH_ACCESS_TOKEN }}
-          branch: test
-          base: main
+          branch: main
+          base: test
 
       - name: Check outputs
         if: ${{ steps.cpr.outputs.pull-request-number }}
