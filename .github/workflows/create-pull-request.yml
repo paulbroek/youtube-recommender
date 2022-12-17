@@ -16,6 +16,7 @@ jobs:
         with:
           token: ${{ secrets.GH_ACCESS_TOKEN }}
           branch: test
+          base: main
 
       - name: Check outputs
         if: ${{ steps.cpr.outputs.pull-request-number }}
