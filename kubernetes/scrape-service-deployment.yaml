@@ -30,9 +30,9 @@ spec:
             - /bin/bash
             - -c
             - |
-              python /service/scrape_requests/serve.py --max_workers 25
+              # python /service/scrape_requests/serve.py --max_workers 25
               # python /service/scrape_requests/serve.py --max_workers 25 --secure
-              # python -c "while True: pass"
+              python -c "while True: pass"
           image: ghcr.io/paulbroek/youtube-recommender:main
           # image: ghcr.io/paulbroek/youtube-recommender:test
           # image: ghcr.io/paulbroek/youtube-recommender:latest
@@ -41,13 +41,16 @@ spec:
             - containerPort: 50051
           resources: {}
           volumeMounts:
-            - mountPath: /run/secrets/nginx.cert
-              name: nginx-cert-secret
-            - mountPath: /run/secrets/nginx.key
-              name: nginx-key-secret
-            # - mountPath: /usr/local/lib/python3.9/site-packages/youtube_recommender/config/postgres.cfg
-            - mountPath: /run/secrets/postgres.cfg
-              name: postgres-cfg-secret
+            - name: nginx-cert-secret
+              mountPath: /run/secrets/nginx.cert
+              readOnly: true
+            - name: nginx-key-secret
+              mountPath: /run/secrets/nginx.key
+              readOnly: true
+            - name: postgres-cfg-secret
+              mountPath: /run/secrets/postgres.cfg
+              # mountPath: /usr/local/lib/python3.9/site-packages/youtube_recommender/config/postgres.cfg
+              readOnly: true
           env:
             - name: RELEASE_MODE
               value: PRODUCTION
