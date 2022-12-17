@@ -5,7 +5,7 @@ on:
   pull_request:
     # branches: ["test", "main"]
     # types: [opened]
-    types: [labeled]
+    # types: [labeled]
     # option below is safer than `types: [opened]`, since auto created prs won't trigger this workflow
     # labeled: ["ready-to-merge"]
 

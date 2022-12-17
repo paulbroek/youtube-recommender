@@ -19,3 +19,9 @@ test:
 .PHONY: install
 install: 
 	pip install -U .
+
+sync_env_to_here:
+	rsync -avz -e ssh $(SERVER_USER)@$(SERVER_ADDR):~/repos/youtube-recommender/.env ~/repos/youtube-recommender
+
+sync_env_to_server:
+	rsync -avz -e ssh ~/repos/youtube-recommender/.env $(SERVER_USER)@$(SERVER_ADDR):~/repos/youtube-recommender/.env
