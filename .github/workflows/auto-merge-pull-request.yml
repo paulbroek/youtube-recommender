@@ -7,14 +7,14 @@ on:
 
   pull_request:
     # types: [opened]
-    # types: [labeled]
+    types: [labeled, unlabeled]
     # option below is safer than `types: [opened]`, since auto created prs won't trigger this workflow
     # labeled: ["ready-to-merge"]
 
 jobs:
   auto-merge-pull-request:
     # if: ${{ github.event.label.name == 'ready-to-merge' }}
-    if: github.event_name == 'pull_request' || github.event_name == 'push' || github.event_name == 'schedule'
+    if: github.event_name == 'pull_request' && github.event.pull_request.labels.some(label => label.name == 'ready-to-merge')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
