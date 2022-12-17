@@ -13,10 +13,18 @@ jobs:
       - name: Create Pull Request
         id: cpr
         uses: peter-evans/create-pull-request@v4
-        # with:
-        #   token: ${{ secrets.GH_ACCESS_TOKEN }}
-        #   branch: test
-        #   base: main
+        with:
+          token: ${{ secrets.GH_ACCESS_TOKEN }}
+          # branch: test
+          base: main
+          # commit-message:
+          title: "Merge test into main"
+          body: |
+            Created by GitHub action
+          labels: |
+            ready-to-merge
+            automated pr
+          delete-branch: false
 
       - name: Check outputs
         if: ${{ steps.cpr.outputs.pull-request-number }}
