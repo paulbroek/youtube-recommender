@@ -4,7 +4,7 @@ import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-import jsonlines
+import jsonlines  # type: ignore[import]
 import pandas as pd
 from rarc_utils.decorators import check_file_exists, items_per_sec
 
@@ -47,7 +47,7 @@ class io_methods:
         df: pd.DataFrame = pd.read_json(path)
         logger.info(f"read {len(df):,} lines")
 
-        return df    
+        return df
 
     @staticmethod
     def save_feather(

@@ -3,7 +3,6 @@ import logging
 from concurrent import futures
 
 import grpc  # type: ignore[import]
-import pandas as pd
 import scrape_requests_pb2_grpc
 from scrape_requests_pb2 import (ScrapeCategory, VideoScrapeResponse,
                                  VideoScrapeResult)

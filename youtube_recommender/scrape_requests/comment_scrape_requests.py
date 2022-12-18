@@ -12,6 +12,7 @@ cats = ScrapeCategory.values()
 
 # todo: use logging or Interceptors?
 
+
 class CommentScrapeService(scrape_requests_pb2_grpc.CommentScrapingsServicer):
     def Scrape(self, request, context):
         if request.category not in ScrapeCategory.values():
