@@ -38,7 +38,7 @@ spec:
             - mountPath: /run/secrets_from/nginx.key
               name: nginx-key-secret
               readOnly: true
-            - mountPath: /run/secrets_from/nginx.conf
+            - mountPath: /run/secrets_from/nginx-inline.conf
               name: nginx-conf-secret
               readOnly: true
             # - mountPath: /run/nginx_from/
@@ -54,8 +54,7 @@ spec:
                   - |
                     cp /run/secrets_from/nginx.cert/secret.file /run/secrets/nginx.cert
                     cp /run/secrets_from/nginx.key/secret.file /run/secrets/nginx.key
-                    cp /run/secrets_from/nginx-line.conf/secret.file /etc/nginx/nginx.conf
-                    cp /run/nginx_from/* /etc/nginx/
+                    cp /run/secrets_from/nginx-inline.conf/secret.file /etc/nginx/nginx.conf
 
       restartPolicy: Always
       volumes:

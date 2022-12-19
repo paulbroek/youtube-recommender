@@ -172,7 +172,20 @@ cd ./nginx
 # save this conf to secret file base64-encoded
 # alias cs="xclip -selection clipboard"
 cat ./nginx-inline.conf| base64 | cs
+# and paste it into ./kubernetes/secrets/nginx-conf-secret.yaml
 
 # now you can deploy load balancer
 k apply -f $(find ./kubernetes -name 'nginx-reverseproxy*.yaml' -o -name '*secret.yaml' -type f | tr '\n' ',' | sed 's/,$//')
+
+# now add a dummy load balancer, to request an external-ip from cloud provider
+# k apply -f kubernetes/loadbalancer-service.yaml
+# now expose this reverseproxy endpoint
+kubectl expose deployment nginx-reverseproxy --port=1443 --target-port=1443 --name=external-service --type=NodePort
+# wait for external-ip to be assigned
+k get svc
+k describe svc external-service
+
+# and test your cluster
+externalIp=$(k get svc my-loadbalancer -o=json | jq --raw-output '.status.loadBalancer.ingress[0].ip')
+
 ```
