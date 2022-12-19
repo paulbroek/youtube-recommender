@@ -135,18 +135,24 @@ jupyter nbconvert --to script recommend/logistic_regression/train.ipynb && ipy r
 
 ## 2.2.3 Build and run distributed scraper
 
+Deploy locally with `docker-compose`
+
 ```bash
 # rsync nginx configuration: nginx.cert and nginx.key
 rsync -avz -e "ssh -p PORT" --progress USER@HOST:/home/paul/repos/youtube-recommender/cert ~/repos/youtube-recommender
 # create network
 docker network create microservices
 # deploy scraper
-docker-compose --scale scrape-service=5 --build && docker-compose logs -f
+docker-compose up --build --scale scrape-service=5 && docker-compose logs -f
 # check if reverseproxy is running succesfully
 docker logs youtube-recommender_nginx-reverseproxy_1 --tail 20 -f
+# maybe convert service names manually to upstream nginx servers
+cd ./nginx
+chmod +x ./save_server_names.sh
+./save_server_names.sh ./includes/grpcservers
 ```
 
-With Kubernetes:
+Deploy to production with Kubernetes:
 
 ```bash
 # only deploy scrape-service and its secret files
