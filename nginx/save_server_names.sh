@@ -1,6 +1,10 @@
 #!/bin/bash
+# usage examples:
+# ./save_server_names.sh ./includes/grpcservers docker
+# ./save_server_names.sh ./includes/grpcservers kubernetes
 
 filename=$1
+option=$2
 
 # Check if the file already exists
 if [ -f "$filename" ]; then
@@ -13,7 +17,16 @@ touch "$filename"
 
 # Get the list of server names from the second command line argument
 # server_names=$2
-server_names="$(docker ps --filter name=youtube-recommender_scrape-service --format '{{.Names}}' | sort -k 2)"
+
+# Get the list of server names based on the option passed
+if [ "$option" = "kubernetes" ]; then
+  server_names="$(kubectl get po | awk '/scrape-service/ {print $1}')"
+elif [ "$option" = "docker" ]; then
+  server_names="$(docker ps --filter name=youtube-recommender_scrape-service --format '{{.Names}}' | sort -k 2)"
+else
+  echo "Error: Invalid option '$option'. Please specify either 'kubernetes' or 'docker'."
+  exit 1
+fi
 
 # Check if the list of server names is not empty
 if [ -z "$server_names" ]; then

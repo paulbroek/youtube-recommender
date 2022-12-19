@@ -144,8 +144,10 @@ rsync -avz -e "ssh -p PORT" --progress USER@HOST:/home/paul/repos/youtube-recomm
 docker network create microservices
 # deploy scraper
 docker-compose up --build --scale scrape-service=5 && docker-compose logs -f
+# this should automatically update ./nginx/includes/grpcservers with compose services names
 # check if reverseproxy is running succesfully
 docker logs youtube-recommender_nginx-reverseproxy_1 --tail 20 -f
+
 # maybe convert service names manually to upstream nginx servers
 cd ./nginx
 chmod +x ./save_server_names.sh
@@ -155,6 +157,22 @@ chmod +x ./save_server_names.sh
 Deploy to production with Kubernetes:
 
 ```bash
+# create persistent volumes, if not already created
+# k apply -f $(find ./kubernetes -name 'persistentvolume0.yaml' -type f | tr '\n' ',' | sed 's/,$//')
+# I use secrets for now, to keep pods stateless
+
 # only deploy scrape-service and its secret files
 k apply -f $(find ./kubernetes -name 'scrape-service*.yaml' -o -name '*secret.yaml' -type f | tr '\n' ',' | sed 's/,$//')
+
+# create a file with kubernetes pod names, and inline it into `nginx-inline.conf`
+cd ./nginx
+./save_server_names.sh ./includes/grpcservers kubernetes
+./create_inlined_conf.sh && less nginx-inline.conf
+
+# save this conf to secret file base64-encoded
+# alias cs="xclip -selection clipboard"
+cat ./nginx-inline.conf| base64 | cs
+
+# now you can deploy load balancer
+k apply -f $(find ./kubernetes -name 'nginx-reverseproxy*.yaml' -o -name '*secret.yaml' -type f | tr '\n' ',' | sed 's/,$//')
 ```

@@ -37,9 +37,10 @@ services:
       - -c
       - |
         # python -c "while True: pass"
-        /etc/nginx/save_server_names.sh /etc/nginx/includes/grpcservers
+        /etc/nginx/save_server_names.sh /etc/nginx/includes/grpcservers docker
     volumes:
       - ./nginx:/etc/nginx
+      # - ./nginx/nginx-inline.conf:/etc/nginx/nginx.conf
       - /var/run/docker.sock:/var/run/docker.sock
       - /usr/bin/docker:/usr/bin/docker
     depends_on:
@@ -50,7 +51,8 @@ services:
     ports:
       - 127.0.0.1:1443:1443
     volumes:
-      - ./nginx:/etc/nginx
+      # - ./nginx:/etc/nginx
+      - ./nginx/nginx-inline.conf:/etc/nginx/nginx.conf
     secrets:
       - nginx.cert
       - nginx.key
