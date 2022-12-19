@@ -32,27 +32,44 @@ spec:
             - containerPort: 1443
           resources: {}
           volumeMounts:
-            - mountPath: /run/secrets/nginx.cert
-              name: nginx.cert
-            - mountPath: /run/secrets/nginx.key
-              name: nginx.key
-            - mountPath: /etc/nginx/nginx.conf
-              name: nginx-reverseproxy-claim0
+            - mountPath: /run/secrets_from/nginx.cert
+              name: nginx-cert-secret
+              readOnly: true
+            - mountPath: /run/secrets_from/nginx.key
+              name: nginx-key-secret
+              readOnly: true
+            - mountPath: /run/secrets_from/nginx-inline.conf
+              name: nginx-conf-secret
+              readOnly: true
+            # - mountPath: /run/nginx_from/
+            #   name: nginx-reverseproxy-claim0
+            #   readOnly: true
+          # hack: copy secrets file to desired path. k8s doesn't allow to mount a file to a specific file location
+          lifecycle:
+            postStart:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - |
+                    cp /run/secrets_from/nginx.cert/secret.file /run/secrets/nginx.cert
+                    cp /run/secrets_from/nginx.key/secret.file /run/secrets/nginx.key
+                    cp /run/secrets_from/nginx-inline.conf/secret.file /etc/nginx/nginx.conf
+
       restartPolicy: Always
       volumes:
-        - name: nginx.cert
+        - name: nginx-cert-secret
           secret:
-            items:
-              - key: nginx.cert
-                path: nginx.cert
-            secretName: nginx.cert
-        - name: nginx.key
+            secretName: nginx-cert-secret
+        - name: nginx-key-secret
           secret:
-            items:
-              - key: nginx.key
-                path: nginx.key
-            secretName: nginx.key
-        - name: nginx-reverseproxy-claim0
-          persistentVolumeClaim:
-            claimName: nginx-reverseproxy-claim0
+            secretName: nginx-key-secret
+        - name: nginx-conf-secret
+          secret:
+            secretName: nginx-conf-secret
+
+        # - name: nginx-reverseproxy-claim0
+        #   persistentVolumeClaim:
+        #     claimName: nginx-reverseproxy-claim0
+
 status: {}

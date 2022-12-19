@@ -1,0 +1,5 @@
+server youtube-recommender_scrape-service_1:50051;
+server youtube-recommender_scrape-service_2:50051;
+server youtube-recommender_scrape-service_3:50051;
+server youtube-recommender_scrape-service_4:50051;
+server youtube-recommender_scrape-service_5:50051;

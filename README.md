@@ -135,20 +135,57 @@ jupyter nbconvert --to script recommend/logistic_regression/train.ipynb && ipy r
 
 ## 2.2.3 Build and run distributed scraper
 
+Deploy locally with `docker-compose`
+
 ```bash
 # rsync nginx configuration: nginx.cert and nginx.key
 rsync -avz -e "ssh -p PORT" --progress USER@HOST:/home/paul/repos/youtube-recommender/cert ~/repos/youtube-recommender
 # create network
 docker network create microservices
 # deploy scraper
-docker-compose --scale scrape-service=5 --build && docker-compose logs -f
+docker-compose up --build --scale scrape-service=5 && docker-compose logs -f
+# this should automatically update ./nginx/includes/grpcservers with compose services names
 # check if reverseproxy is running succesfully
 docker logs youtube-recommender_nginx-reverseproxy_1 --tail 20 -f
+
+# maybe convert service names manually to upstream nginx servers
+cd ./nginx
+chmod +x ./save_server_names.sh
+./save_server_names.sh ./includes/grpcservers
 ```
 
-With Kubernetes:
+Deploy to production with Kubernetes:
 
 ```bash
+# create persistent volumes, if not already created
+# k apply -f $(find ./kubernetes -name 'persistentvolume0.yaml' -type f | tr '\n' ',' | sed 's/,$//')
+# I use secrets for now, to keep pods stateless
+
 # only deploy scrape-service and its secret files
 k apply -f $(find ./kubernetes -name 'scrape-service*.yaml' -o -name '*secret.yaml' -type f | tr '\n' ',' | sed 's/,$//')
+
+# create a file with kubernetes pod names, and inline it into `nginx-inline.conf`
+cd ./nginx
+./save_server_names.sh ./includes/grpcservers kubernetes
+./create_inlined_conf.sh && less nginx-inline.conf
+
+# save this conf to secret file base64-encoded
+# alias cs="xclip -selection clipboard"
+cat ./nginx-inline.conf| base64 | cs
+# and paste it into ./kubernetes/secrets/nginx-conf-secret.yaml
+
+# now you can deploy load balancer
+k apply -f $(find ./kubernetes -name 'nginx-reverseproxy*.yaml' -o -name '*secret.yaml' -type f | tr '\n' ',' | sed 's/,$//')
+
+# now add a dummy load balancer, to request an external-ip from cloud provider
+# k apply -f kubernetes/loadbalancer-service.yaml
+# now expose this reverseproxy endpoint
+kubectl expose deployment nginx-reverseproxy --port=1443 --target-port=1443 --name=external-service --type=NodePort
+# wait for external-ip to be assigned
+k get svc
+k describe svc external-service
+
+# and test your cluster
+externalIp=$(k get svc my-loadbalancer -o=json | jq --raw-output '.status.loadBalancer.ingress[0].ip')
+
 ```

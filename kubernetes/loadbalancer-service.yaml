@@ -1,11 +1,11 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: example-service
+  name: my-loadbalancer
 spec:
   selector:
     app: example
   ports:
-    - port: 8765
-      targetPort: 9376
+    - port: 1443
+      targetPort: 1443
   type: LoadBalancer

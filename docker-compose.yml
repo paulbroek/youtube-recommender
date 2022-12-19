@@ -14,7 +14,7 @@ services:
       - /bin/bash
       - -c
       - |
-        python /service/scrape_requests/serve.py --max_workers 25
+        python /service/scrape_requests/serve.py --max_workers 25 --debug
         # python /service/scrape_requests/serve.py --max_workers 25 --secure
         # python -c "while True: pass"
     # ports:
@@ -24,24 +24,42 @@ services:
     secrets:
       - nginx.cert
       - nginx.key
-    # depends_on:
-    #   - nginx-reverseproxy
     networks:
       - microservices
     volumes:
       - ./youtube_recommender/config/postgres.cfg:/usr/local/lib/python3.9/site-packages/youtube_recommender/config/postgres.cfg
+
+  save-server-names:
+    build:
+      context: .
+    command:
+      - /bin/bash
+      - -c
+      - |
+        # python -c "while True: pass"
+        /etc/nginx/save_server_names.sh /etc/nginx/includes/grpcservers docker
+    volumes:
+      - ./nginx:/etc/nginx
+      # - ./nginx/nginx-inline.conf:/etc/nginx/nginx.conf
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /usr/bin/docker:/usr/bin/docker
+    depends_on:
+      - scrape-service
 
   nginx-reverseproxy:
     image: nginx:1.13.11
     ports:
       - 127.0.0.1:1443:1443
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      # - ./nginx:/etc/nginx
+      - ./nginx/nginx-inline.conf:/etc/nginx/nginx.conf
     secrets:
       - nginx.cert
       - nginx.key
     depends_on:
-      - scrape-service
+      save-server-names:
+        condition: service_completed_successfully
+      # - scrape-service
     networks:
       - microservices
 

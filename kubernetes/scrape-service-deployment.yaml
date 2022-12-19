@@ -51,6 +51,8 @@ spec:
               mountPath: /run/secrets_from/postgres.cfg
               # mountPath: /usr/local/lib/python3.9/site-packages/youtube_recommender/config/postgres.cfg
               readOnly: true
+            # - mountPath: /exports
+            #   name: scrape-service-claim0
           # hack: copy secrets file to desired path. k8s doesn't allow to mount a file to a specific file location
           lifecycle:
             postStart:
@@ -84,4 +86,7 @@ spec:
         - name: postgres-cfg-secret
           secret:
             secretName: postgres-cfg-secret
+        # - name: scrape-service-claim0
+        #   persistentVolumeClaim:
+        #     claimName: scrape-service-claim0
 status: {}

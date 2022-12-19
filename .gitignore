@@ -27,7 +27,9 @@ youtube_recommender/data/watch-history.json
 # kubernetes secret files
 # TODO: use sealed secrets
 kubernetes/secrets
-
+nginx/includes/grpcservers
+grpcservers
+nginx/nginx-inline.conf
 
 # C extensions
 *.so
