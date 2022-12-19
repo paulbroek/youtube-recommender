@@ -175,15 +175,27 @@ cat ./nginx-inline.conf| base64 | cs
 # and paste it into ./kubernetes/secrets/nginx-conf-secret.yaml
 
 # now you can deploy load balancer
-k apply -f $(find ./kubernetes -name 'nginx-reverseproxy*.yaml' -o -name '*secret.yaml' -type f | tr '\n' ',' | sed 's/,$//')
+# k apply -f $(find ./kubernetes -name 'nginx-reverseproxy*.yaml' -o -name '*secret.yaml' -type f | tr '\n' ',' | sed 's/,$//')
+
+# apply grpc linkerd ingress
+k apply -f ./kubernetes/ingress-service.yaml
 
 # now add a dummy load balancer, to request an external-ip from cloud provider
 # k apply -f kubernetes/loadbalancer-service.yaml
 # now expose this reverseproxy endpoint
-kubectl expose deployment nginx-reverseproxy --port=1443 --target-port=1443 --name=external-service --type=NodePort
+# kubectl expose deployment nginx-reverseproxy --port=1443 --target-port=1443 --name=external-service --type=NodePort
 # wait for external-ip to be assigned
-k get svc
-k describe svc external-service
+# k get svc
+# k describe svc external-service
+
+# linkerd for meshing your grpc cluster
+# assuming pods run in `default` namespace
+kubectl get -n default deploy -o yaml \
+  | linkerd inject - \
+  | kubectl apply -f -
+
+# show linkerd dashboard
+linkerd viz dashboard &
 
 # and test your cluster
 externalIp=$(k get svc my-loadbalancer -o=json | jq --raw-output '.status.loadBalancer.ingress[0].ip')
