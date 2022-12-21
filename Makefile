@@ -20,6 +20,9 @@ test:
 install: 
 	pip install -U .
 
+deploy-scrape-service:
+	kubectl apply -f $(find ./kubernetes -name 'scrape-service*.yaml' -o -name '*secret.yaml' -type f | tr '\n' ',' | sed 's/,$//')
+
 sync_env_to_here:
 	rsync -avz -e ssh $(SERVER_USER)@$(SERVER_ADDR):$(REPO_PATH)/.env $(REPO_PATH)
 
