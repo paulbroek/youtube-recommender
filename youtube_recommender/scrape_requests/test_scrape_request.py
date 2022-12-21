@@ -250,6 +250,9 @@ if __name__ == "__main__":
     # TODO: update live progress
     # implement as a service running in compose.yml?
 
+    # TODO: send requests in batches, so all k8s pods are actually utilized
+
+
     elapsed: float = time() - t0
     requests_per_sec: float = len(res) / elapsed
 

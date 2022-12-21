@@ -3,7 +3,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: scrape-service-ingress
-  # namespace: default
+  namespace: ingress-nginx
   annotations:
     nginx.ingress.kubernetes.io/service-upstream: "true"
 spec:

@@ -164,6 +164,13 @@ Deploy to production with Kubernetes:
 # only deploy scrape-service and its secret files
 k apply -f $(find ./kubernetes -name 'scrape-service*.yaml' -o -name '*secret.yaml' -type f | tr '\n' ',' | sed 's/,$//')
 
+# verify if service dns can reach all pods
+
+
+
+# get all logs
+k logs --selector io.kompose.service=scrape-service
+
 # create a file with kubernetes pod names, and inline it into `nginx-inline.conf`
 cd ./nginx
 ./save_server_names.sh ./includes/grpcservers kubernetes
@@ -171,22 +178,25 @@ cd ./nginx
 
 # save this conf to secret file base64-encoded
 # alias cs="xclip -selection clipboard"
-cat ./nginx-inline.conf| base64 | cs
+cat ./nginx-inline.conf | base64 | cs
 # and paste it into ./kubernetes/secrets/nginx-conf-secret.yaml
 
 # now you can deploy load balancer
 # k apply -f $(find ./kubernetes -name 'nginx-reverseproxy*.yaml' -o -name '*secret.yaml' -type f | tr '\n' ',' | sed 's/,$//')
 
 # apply grpc linkerd ingress
-k apply -f ./kubernetes/ingress-service.yaml
+# k create ns ingress-nginx
+# k apply -f ./kubernetes/ingress-service.yaml
 
 # now add a dummy load balancer, to request an external-ip from cloud provider
 # k apply -f kubernetes/loadbalancer-service.yaml
 # now expose this reverseproxy endpoint
 # kubectl expose deployment nginx-reverseproxy --port=1443 --target-port=1443 --name=external-service --type=NodePort
+# expose service
+k expose deployment scrape-service --type=LoadBalancer --name=scrape-service-ext
 # wait for external-ip to be assigned
-# k get svc
-# k describe svc external-service
+k get svc
+k describe svc scrape-service-ext
 
 # linkerd for meshing your grpc cluster
 # assuming pods run in `default` namespace
@@ -198,6 +208,21 @@ kubectl get -n default deploy -o yaml \
 linkerd viz dashboard &
 
 # and test your cluster
-externalIp=$(k get svc my-loadbalancer -o=json | jq --raw-output '.status.loadBalancer.ingress[0].ip')
+# externalIp=$(k get svc my-loadbalancer -o=json | jq --raw-output '.status.loadBalancer.ingress[0].ip')
+externalIp=$(k get svc nginx-ingress-ingress-nginx-controller -o=json | jq --raw-output '.status.loadBalancer.ingress[0].ip')
 
+```
+
+## 2.2.4 Add Prometheus monitoring
+
+```bash
+k create ns monitoring
+# k apply -f ./kubernetes/prometheus/deployment.yaml
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+# deploy
+helm install -n monitoring prometheus prometheus-community/prometheus
+k -n monitoring get po -w
+# delete helm package
+helm uninstall prometheus
 ```

@@ -9,6 +9,7 @@ metadata:
     io.kompose.service: scrape-service
   name: scrape-service
 spec:
+  clusterIP: None
   ports:
     - name: "50051"
       port: 50051
