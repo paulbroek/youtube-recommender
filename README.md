@@ -165,20 +165,21 @@ Deploy to production with Kubernetes:
 k apply -f $(find ./kubernetes -name 'scrape-service*.yaml' -o -name '*secret.yaml' -type f | tr '\n' ',' | sed 's/,$//')
 
 # verify if service dns can reach all pods
-
-
+k run dnsutils --image=tutum/dnsutils --command -- sleep infinity
+# should show a list of multiple ips
+k exec dnsutils --  nslookup scrape-service
 
 # get all logs
 k logs --selector io.kompose.service=scrape-service
 
-# create a file with kubernetes pod names, and inline it into `nginx-inline.conf`
-cd ./nginx
-./save_server_names.sh ./includes/grpcservers kubernetes
-./create_inlined_conf.sh && less nginx-inline.conf
+# create a file with kubernetes pod names, and inline it into `nginx-inline.conf`. OLD
+# cd ./nginx
+# ./save_server_names.sh ./includes/grpcservers kubernetes
+# ./create_inlined_conf.sh && less nginx-inline.conf
 
 # save this conf to secret file base64-encoded
 # alias cs="xclip -selection clipboard"
-cat ./nginx-inline.conf | base64 | cs
+# cat ./nginx-inline.conf | base64 | cs
 # and paste it into ./kubernetes/secrets/nginx-conf-secret.yaml
 
 # now you can deploy load balancer
@@ -193,18 +194,27 @@ cat ./nginx-inline.conf | base64 | cs
 # now expose this reverseproxy endpoint
 # kubectl expose deployment nginx-reverseproxy --port=1443 --target-port=1443 --name=external-service --type=NodePort
 # expose service
-k expose deployment scrape-service --type=LoadBalancer --name=scrape-service-ext
+# k expose deployment scrape-service --type=LoadBalancer --name=scrape-service-ext
+k expose deployment scrape-service --type=NodePort --target-port=50051 --name=scrape-service-ext
 # wait for external-ip to be assigned
-k get svc
-k describe svc scrape-service-ext
+# k get svc
+# k describe svc scrape-service-ext
+# access the service on node where this service is running + assigned NodePort
 
 # linkerd for meshing your grpc cluster
+
+# install linkerd onto your cluster
+linkerd install --crds | kubectl apply -f -
+linkerd install | kubectl apply -f -
+
 # assuming pods run in `default` namespace
-kubectl get -n default deploy -o yaml \
+kubectl get -n default deploy scrape-service -o yaml \
   | linkerd inject - \
   | kubectl apply -f -
 
 # show linkerd dashboard
+# install viz extension first
+linkerd viz install | kubectl apply -f -
 linkerd viz dashboard &
 
 # and test your cluster
