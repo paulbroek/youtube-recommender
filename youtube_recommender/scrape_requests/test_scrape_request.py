@@ -21,6 +21,7 @@ Run:
         --id m6UNCJESYHM \
         --aio \
         --ntrial 10 \
+        --nworker 6 \
         # --secure
 
     # line by line format: channel
@@ -32,6 +33,7 @@ Run:
         --id UCXPHFM88IlFn68OmLwtPmZA \
         --aio \
         --ntrial 10 \
+        --nworker 6 \
         # --secure
 
 TODO:
@@ -46,8 +48,10 @@ import os
 from time import time
 from typing import List
 
+import aiohttp
 import grpc  # type: ignore[import]
 import grpc.aio  # type: ignore[import]
+import numpy as np
 # from google.protobuf.json_format import MessageToJson
 from google.protobuf.json_format import MessageToDict
 from grpc import ssl_channel_credentials
@@ -87,6 +91,12 @@ parser.add_argument(
     default="video",
     choices=list(map(str.lower, ScrapeCategory.keys())),
     help="ScrapeCategory to scrape",
+)
+parser.add_argument(
+    "--nworker",
+    type=int,
+    default=6,
+    help="number of client sessions to create",
 )
 parser.add_argument(
     "--ntrial",
@@ -163,9 +173,10 @@ def compute_items_received(cat: int, res) -> int:
     return len(mm)
 
 
-def main_blocking(cat: int, urls: List[str]):
+def main_blocking(channel, cat: int, urls: List[str]):
     """Run main loop, blocking."""
     res = None
+    client = get_client(cat, channel)
     for i, url in enumerate(urls):
         request = ScrapeRequest(
             id=i,
@@ -177,8 +188,24 @@ def main_blocking(cat: int, urls: List[str]):
     return res
 
 
-async def main(cat: int, urls: List[str]):
+async def main(channel, cat: int, urls: List[str]):
     """Run main loop."""
+
+    # TODO: Create a session for each worker, to utilize distributed cluster?
+    # sessions = [aiohttp.ClientSession() for _ in range(cli_args.nworker)]
+    # reqs_by_session = np.array_split(urls, cli_args.nworker)
+
+    # Create a client for each session
+    # clients = [session.grpc_client("https://worker-address:port") for session in sessions]
+
+    # clients = [get_client(cat, channel) for session in sessions]
+    # clients = [get_client(cat, grpc.insecure_channel(addr)) for session in sessions]
+
+
+    # spread requests evenly and randomly over clients 
+
+    # 'old' approach
+    client = get_client(cat, channel)
     cors = [
         client.Scrape(
             ScrapeRequest(
@@ -188,7 +215,19 @@ async def main(cat: int, urls: List[str]):
             )
         )
         for i, url in enumerate(urls)
+
     ]
+
+    # cors = [
+    #     clients[client_ix].Scrape(
+    #         ScrapeRequest(
+    #             id=i,
+    #             category=cat,
+    #             value=url,
+    #         )
+    #     )
+    #     for client_ix, urls in enumerate(reqs_by_session) for i, url in enumerate(urls)
+    # ]
 
     return await asyncio.gather(*cors)
 
@@ -231,18 +270,17 @@ if __name__ == "__main__":
     else:
         channel = grpc.insecure_channel(addr)
 
-    client = get_client(cat, channel)
-    urls: List[str] = construct_urls(cli_args, cat)
+    all_urls: List[str] = construct_urls(cli_args, cat)
 
-    print(f"{len(urls)=:,}")
+    print(f"{len(all_urls)=:,}")
 
     t0: float = time()
 
     if cli_args.aio:
-        res = loop.run_until_complete(main(cat=cat, urls=urls))
+        res = loop.run_until_complete(main(channel=channel, cat=cat, urls=all_urls))
 
     else:
-        res = main_blocking(cat=cat, urls=urls)
+        res = main_blocking(channel=channel, cat=cat, urls=all_urls)
 
     if cli_args.ntrial == 1:
         print(f"{res=}")

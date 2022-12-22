@@ -165,9 +165,9 @@ Deploy to production with Kubernetes:
 k apply -f $(find ./kubernetes -name 'scrape-service*.yaml' -o -name '*secret.yaml' -type f | tr '\n' ',' | sed 's/,$//')
 
 # verify if service dns can reach all pods
-kubectl run dnsutils --image=tutum/dnsutils --command -- sleep infinity
+k run dnsutils --image=tutum/dnsutils --command -- sleep infinity
 # should show a list of multiple ips
-kubectl exec dnsutils --  nslookup scrape-service
+k exec dnsutils --  nslookup scrape-service
 
 # get all logs
 k logs --selector io.kompose.service=scrape-service
@@ -202,12 +202,19 @@ k expose deployment scrape-service --type=NodePort --target-port=50051 --name=sc
 # access the service on node where this service is running + assigned NodePort
 
 # linkerd for meshing your grpc cluster
+
+# install linkerd onto your cluster
+linkerd install --crds | kubectl apply -f -
+linkerd install | kubectl apply -f -
+
 # assuming pods run in `default` namespace
-kubectl get -n default deploy -o yaml \
+kubectl get -n default deploy scrape-service -o yaml \
   | linkerd inject - \
   | kubectl apply -f -
 
 # show linkerd dashboard
+# install viz extension first
+linkerd viz install | kubectl apply -f -
 linkerd viz dashboard &
 
 # and test your cluster
