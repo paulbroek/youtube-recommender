@@ -1,10 +1,10 @@
-FROM python:3.9
+FROM python:3.11-slim
 
 RUN python -m pip install --upgrade pip
 
-RUN apt-get update   		            && \
-	apt-get install git -y				&& \
-	apt-get install openssh-client
+# RUN apt-get update   		            && \
+# 	apt-get install git -y				&& \
+# 	apt-get install openssh-client
 
 COPY requirements.txt /tmp
 
@@ -16,7 +16,10 @@ RUN python -m spacy download en_core_web_sm
 
 COPY . /tmp
 
-RUN pip install -U git+https://git@github.com/paulbroek/rarc-utils.git 
+RUN pip install https://github.com/paulbroek/rarc-utils/archive/master.zip
+RUN pip install https://github.com/paulbroek/scrape-utils-py/archive/master.zip
+
+RUN pip install python-dotenv
 
 # install package
 RUN pip install /tmp/
