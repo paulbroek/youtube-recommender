@@ -1,9 +1,11 @@
-FROM python:3.11-slim
+FROM python:3.10-slim
 
 RUN python -m pip install --upgrade pip
 
 RUN apt-get update   		            && \
-	apt-get install -y build-essential
+	apt-get install -y build-essential  && \
+	apt-get -y install libpq-dev gcc 	&& \
+    pip install psycopg2
 
 COPY requirements.txt /tmp
 
@@ -17,8 +19,6 @@ COPY . /tmp
 
 RUN pip install https://github.com/paulbroek/rarc-utils/archive/master.zip
 RUN pip install https://github.com/paulbroek/scrape-utils-py/archive/master.zip
-
-RUN pip install python-dotenv
 
 # install package
 RUN pip install /tmp/
