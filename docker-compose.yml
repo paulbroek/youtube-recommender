@@ -54,7 +54,9 @@ services:
   nginx-reverseproxy:
     image: nginx:1.22.1
     ports:
-      - 127.0.0.1:1443:1443
+      - 1443:1443
+    # ports:
+    #   - 127.0.0.1:1443:1443
     volumes:
       # to use with docker
       - ./nginx:/etc/nginx
