@@ -7,11 +7,12 @@ Run:
     # go to this dir
     cd ~/repos/youtube-recommender/youtube_recommender/scrape_requests
 
-    # now test scrape_requests
+    # test scrape_requests with one worker running locally
     export YT_SCRAPE_SERVICE_HOST=localhost         && ipy test_scrape_request.py -- --category video   --id GBTdnfD6s5Q --aio --ntrial 10
-    export YT_SCRAPE_SERVICE_HOST=192.168.178.46    && ipy test_scrape_request.py -- --category video   --id GBTdnfD6s5Q --aio --ntrial 10
-    export YT_SCRAPE_SERVICE_HOST=192.168.178.46    && ipy test_scrape_request.py -- --category channel --id UCBjOe-Trw6N8neQV7NUsfiA --aio --ntrial 2
+    export YT_SCRAPE_SERVICE_HOST=192.168.178.98    && ipy test_scrape_request.py -- --category video   --id GBTdnfD6s5Q --aio --ntrial 10
+    export YT_SCRAPE_SERVICE_HOST=192.168.178.98    && ipy test_scrape_request.py -- --category channel --id UCBjOe-Trw6N8neQV7NUsfiA --aio --ntrial 2
 
+    # test scrape_requests through nginx reverse proxy
     # line by line format: video/comment
     export YT_SCRAPE_SERVICE_HOST=localhost &&
     export YT_SCRAPE_SERVICE_PORT=1443 && 
@@ -55,12 +56,12 @@ import numpy as np
 # from google.protobuf.json_format import MessageToJson
 from google.protobuf.json_format import MessageToDict
 from grpc import ssl_channel_credentials
-from rarc_utils.sqlalchemy_base import (get_async_session, get_session,
-                                        load_config)
+from rarc_utils.sqlalchemy_base import get_async_session, get_session
 from scrape_requests_pb2 import ScrapeCategory, ScrapeRequest
 from scrape_requests_pb2_grpc import (ChannelScrapingsStub,
                                       CommentScrapingsStub, VideoScrapingsStub)
 from youtube_recommender import config as config_dir
+from youtube_recommender.core.setup import psql_config as psql
 from youtube_recommender.db.helpers import (get_top_channels_with_comments,
                                             get_top_videos_by_channel_ids)
 from youtube_recommender.settings import (YOUTUBE_CHANNEL_PREFIX,
@@ -201,8 +202,7 @@ async def main(channel, cat: int, urls: List[str]):
     # clients = [get_client(cat, channel) for session in sessions]
     # clients = [get_client(cat, grpc.insecure_channel(addr)) for session in sessions]
 
-
-    # spread requests evenly and randomly over clients 
+    # spread requests evenly and randomly over clients
 
     # 'old' approach
     client = get_client(cat, channel)
@@ -215,7 +215,6 @@ async def main(channel, cat: int, urls: List[str]):
             )
         )
         for i, url in enumerate(urls)
-
     ]
 
     # cors = [
@@ -241,12 +240,12 @@ if __name__ == "__main__":
     cli_args = parser.parse_args()
     print(f"{cli_args=}")
 
-    psql = load_config(
-        db_name="youtube",
-        cfg_file=cli_args.cfg_file,
-        config_dir=config_dir,
-        starts_with=True,
-    )
+    # psql = load_config(
+    #     db_name="youtube",
+    #     cfg_file=cli_args.cfg_file,
+    #     config_dir=config_dir,
+    #     starts_with=True,
+    # )
     psession = get_session(psql)()
     async_session = get_async_session(psql)
 
@@ -289,7 +288,6 @@ if __name__ == "__main__":
     # implement as a service running in compose.yml?
 
     # TODO: send requests in batches, so all k8s pods are actually utilized
-
 
     elapsed: float = time() - t0
     requests_per_sec: float = len(res) / elapsed

@@ -13,14 +13,15 @@ from rarc_utils.sqlalchemy_base import (get_async_db, get_async_session,
                                         get_session)
 from sqlalchemy import delete, select
 from youtube_recommender import config as config_dir
+from youtube_recommender.core.setup import psql_config as psql
 from youtube_recommender.core.types import ChannelId
-from youtube_recommender.db.models import Channel, Chapter, Video, load_config
+from youtube_recommender.db.models import Channel, Chapter, Video
 from youtube_recommender.io_methods import io_methods as im
 from youtube_recommender.settings import CHAPTERS_JL_FILE
 
 LOG_FMT = "%(asctime)s - %(module)-16s - %(lineno)-4s - %(funcName)-16s - %(levelname)-7s - %(message)s"
 
-psql = load_config(db_name="youtube", cfg_file="postgres.cfg", config_dir=config_dir)
+# psql = load_config(db_name="youtube", cfg_file="postgres.cfg", config_dir=config_dir)
 psession = get_session(psql)()
 
 logger = logging.getLogger(__name__)
@@ -120,7 +121,6 @@ def migrate_chapter_ids_to_composite(session) -> None:
 
 
 def create_chapters_from_json(session, file=CHAPTERS_JL_FILE) -> None:
-
     df = im.load_jsonlines(file).drop_duplicates(subset="id")
     assert not df.empty
     res = df.to_dict("records")

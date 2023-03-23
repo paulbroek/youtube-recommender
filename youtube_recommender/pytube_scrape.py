@@ -23,9 +23,10 @@ import pandas as pd
 from pytube import Channel as pytube_channel  # type: ignore[import]
 from pytube import YouTube  # type: ignore[import]
 # from pytube import Playlist, Search
-from rarc_utils.log import LOG_FMT, setup_logger
-from rarc_utils.sqlalchemy_base import get_async_session, load_config
+from rarc_utils.log import get_create_logger
+from rarc_utils.sqlalchemy_base import get_async_session
 from youtube_recommender import config as config_dir
+from youtube_recommender.core.setup import psql_config
 from youtube_recommender.data_methods import data_methods as dm
 from youtube_recommender.db.db_methods import refresh_view
 # from youtube_recommender.db.helpers import (
@@ -35,15 +36,18 @@ from youtube_recommender.settings import (CHANNEL_FIELDS, PYTUBE_VIDEOS_PATH,
                                           VIDEO_FIELDS)
 from youtube_recommender.video_finder import load_feather, save_feather
 
-logger = setup_logger(
-    cmdLevel=logging.INFO, saveFile=0, savePandas=1, color=1, fmt=LOG_FMT
-)  # DEBUG
+logger = get_create_logger(
+    cmdLevel=logging.INFO,
+    color=1,
+)
+
+# logger = setup_logger(
+#     cmdLevel=logging.INFO, saveFile=0, savePandas=1, color=1, fmt=LOG_FMT
+# )  # DEBUG
 
 
 def extract_video_fields(
-    url: str,
-    fields=VIDEO_FIELDS,
-    isodate=False
+    url: str, fields=VIDEO_FIELDS, isodate=False
 ) -> Dict[str, Any]:
     """Extract selected fields from YouTube object."""
     assert isinstance(url, str)
@@ -59,7 +63,12 @@ def extract_video_fields(
             logger.error(f"remote disconnected")
             return {}
 
-        if field == 'publish_date' and isodate:
+        except Exception as e:
+            # TODO: often means number of requests/second is too high
+            logger.error(f"could not get attribute `{field}` from {yt_obj=} \n{e=!r}")
+            raise
+
+        if field == "publish_date" and isodate:
             res[field] = res[field].isoformat()
 
     return res
@@ -206,13 +215,13 @@ if __name__ == "__main__":
     if args.dryrun:
         sys.exit()
 
-    psql = load_config(
-        db_name="youtube",
-        cfg_file=args.cfg_file,
-        config_dir=config_dir,
-        starts_with=True,
-    )
-    async_session = get_async_session(psql)
+    # psql = load_config(
+    #     db_name="youtube",
+    #     cfg_file=args.cfg_file,
+    #     config_dir=config_dir,
+    #     starts_with=True,
+    # )
+    async_session = get_async_session(psql_config)
 
     assert isinstance(args.channel_url, str), "pass url as string"
 

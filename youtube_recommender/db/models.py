@@ -65,29 +65,28 @@ import uuid
 from datetime import datetime, time
 
 import timeago  # type: ignore[import]
+from rarc_utils.log import (LOG_FMT, loggingLevelNames, set_log_level,
+                            setup_logger)
+from rarc_utils.misc import trunc_msg
+from rarc_utils.sqlalchemy_base import (UtilityBase, async_main, get_async_db,
+                                        get_async_session, get_session)
 from sqlalchemy import (Boolean, Column, DateTime, Float, ForeignKey, Integer,
                         Interval, LargeBinary, String, UniqueConstraint, func)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy.schema import Table
-
-from rarc_utils.log import (LOG_FMT, loggingLevelNames, set_log_level,
-                            setup_logger)
-from rarc_utils.misc import trunc_msg
-from rarc_utils.sqlalchemy_base import (UtilityBase, async_main, get_async_db,
-                                        get_async_session, get_session,
-                                        load_config)
-from youtube_recommender import config as config_dir
+# from youtube_recommender import config as config_dir
+from youtube_recommender.core.setup import psql_config as psql
 
 Base = declarative_base()
 
-psql = load_config(
-    db_name="youtube",
-    cfg_file="postgres.cfg",
-    config_dir=config_dir,
-    starts_with=True,
-)
+# psql = load_config(
+#     db_name="youtube",
+#     cfg_file="postgres.cfg",
+#     config_dir=config_dir,
+#     starts_with=True,
+# )
 
 # a video can have multiple keywords, a keyword can belong to multiple videos
 video_keyword_association = Table(

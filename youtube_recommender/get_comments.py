@@ -71,11 +71,12 @@ from typing import Any, Dict, Iterator, List
 import pandas as pd
 from rarc_utils.decorators import items_per_sec
 from rarc_utils.log import setup_logger
-from rarc_utils.sqlalchemy_base import get_async_session, load_config
+from rarc_utils.sqlalchemy_base import get_async_session
 from youtube_comment_downloader.downloader import \
     YoutubeCommentDownloader  # type: ignore[import]
 from youtube_recommender import config as config_dir
 from youtube_recommender.comments_methods import comments_methods as cm
+from youtube_recommender.core.setup import psql_config as psql
 from youtube_recommender.data_methods import data_methods as dm
 from youtube_recommender.db.helpers import get_video_ids_by_channel_ids
 from youtube_recommender.io_methods import io_methods as im
@@ -232,12 +233,12 @@ parser.add_argument(
 if __name__ == "__main__":
     args = parser.parse_args()
 
-    psql = load_config(
-        db_name="youtube",
-        cfg_file=args.cfg_file,
-        config_dir=config_dir,
-        starts_with=True,
-    )
+    # psql = load_config(
+    #     db_name="youtube",
+    #     cfg_file=args.cfg_file,
+    #     config_dir=config_dir,
+    #     starts_with=True,
+    # )
 
     async_session = get_async_session(psql)
 
@@ -253,7 +254,6 @@ if __name__ == "__main__":
         LOADED_DF = True
 
     if not LOADED_DF:
-
         if args.channel_ids:
             video_ids = loop.run_until_complete(
                 get_video_ids_by_channel_ids(async_session, args.channel_ids)

@@ -24,13 +24,13 @@ deploy-scrape-service:
 	kubectl apply -f $(find ./kubernetes -name 'scrape-service*.yaml' -o -name '*secret.yaml' -type f | tr '\n' ',' | sed 's/,$//')
 
 sync_env_to_here:
-	rsync -avz -e ssh $(SERVER_USER)@$(SERVER_ADDR):$(REPO_PATH)/.env $(REPO_PATH)
+	rsync -avz -e ssh $(SERVER_USER)@$(SERVER_ADDR):$(REPO_PATH)/config $(REPO_PATH)
 
 sync_secrets_to_here:
 	rsync -avz -e ssh $(SERVER_USER)@$(SERVER_ADDR):$(REPO_PATH)/kubernetes/secrets $(REPO_PATH)/kubernetes
 
 sync_env_to_server:
-	rsync -avz -e ssh $(REPO_PATH)/.env $(SERVER_USER)@$(SERVER_ADDR):$(REPO_PATH)/.env
+	rsync -avz -e ssh $(REPO_PATH)/config $(SERVER_USER)@$(SERVER_ADDR):$(REPO_PATH)/
 
 sync_secrets_to_server:
 	rsync -avz -e ssh $(REPO_PATH)/kubernetes/secrets $(SERVER_USER)@$(SERVER_ADDR):$(REPO_PATH)/kubernetes
