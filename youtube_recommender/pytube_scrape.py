@@ -63,6 +63,11 @@ def extract_video_fields(
             logger.error(f"remote disconnected")
             return {}
 
+        except Exception as e:
+            # TODO: often means number of requests/second is too high
+            logger.error(f"could not get attribute `{field}` from {yt_obj=} \n{e=!r}")
+            raise
+
         if field == "publish_date" and isodate:
             res[field] = res[field].isoformat()
 

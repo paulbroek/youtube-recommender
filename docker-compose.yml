@@ -17,10 +17,12 @@ services:
         python /service/scrape_requests/serve.py --max_workers 25 --debug
         # python /service/scrape_requests/serve.py --max_workers 25 --secure
         # python -c "while True: pass"
-    # ports:
-    #   - "50051:50051"
     env_file:
       - ./.env
+    # for testing
+    # ports:
+    #   - "50051:50051"
+    # for scaling
     expose:
       - 50051
     secrets:
@@ -46,23 +48,26 @@ services:
       # - ./nginx/nginx-inline.conf:/etc/nginx/nginx.conf
       - /var/run/docker.sock:/var/run/docker.sock
       - /usr/bin/docker:/usr/bin/docker
-    depends_on:
-      - scrape-service
+    # depends_on:
+    #   - scrape-service
 
   nginx-reverseproxy:
-    image: nginx:1.13.11
+    image: nginx:1.22.1
     ports:
       - 127.0.0.1:1443:1443
     volumes:
-      # - ./nginx:/etc/nginx
-      - ./nginx/nginx-inline.conf:/etc/nginx/nginx.conf
+      # to use with docker
+      - ./nginx:/etc/nginx
+      # to use with k8s
+      # - ./nginx/nginx-inline.conf:/etc/nginx/nginx.conf
     secrets:
       - nginx.cert
       - nginx.key
-    depends_on:
-      save-server-names:
-        condition: service_completed_successfully
-      # - scrape-service
+    # depends on removes sibling containers..
+    # depends_on:
+    #   # save-server-names:
+    #   #   condition: service_completed_successfully
+    #   - scrape-service
     networks:
       - microservices
 

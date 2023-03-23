@@ -1,9 +1,13 @@
 #!/usr/bin/env python
 
+from typing import Final, List
+
 from setuptools import find_packages, setup
 
-# requires = []
-requires = [
+Requirements = List[str]
+
+# requires: Final[Requirements] = []
+requires: Final[Requirements] = [
     "yapic.json>=1.7.0",
     "pandas>=1.0.3",
     "timeago>=1.0.15",
@@ -16,7 +20,7 @@ requires = [
     "youtube_comment_downloader",
     # "cqlengine",
     "aiocache",
-    "aioredis==1.3.1",
+    # "aioredis==1.3.1",
     "jsonlines",
     "types-protobuf",
     "grpcio-tools",
@@ -24,7 +28,7 @@ requires = [
     "pytest",
 ]
 
-dev_requires = [
+dev_requires: Final[Requirements] = [
     "spacy",
     "gensim",
     "bertopic",
@@ -34,7 +38,7 @@ dev_requires = [
 
 setup(
     name="youtube_recommender",
-    version="0.1.1",
+    version="0.1.2",
     description="YouTube recommender - \
         data science project to extract recommendations from youtube video metadata",
     url="git@github.com:paulbroek/youtube-recommender.git",
