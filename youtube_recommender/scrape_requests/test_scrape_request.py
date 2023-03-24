@@ -60,7 +60,6 @@ from rarc_utils.sqlalchemy_base import get_async_session, get_session
 from scrape_requests_pb2 import ScrapeCategory, ScrapeRequest
 from scrape_requests_pb2_grpc import (ChannelScrapingsStub,
                                       CommentScrapingsStub, VideoScrapingsStub)
-from youtube_recommender import config as config_dir
 from youtube_recommender.core.setup import psql_config as psql
 from youtube_recommender.db.helpers import (get_top_channels_with_comments,
                                             get_top_videos_by_channel_ids)
@@ -239,13 +238,7 @@ if __name__ == "__main__":
 
     cli_args = parser.parse_args()
     print(f"{cli_args=}")
-
-    # psql = load_config(
-    #     db_name="youtube",
-    #     cfg_file=cli_args.cfg_file,
-    #     config_dir=config_dir,
-    #     starts_with=True,
-    # )
+    
     psession = get_session(psql)()
     async_session = get_async_session(psql)
 
