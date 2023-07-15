@@ -14,8 +14,9 @@ import pandas as pd
 from pytube import Channel as pytube_channel  # type: ignore[import]
 # from pytube import Playlist, Search
 from rarc_utils.log import setup_logger
-from rarc_utils.sqlalchemy_base import get_async_session, load_config
-from youtube_recommender import config as config_dir
+from rarc_utils.sqlalchemy_base import get_async_session
+from scrape_youtube.core.config import settings
+# from youtube_recommender import config as config_dir
 from youtube_recommender.data_methods import data_methods as dm
 # from youtube_recommender.db.helpers import (
 #     get_keyword_association_rows_by_ids, get_video_ids_by_ids)

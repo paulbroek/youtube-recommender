@@ -238,7 +238,7 @@ if __name__ == "__main__":
 
     cli_args = parser.parse_args()
     print(f"{cli_args=}")
-    
+
     psession = get_session(psql)()
     async_session = get_async_session(psql)
 
@@ -289,3 +289,5 @@ if __name__ == "__main__":
     items_per_sec: float = received / elapsed
 
     print(f"{requests_per_sec=:.2f} {items_per_sec=:.2f} {category=}")
+
+    # TODO: store data in redis

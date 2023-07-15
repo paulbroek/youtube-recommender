@@ -8,11 +8,8 @@ import argparse
 import logging
 
 import pandas as pd
-from rarc_utils.log import setup_logger, LOG_FMT
+from rarc_utils.log import LOG_FMT, setup_logger
 from rarc_utils.sqlalchemy_base import get_session
-
-# from sqlalchemy.future import select  # type: ignore[import]
-# from youtube_recommender.db.models import Channel, Video, psql
 from youtube_recommender.db.models import psql
 from youtube_recommender.io_methods import io_methods as im
 from youtube_recommender.settings import EDUCATIONAL_VIDEOS_PATH
@@ -54,7 +51,6 @@ if __name__ == "__main__":
     """
 
     videos = s.execute(stmt).mappings().fetchall()
-    # df = pd.DataFrame([v.as_dict() for v in videos])
     df = pd.DataFrame(videos)
 
     # save to feather
