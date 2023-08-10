@@ -190,7 +190,6 @@ def main_blocking(channel, cat: int, urls: List[str]):
 
 async def main(channel, cat: int, urls: List[str]):
     """Run main loop."""
-
     # TODO: Create a session for each worker, to utilize distributed cluster?
     # sessions = [aiohttp.ClientSession() for _ in range(cli_args.nworker)]
     # reqs_by_session = np.array_split(urls, cli_args.nworker)

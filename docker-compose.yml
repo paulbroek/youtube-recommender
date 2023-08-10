@@ -20,11 +20,11 @@ services:
     env_file:
       - ./.env
     # for testing
-    # ports:
-    #   - "50051:50051"
+    ports:
+      - "50051:50051"
     # for scaling
-    expose:
-      - 50051
+    # expose:
+    #   - 50051
     secrets:
       - nginx.cert
       - nginx.key
