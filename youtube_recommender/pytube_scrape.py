@@ -220,7 +220,7 @@ if __name__ == "__main__":
     #     starts_with=True,
     # )
     # async_session = get_async_session(psql_config)
-    async_session = get_async_session(settings)
+    async_session = get_async_session(settings.db_async_connection_str)
 
     assert isinstance(args.channel_url, str), "pass url as string"
 
