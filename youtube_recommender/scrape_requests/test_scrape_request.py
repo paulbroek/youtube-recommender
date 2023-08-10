@@ -53,14 +53,13 @@ import aiohttp
 import grpc  # type: ignore[import]
 import grpc.aio  # type: ignore[import]
 import numpy as np
-# from google.protobuf.json_format import MessageToJson
 from google.protobuf.json_format import MessageToDict
 from grpc import ssl_channel_credentials
-from rarc_utils.sqlalchemy_base import get_async_session, get_session
 from scrape_requests_pb2 import ScrapeCategory, ScrapeRequest
 from scrape_requests_pb2_grpc import (ChannelScrapingsStub,
                                       CommentScrapingsStub, VideoScrapingsStub)
-from youtube_recommender.core.setup import psql_config as psql
+from scrape_utils.core.db import get_async_session, get_session
+from youtube_recommender.core.setup import settings
 from youtube_recommender.db.helpers import (get_top_channels_with_comments,
                                             get_top_videos_by_channel_ids)
 from youtube_recommender.settings import (YOUTUBE_CHANNEL_PREFIX,
@@ -238,8 +237,8 @@ if __name__ == "__main__":
     cli_args = parser.parse_args()
     print(f"{cli_args=}")
 
-    psession = get_session(psql)()
-    async_session = get_async_session(psql)
+    psession = get_session(settings.db_connection_str)
+    async_session = get_async_session(settings.db_async_connection_str)
 
     assert host is not None
     assert port is not None

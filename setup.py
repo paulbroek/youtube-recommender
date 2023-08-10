@@ -38,7 +38,7 @@ dev_requires: Final[Requirements] = [
 
 setup(
     name="youtube_recommender",
-    version="0.1.2",
+    version="0.2.0",
     description="YouTube recommender - \
         data science project to extract recommendations from youtube video metadata",
     url="git@github.com:paulbroek/youtube-recommender.git",

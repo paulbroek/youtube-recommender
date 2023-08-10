@@ -68,8 +68,8 @@ import timeago  # type: ignore[import]
 from rarc_utils.log import (LOG_FMT, loggingLevelNames, set_log_level,
                             setup_logger)
 from rarc_utils.misc import trunc_msg
-from rarc_utils.sqlalchemy_base import (UtilityBase, async_main, get_async_db,
-                                        get_async_session, get_session)
+from rarc_utils.sqlalchemy_base import UtilityBase, async_main, get_async_db
+from scrape_utils.core.db import get_async_session, get_session
 from sqlalchemy import (Boolean, Column, DateTime, Float, ForeignKey, Integer,
                         Interval, LargeBinary, String, UniqueConstraint, func)
 from sqlalchemy.dialects.postgresql import UUID
@@ -77,7 +77,8 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy.schema import Table
 # from youtube_recommender import config as config_dir
-from youtube_recommender.core.setup import psql_config as psql
+# from youtube_recommender.core.setup import psql_config as psql
+from youtube_recommender.core.setup import settings
 
 Base = declarative_base()
 
@@ -553,7 +554,6 @@ CLI.add_argument(
 )
 
 if __name__ == "__main__":
-
     args = CLI.parse_args()
 
     # psql = load_config(
@@ -562,10 +562,13 @@ if __name__ == "__main__":
     #     config_dir=config_dir,
     #     starts_with=True,
     # )
-    psession = get_session(psql)()
+    # psession = get_session(psql)()
 
-    async_session = get_async_session(psql)
-    async_db = get_async_db(psql)()
+    # async_session = get_async_session(psql)
+    # async_db = get_async_db(psql)()
+
+    psession = get_session(settings.db_connection_str)
+    async_session = get_async_session(settings.db_async_connection_str)
 
     loop = asyncio.new_event_loop()
 
@@ -575,10 +578,17 @@ if __name__ == "__main__":
     )
     set_log_level(logger, level=log_level, fmt=LOG_FMT)
 
+    # needs updating
     if args.create:
         print("create models")
         loop.run_until_complete(
-            async_main(psql, base=Base, force=args.force, dropFirst=True)
+            async_main(
+                settings.db_async_connectrion_str,
+                base=Base,
+                force=args.force,
+                dropFirst=True,
+            )
+            # async_main(psql, base=Base, force=args.force, dropFirst=True)
         )
 
         # print('create data')

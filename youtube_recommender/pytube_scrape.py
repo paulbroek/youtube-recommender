@@ -24,9 +24,11 @@ from pytube import Channel as pytube_channel  # type: ignore[import]
 from pytube import YouTube  # type: ignore[import]
 # from pytube import Playlist, Search
 from rarc_utils.log import get_create_logger
-from rarc_utils.sqlalchemy_base import get_async_session
+# from rarc_utils.sqlalchemy_base import get_async_session
+from scrape_utils.core.db import get_async_session
 from youtube_recommender import config as config_dir
-from youtube_recommender.core.setup import psql_config
+# from youtube_recommender.core.setup import psql_config
+from youtube_recommender.core.setup import settings
 from youtube_recommender.data_methods import data_methods as dm
 from youtube_recommender.db.db_methods import refresh_view
 # from youtube_recommender.db.helpers import (
@@ -40,10 +42,6 @@ logger = get_create_logger(
     cmdLevel=logging.INFO,
     color=1,
 )
-
-# logger = setup_logger(
-#     cmdLevel=logging.INFO, saveFile=0, savePandas=1, color=1, fmt=LOG_FMT
-# )  # DEBUG
 
 
 def extract_video_fields(
@@ -221,7 +219,8 @@ if __name__ == "__main__":
     #     config_dir=config_dir,
     #     starts_with=True,
     # )
-    async_session = get_async_session(psql_config)
+    # async_session = get_async_session(psql_config)
+    async_session = get_async_session(settings)
 
     assert isinstance(args.channel_url, str), "pass url as string"
 

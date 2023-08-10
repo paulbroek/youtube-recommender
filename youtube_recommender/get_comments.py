@@ -70,22 +70,23 @@ from typing import Any, Dict, Iterator, List
 
 import pandas as pd
 from rarc_utils.decorators import items_per_sec
-from rarc_utils.log import setup_logger
-from rarc_utils.sqlalchemy_base import get_async_session
+from rarc_utils.log import get_create_logger
+from scrape_utils.core.db import get_async_session
 from youtube_comment_downloader.downloader import \
     YoutubeCommentDownloader  # type: ignore[import]
 from youtube_recommender import config as config_dir
 from youtube_recommender.comments_methods import comments_methods as cm
-from youtube_recommender.core.setup import psql_config as psql
+# from youtube_recommender.core.setup import psql_config as psql
+from youtube_recommender.core.setup import settings
 from youtube_recommender.data_methods import data_methods as dm
 from youtube_recommender.db.helpers import get_video_ids_by_channel_ids
 from youtube_recommender.io_methods import io_methods as im
 from youtube_recommender.settings import (COMMENTS_FEATHER_FILE,
                                           COMMENTS_JL_FILE)
 
-log_fmt = "%(asctime)s - %(module)-16s - %(lineno)-4s - %(funcName)-20s - %(levelname)-7s - %(message)s"  # name
-logger = setup_logger(
-    cmdLevel=logging.INFO, saveFile=0, savePandas=1, color=1, fmt=log_fmt
+logger = get_create_logger(
+    cmdLevel=logging.INFO,
+    color=1,
 )
 
 loop = asyncio.get_event_loop()
@@ -240,7 +241,8 @@ if __name__ == "__main__":
     #     starts_with=True,
     # )
 
-    async_session = get_async_session(psql)
+    # async_session = get_async_session(psql)
+    async_session = get_async_session(settings)
 
     LOADED_DF = False
 

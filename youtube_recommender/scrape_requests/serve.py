@@ -13,7 +13,7 @@ import scrape_requests_pb2_grpc
 from channel_scrape_requests import ChannelScrapeService
 from comment_scrape_requests import CommentScrapeService
 from interceptors import ErrorLogger
-from rarc_utils.log import LOG_FMT, setup_logger
+from rarc_utils.log import get_create_logger
 from video_scrape_requests import VideoScrapeService
 
 with open("/run/secrets/nginx.key", "rb") as f:  # path to you key location
@@ -77,13 +77,15 @@ parser.add_argument(
 if __name__ == "__main__":
     cli_args = parser.parse_args()
 
-    logger = setup_logger(
-        cmdLevel=logging.DEBUG if cli_args.debug else logging.INFO,
-        saveFile=0,
-        savePandas=0,
-        color=1,
-        fmt=LOG_FMT,
-    )
+    logger = get_create_logger(cmdLevel=logging.INFO, color=1)
+
+    # logger = setup_logger(
+    #     cmdLevel=logging.DEBUG if cli_args.debug else logging.INFO,
+    #     saveFile=0,
+    #     savePandas=0,
+    #     color=1,
+    #     fmt=LOG_FMT,
+    # )
     # logger = logging.getLogger(__name__)
     logger.info("running")
 
