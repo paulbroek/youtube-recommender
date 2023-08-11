@@ -17,16 +17,16 @@ import sys
 from http.client import RemoteDisconnected
 from multiprocessing import Pool
 from time import time
-from typing import Any, Dict, List, Set
+from typing import Any, Dict, Final, List, Set
 
 import pandas as pd
-from pytube import Channel as pytube_channel  # type: ignore[import]
-from pytube import YouTube  # type: ignore[import]
+from pytube import Channel as PyTubeChannel  # type: ignore[import]
+from pytube import YouTube as PyTubeVideo  # type: ignore[import]
 # from pytube import Playlist, Search
 from rarc_utils.log import get_create_logger
 # from rarc_utils.sqlalchemy_base import get_async_session
 from scrape_utils.core.db import get_async_session
-from youtube_recommender import config as config_dir
+# from youtube_recommender import config as config_dir
 # from youtube_recommender.core.setup import psql_config
 from youtube_recommender.core.setup import settings
 from youtube_recommender.data_methods import data_methods as dm
@@ -43,19 +43,33 @@ logger = get_create_logger(
     color=1,
 )
 
+WITH_DESCRIPTION: Final[bool] = False
+# WITH_DESCRIPTION: Final[bool] = True
 
+
+# TODO: as of may '23, pytube Channel will not return all video urls, so this script no longer works
+# can scrape single videos, and directly push them to postgres instead
 def extract_video_fields(
     url: str, fields=VIDEO_FIELDS, isodate=False
 ) -> Dict[str, Any]:
-    """Extract selected fields from YouTube object."""
+    """Extract selected fields from PyTubeVideo object."""
     assert isinstance(url, str)
 
-    yt_obj = YouTube(url)
+    youtube = PyTubeVideo(url)
+
+    # pytube v15 fix, call vid.streams.first(), just to retrieve video description
+    # TODO: is it slow?
+    if WITH_DESCRIPTION:
+        try:
+            _ = youtube.streams.first()
+        except Exception as e:
+            pass
+
     res = {}
     # slow?
     for field in fields:
         try:
-            res[field] = getattr(yt_obj, field)
+            res[field] = getattr(youtube, field)
 
         except RemoteDisconnected:
             logger.error(f"remote disconnected")
@@ -63,7 +77,7 @@ def extract_video_fields(
 
         except Exception as e:
             # TODO: often means number of requests/second is too high
-            logger.error(f"could not get attribute `{field}` from {yt_obj=} \n{e=!r}")
+            logger.error(f"could not get attribute `{field}` from {youtube=} \n{e=!r}")
             raise
 
         if field == "publish_date" and isodate:
@@ -79,15 +93,18 @@ def extract_channel_fields(
     """Extract selected fields from Channel object."""
     assert isinstance(url, str)
 
-    chan = pytube_channel(url)
+    chan = PyTubeChannel(url)
     res = {}
     # slow?
     for field in fields:
         try:
+            metadata = chan.initial_data["metadata"]["channelMetadataRenderer"]
             if field == "title":
-                res["channel_name"] = chan.initial_data["metadata"][
-                    "channelMetadataRenderer"
-                ]["title"]
+                res["channel_name"] = metadata["title"]
+            elif field == "channel_id":
+                res["channel_id"] = metadata["externalId"]
+            elif field == "description":
+                res["channel_description"] = metadata["description"]
             else:
                 res[field] = getattr(chan, field)
         except AttributeError:
@@ -102,7 +119,7 @@ def extract_multiple_urls(urls: List[str]) -> List[Dict[str, Any]]:
     t0 = time()
     # slow?
     for url in urls:
-        yt = YouTube(url)
+        yt = PyTubeVideo(url)
         res.append(extract_video_fields(yt))
 
     elapsed: float = time() - t0
@@ -233,7 +250,7 @@ if __name__ == "__main__":
         df = load_feather(PYTUBE_VIDEOS_PATH)
 
     else:
-        vurls: pytube_channel = pytube_channel(args.channel_url)
+        vurls: PyTubeChannel = PyTubeChannel(args.channel_url)
 
         # slow call to urls.len?
         # logger.info(f"this channel has {len(vurls):,} videos")
@@ -264,7 +281,7 @@ if __name__ == "__main__":
         vdf = pd.DataFrame(vres)
         cdf = pd.DataFrame(cres)
 
-        # todo: get num_subscribers through beautifulsoup or YouTube API
+        # todo: get num_subscribers through beautifulsoup or PyTubeVideo API
         cdf["num_subscribers"] = None
         vdf["custom_score"] = None
 

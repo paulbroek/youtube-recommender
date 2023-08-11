@@ -63,6 +63,9 @@ def find_chapter_locations(video_recs: List[VideoRec], display=False) -> List[di
     for video_rec in video_recs:
         assert isinstance(video_rec, dict)
 
+        if video_rec["description"] is None:
+            continue
+
         rec_factory = lambda: {
             "video_id": video_rec["id"],
             "video_description": video_rec["description"],
@@ -191,6 +194,7 @@ async def get_top_videos_by_channel_ids(
 ) -> pd.DataFrame:
     # ) -> List[dict]:
     """Get top videos by channel ids."""
+
     # todo: I use inner method to only cache `channel_ids`, is there a work around for this?
     @cached(ttl=None, cache=Cache.REDIS, serializer=PickleSerializer())
     async def inner(channel_ids=channel_ids):
@@ -248,7 +252,6 @@ async def get_videos_by_query(
 
     # uses materialized view `last_videos`, assuming it refreshes on every query_result record insert
     async with asession() as session:
-
         # todo: this can be done with SQLAlchemy models, raw SQL is not needed
         query_ = f"SELECT * FROM last_videos WHERE query = '{query}' AND qr_updated > '{since.isoformat()}' LIMIT {n};"
         # logger.info(f"{query_=}")

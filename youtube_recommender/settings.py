@@ -84,4 +84,5 @@ VIDEO_FIELDS = (
 CHANNEL_FIELDS = (
     "title",
     "channel_id",
+    "description",
 )

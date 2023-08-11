@@ -286,6 +286,7 @@ class Channel(Base, UtilityBase):
     __tablename__ = "channel"
     id = Column(String, primary_key=True)
     name = Column(String, nullable=False, unique=False)
+    # description = Column(String, nullable=True, unique=False)
     num_subscribers = Column(
         Integer, nullable=True, unique=False
     )  # nullable=False for now, since pytube does not collect this information, can request later through youtube API v3 (single calls)
