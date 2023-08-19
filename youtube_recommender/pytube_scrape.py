@@ -22,17 +22,11 @@ from typing import Any, Dict, Final, List, Set
 import pandas as pd
 from pytube import Channel as PyTubeChannel  # type: ignore[import]
 from pytube import YouTube as PyTubeVideo  # type: ignore[import]
-# from pytube import Playlist, Search
 from rarc_utils.log import get_create_logger
-# from rarc_utils.sqlalchemy_base import get_async_session
 from scrape_utils.core.db import get_async_session
-# from youtube_recommender import config as config_dir
-# from youtube_recommender.core.setup import psql_config
 from youtube_recommender.core.setup import settings
 from youtube_recommender.data_methods import data_methods as dm
 from youtube_recommender.db.db_methods import refresh_view
-# from youtube_recommender.db.helpers import (
-#     get_keyword_association_rows_by_ids, get_video_ids_by_ids)
 from youtube_recommender.db.helpers import get_video_ids_by_channel_ids
 from youtube_recommender.settings import (CHANNEL_FIELDS, PYTUBE_VIDEOS_PATH,
                                           VIDEO_FIELDS)
@@ -47,8 +41,8 @@ WITH_DESCRIPTION: Final[bool] = False
 # WITH_DESCRIPTION: Final[bool] = True
 
 
-# TODO: as of may '23, pytube Channel will not return all video urls, so this script no longer works
-# can scrape single videos, and directly push them to postgres instead
+# TODO: as of may '23, pytube Channel does not return all video urls, so this script no longer works
+# can scrape single videos, and directly push to postgres instead
 def extract_video_fields(
     url: str, fields=VIDEO_FIELDS, isodate=False
 ) -> Dict[str, Any]:
@@ -58,7 +52,7 @@ def extract_video_fields(
     youtube = PyTubeVideo(url)
 
     # pytube v15 fix, call vid.streams.first(), just to retrieve video description
-    # TODO: is it slow?
+    # TODO: slow
     if WITH_DESCRIPTION:
         try:
             _ = youtube.streams.first()
@@ -147,7 +141,7 @@ def mp_extract_videos(urls: List[str], nprocess: int) -> List[Dict[str, Any]]:
 
 def mp_extract_channels(res: List[Dict[str, Any]], nprocess: int):
     """Extract metadata for multiple videos + channel names using multiprocessing."""
-    # get unique channels
+    # get unique channel urls
     channel_urls: Set[str] = set(r["channel_url"] for r in res)
 
     t0 = time()
@@ -230,13 +224,6 @@ if __name__ == "__main__":
     if args.dryrun:
         sys.exit()
 
-    # psql = load_config(
-    #     db_name="youtube",
-    #     cfg_file=args.cfg_file,
-    #     config_dir=config_dir,
-    #     starts_with=True,
-    # )
-    # async_session = get_async_session(psql_config)
     async_session = get_async_session(settings.db_async_connection_str)
 
     assert isinstance(args.channel_url, str), "pass url as string"
